@@ -161,6 +161,11 @@ print('team seasons', len(teams), '| without a location:', sorted({t['n'] for t 
 
 # franchise colors: data/overrides/team_colors.csv (franchID, bg, fg); others get a neutral badge
 COLORS = {r.franchID: [r.bg, r.fg] for r in pd.read_csv(OVR / 'team_colors.csv').itertuples()}
+# teams from before the database starts (data/overrides/manual_teams.csv), e.g. the 1869 Cincinnati Red Stockings
+for r in pd.read_csv(OVR / 'manual_teams.csv').itertuples() if (OVR / 'manual_teams.csv').exists() else []:
+    teams[r.tid] = dict(y=int(r.y), lg=r.lg, tm=r.tm, fr=r.fr, n=r.n, w=int(r.w), l=int(r.l), rs=None, ra=None, rk=None, pen=0, ws=0, dv=None,
+                        pk=None, park=r.park, br=None, ll=[r.lat, r.lon], pl={'c': r.city, 'r': r.region, 'n': r.country}, ap=0, top=1)
+    TFn[r.fr] = r.franch; COLORS[r.fr] = [r.bg, r.fg]
 franch = {}
 for tid, t in teams.items():
     f = franch.setdefault(t['fr'], dict(n=TFn.get(t['fr'], t['n']), s=[], col=COLORS.get(t['fr'])))
@@ -420,6 +425,7 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
     TR['a'] = .80 * TR.tal + .15 * TR.py + .05 * TR.wp
     TR['yr'] = TR.groupby('y').a.rank(ascending=False, method='min').astype(int)
     TR['ar'] = TR.a.rank(ascending=False, method='min').astype(int)
+    for tid in TR.loc[TR.groupby('y').a.idxmax(), 'tid']: teams[tid]['top'] = 1  # best team each season (tracked)
     for r in TR.itertuples(): teams[r.tid]['tr'] = dict(tr[r.tid], a=round(r.a, 1), tal=round(r.tal, 1), py=round(r.py, 1), wp=round(r.wp, 1), yr=int(r.yr), ar=int(r.ar), n=int((TR.y == r.y).sum()))
     print(f'team ratings: {len(TR)} of {len(teams)} team seasons rated; best: ' +
           ', '.join(f"{teams[r.tid]['y']} {teams[r.tid]['n']} {r.a:+.1f}" for r in TR.nsmallest(5, 'ar').itertuples()))

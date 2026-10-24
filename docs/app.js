@@ -383,26 +383,34 @@ function rosterHTML(tid) {
    ${r.B.length ? `<h2>Bench</h2><div class="statline">${hit(r.B)}</div>` : ''}`;
 }
 /* ================================================================ tracker
-   Players, team seasons, games and pins have their own three lights (seen, read, numbers): explored = any lit,
-   complete = all three. Years, decades, franchises and places roll up the things on their pages. */
+   Tracked pages: your players, the best team each season by your model (plus the 1869 Red Stockings), your top
+   games (as many as there are team seasons) and your pins. Each has three lights (seen, read, numbers):
+   explored = any lit, complete = all three. Years, decades, franchises and places roll up tracked pages. */
 function vTracker() {
-  const P = Object.keys(D.players).map(k => 'p_' + k), T = Object.keys(D.teams).map(k => 't_' + k), G = Object.keys(D.games).map(k => 'g_' + k), S = Object.keys(STORE.pins).map(k => 's_' + k);
+  const P = Object.keys(D.players).map(k => 'p_' + k), S = Object.keys(STORE.pins).map(k => 's_' + k);
+  const T = Object.entries(D.teams).filter(([, t]) => t.top).sort((a, b) => a[1].y - b[1].y).map(([k]) => 't_' + k);
+  const G = Object.values(D.games).sort((a, b) => a.rk - b.rk).slice(0, T.length).map(g => 'g_' + g.rk);
   const L = {}; for (const k of [...P, ...T, ...G, ...S]) L[k] = litN(k);
-  const own = (label, keys) => ({ label, n: keys.length, ex: keys.filter(k => L[k] > 0).length, done: keys.filter(k => L[k] === 3).length, keys });
-  // years: champions, your top 5 and your great games
-  const yItems = {}; for (const [tid, t] of Object.entries(D.teams)) if (t.ws || t.pen) (yItems[t.y] = yItems[t.y] || []).push('t_' + tid);
-  for (const [y, yd] of Object.entries(D.years)) { for (const e of yd.top || []) if (e[5] && e[0] !== 'WPA') (yItems[y] = yItems[y] || []).push('p_' + e[5]); for (const g of yd.games || []) (yItems[y] = yItems[y] || []).push('g_' + g); }
+  const own = (label, keys, note) => ({ label, note, n: keys.length, ex: keys.filter(k => L[k] > 0).length, done: keys.filter(k => L[k] === 3).length, keys });
+  // years: the season's best team, your top 5, its tracked games and your pins
+  const yItems = {}, add = (y, k) => (yItems[y] = yItems[y] || []).push(k);
+  for (const k of T) add(D.teams[k.slice(2)].y, k);
+  for (const k of G) add(D.games[k.slice(2)].y, k);
+  for (const k of S) if (STORE.pins[k.slice(2)].year) add(STORE.pins[k.slice(2)].year, k);
+  for (const [y, yd] of Object.entries(D.years)) for (const e of yd.top || []) if (e[5] && e[0] !== 'WPA') add(y, 'p_' + e[5]);
   const frac = ks => ks.length ? ks.filter(k => L[k] > 0).length / ks.length : 0;
   const years = Object.keys(yItems).map(Number).sort((a, b) => a - b), yf = Object.fromEntries(years.map(y => [y, frac([...new Set(yItems[y])])]));
   const roll = (label, groups) => ({ label, n: groups.length, ex: groups.filter(g => g.some(k => L[k] > 0)).length, done: groups.filter(g => g.length && g.every(k => L[k] > 0)).length });
-  const decs = {}; for (const y of years) (decs[Math.floor(y / 10) * 10] = decs[Math.floor(y / 10) * 10] || []).push(...new Set(yItems[y]));
+  const decs = {}; for (const y of years) (decs[decadeOf(y)] = decs[decadeOf(y)] || []).push(...new Set(yItems[y]));  // everything before 1871 is one page
   if (!PL) buildPlaces();
   const places = Object.values(PL).filter(nd => nd.from.length);
-  const rows = [own('Players', P), own('Team seasons', T), own('Games', G), ...(S.length ? [own('Your pins', S)] : []),
-    { ...roll('Years', years.map(y => yItems[y])), note: 'champions, your top 5, great games' },
-    { ...roll('Decades', Object.values(decs)), note: 'every year’s items' },
-    { ...roll('Franchises', Object.values(D.franch).map(f => f.s.map(t => 't_' + t))), note: 'their seasons' },
-    { ...roll('Places', places.map(nd => nd.from.map(k => 'p_' + k))), note: 'players from there' }];
+  const tracked = new Set(T);
+  const rows = [own('Players', P, 'your list'), own('Team seasons', T, 'the best team each season, by your model'), own('Games', G, `your top ${G.length}`),
+    ...(S.length ? [own('Your pins', S, 'what you’ve added to the map')] : []),
+    { ...roll('Years', years.map(y => yItems[y])), note: 'best team, your top 5, games, pins' },
+    { ...roll('Decades', Object.values(decs)), note: 'before 1871 is one page' },
+    { ...roll('Franchises', Object.values(D.franch).map(f => f.s.map(t => 't_' + t).filter(k => tracked.has(k))).filter(g => g.length)), note: 'their tracked seasons' },
+    { ...roll('Places of origin', places.map(nd => nd.from.map(k => 'p_' + k))), note: 'players from there' }];
   const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
   const bar = (ex, done, n) => `<div class="tbar" title="${done} complete, ${ex} explored of ${n}"><i class="d" style="width:${100 * done / (n || 1)}%"></i><i class="e" style="width:${100 * (ex - done) / (n || 1)}%"></i></div>`;
   const lightRow = (label, keys) => { const c = { see: 0, read: 0, nums: 0 }; for (const k of keys) { const l = lights(k); for (const x in c) if (l[x]) c[x]++; }
@@ -414,18 +422,18 @@ function vTracker() {
   const byPos = POSITIONS.map(pos => own(pos, P.filter(k => D.players[k.slice(2)].pos === pos))).filter(r => r.n);
   const graded = P.filter(k => Object.keys(prog(k)?.grades || {}).length).length, clipped = [...P, ...T, ...G, ...S].filter(k => (prog(k)?.clips || []).length).length;
   const next = (keys, rank, label, n = 5) => keys.filter(k => !L[k]).sort((a, b) => rank(a) - rank(b)).slice(0, n);
-  const nP = next(P, k => D.players[k.slice(2)].ovr || 999), nT = next(T.filter(k => D.teams[k.slice(2)].tr), k => D.teams[k.slice(2)].tr.ar), nG = next(G, k => D.games[k.slice(2)].rk);
+  const nP = next(P, k => D.players[k.slice(2)].ovr || 999), nT = next(T, k => D.teams[k.slice(2)].tr?.ar ?? 0), nG = next(G, k => D.games[k.slice(2)].rk);
   const nextRow = k => { const e = ent(k), o = e.o;
-    const [a, b] = e.type === 'p' ? [rankLabel(o), nameOf(o)] : e.type === 't' ? [`#${o.tr.ar}`, `${o.y} ${o.n}`] : [`#${o.rk}`, `${o.y} ${o.g}${o.d ? ' · ' + o.d : ''}`];
+    const [a, b] = e.type === 'p' ? [rankLabel(o), nameOf(o)] : e.type === 't' ? [o.tr ? `#${o.tr.ar}` : String(o.y), `${o.y} ${o.n}`] : [`#${o.rk}`, `${o.y} ${o.g}${o.d ? ' · ' + o.d : ''}`];
     return `<button class="row" onclick="go('${k}')"><span class="yr">${esc(a)}</span><span class="rn">${esc(b)}</span><span class="meta">${dotsHTML(k)}</span></button>`; };
   return `${banner()}<div class="eyebrow">Your progress</div><h1 class="name">Tracker</h1>
-   <p class="note">Players, team seasons, games and pins are explored with at least one light on (seen, read or numbers) and complete with all three. Years, decades, franchises and places roll up what’s on their pages: explored once anything there is, complete once everything there is.</p>
+   <p class="note">Players, team seasons, games and pins are explored with at least one light on (seen, read or numbers) and complete with all three. Years, decades, franchises and places of origin roll those up: explored once anything in them is, complete once everything is.</p>
    <table class="track"><tr><th></th><th>Explored</th><th>Complete</th><th class="wide"></th></tr>
    ${rows.map(r => `<tr><td>${r.label}${r.note ? `<small>${r.note}</small>` : ''}</td><td><b>${r.ex}</b>/${r.n} <span class="pc">${pct(r.ex, r.n)}%</span></td><td><b>${r.done}</b> <span class="pc">${pct(r.done, r.n)}%</span></td><td class="wide">${bar(r.ex, r.done, r.n)}</td></tr>`).join('')}</table>
    <div class="tlegend"><span><i class="d"></i>complete</span><span><i class="e"></i>explored</span><span><i></i>not yet</span></div>
    <h2>Lights <small>how many have each one on</small></h2>
    <table class="track lights3"><tr><th></th><th>Seen</th><th>Read</th><th>Numbers</th></tr>${lightRow('Players', P)}${lightRow('Team seasons', T)}${lightRow('Games', G)}${S.length ? lightRow('Your pins', S) : ''}</table>
-   <h2>Year by year <small>champions, your top 5 and great games explored</small></h2>
+   <h2>Year by year <small>best team, your top 5, games and pins explored</small></h2>
    <div class="ygrid">${grid.join('')}</div>
    <div class="tlegend"><span><i class="yg s0"></i>none</span><span><i class="yg s1"></i>some</span><span><i class="yg s2"></i>a third</span><span><i class="yg s3"></i>two thirds</span><span><i class="yg s4"></i>all</span></div>
    <h2>Players by position</h2>
@@ -433,7 +441,7 @@ function vTracker() {
    <div class="sub"><span><b>${graded}</b> scouting cards graded</span><span><b>${clipped}</b> pages with clippings</span></div>
    <h2>Next up <small>the highest-ranked you haven’t opened a door on</small></h2>
    ${nP.length ? `<h3 class="sm">Players, by your list</h3><div class="list">${nP.map(nextRow).join('')}</div>` : ''}
-   ${nT.length ? `<h3 class="sm">Team seasons, by your model</h3><div class="list">${nT.map(nextRow).join('')}</div>` : ''}
+   ${nT.length ? `<h3 class="sm">Team seasons, best first by your model</h3><div class="list">${nT.map(nextRow).join('')}</div>` : ''}
    ${nG.length ? `<h3 class="sm">Games, by your list</h3><div class="list">${nG.map(nextRow).join('')}</div>` : ''}
    ${saveBox()}`;
 }

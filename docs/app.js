@@ -255,10 +255,10 @@ function drawFocus() {
 function fitTo(lls, maxK = 30) {
   if (!lls.length) return;
   const xs = lls.map(XY); let [x0, x1] = d3.extent(xs, d => d[0]), [y0, y1] = d3.extent(xs, d => d[1]);
-  const pad = Math.max(24, Math.min(W, H) * .12), bar = $('#mapbar').hidden ? 0 : 70;
+  const pad = Math.max(24, Math.min(W, H) * .1), bar = $('#mapbar').hidden ? 0 : 56;  // the year pill floats over the top of the map
   const k = Math.min(maxK, Math.min((W - 2 * pad) / Math.max(x1 - x0, 20), (H - 2 * pad - bar) / Math.max(y1 - y0, 20)));
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
-  svg.transition().duration(reduce ? 0 : 600).call(zoom.transform, d3.zoomIdentity.translate(W / 2 - k * (x0 + x1) / 2, (H - bar) / 2 - k * (y0 + y1) / 2).scale(k));
+  svg.transition().duration(reduce ? 0 : 600).call(zoom.transform, d3.zoomIdentity.translate(W / 2 - k * (x0 + x1) / 2, (H + bar) / 2 - k * (y0 + y1) / 2).scale(k));
 }
 const fitNorthAmerica = () => fitTo([[50, -125], [17, -66]], 6);
 function refreshMap() { drawBase(); drawFocus(); }
@@ -378,19 +378,19 @@ function vYear() {
   const gms = (yd.games || []).map(r => D.games[r]).sort((a, b) => b.gr - a.gr || a.rk - b.rk);
   const pins = Object.entries(STORE.pins).filter(([, s]) => s.year === y);
   const yn = NOTES.years[y] || {};
-  return `${banner()}<div class="eyebrow">The season · <a href="#" onclick="go('d_${decadeOf(y)}');return false">${decadeName(decadeOf(y))}</a></div>
-  <div style="display:flex;align-items:center;gap:10px"><button class="iconbtn" onclick="go('y_${y - 1}')" aria-label="Previous year">‹</button><h1 class="name" style="margin:0">${y}</h1><button class="iconbtn" onclick="go('y_${y + 1}')" aria-label="Next year">›</button></div>
-  <div class="sub" style="margin-top:6px"><span><b>${tms.length}</b> teams</span><span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> explored</span>${lgs.length ? `<span>${lgs.map(l => esc(LG[l] || l)).join(' · ')}</span>` : ''}</div>
-  ${era ? `<h2>Your era notes <small>${era[0]}${era[1] !== era[0] ? '–' + era[1] : ''}</small></h2><p style="margin:0">${esc(era[2])}</p>${era[3] ? `<p class="note" style="margin-top:4px">Black clubs and independents: ${esc(era[3])}</p>` : ''}` : ''}
-  ${yn.quick && yn.quick.length ? `<h2>Changes and notes</h2>${quickList(yn.quick)}` : ''}
-  ${yn.text && yn.text.length ? `<h2>Your write-up</h2>${writeup(yn.text)}` : ''}
-  ${ws.length || pen.length ? `<h2>Champions</h2><div class="chips">${ws.map(([tid, t]) => `<button class="chip lit" onclick="go('t_${tid}')"><span class="k">WS</span>${esc(t.n)}</button>`).join('')}${pen.map(([tid, t]) => `<button class="chip" onclick="go('t_${tid}')"><span class="k">${esc(t.lg)}</span>${esc(t.n)}</button>`).join('')}</div>` : ''}
+  const champ = ([tid, t]) => `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="rn">${esc(t.n)}<small>${t.ws ? 'won the World Series' : esc(t.lg) + ' pennant'}${t.w != null ? ` · ${t.w}–${t.l}` : ''}</small></span><span class="meta">${dotsHTML('t_' + tid)}</span></button>`;
+  return `${banner()}<div class="eyebrow">${y} · <a href="#" onclick="go('d_${decadeOf(y)}');return false">the ${decadeName(decadeOf(y))}</a></div>
+  <div class="sub" style="margin-top:4px"><span><b>${tms.length}</b> teams</span><span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> explored</span>${lgs.length ? `<span>${lgs.map(l => esc(l)).join(' · ')}</span>` : ''}</div>
+  ${ws.length || pen.length ? `<h2>Champions</h2><div class="list">${[...ws, ...pen].map(champ).join('')}</div>` : ''}
   ${topH.length ? `<h2>Your top 5 <small>position players</small></h2><div class="list">${topH.map(entry).join('')}</div>` : ''}
   ${topP.length ? `<h2>Your top 5 <small>pitchers</small></h2><div class="list">${topP.map(entry).join('')}${rp ? entry(['', 1, 'RP', rp[3], rp[4], rp[5]]) : ''}</div>` : ''}
   ${wpa ? `<p class="note">cWPA leader: ${wpa[5] ? `<a href="#" onclick="go('p_${wpa[5]}');return false">${esc(wpa[3])}</a>` : esc(wpa[3])}</p>` : ''}
   ${gms.length ? `<h2>Great games</h2><div class="list">${gms.map(gameRow).join('')}</div>` : ''}
+  ${yn.quick && yn.quick.length ? `<h2>Changes and notes</h2>${quickList(yn.quick)}` : ''}
+  ${yn.text && yn.text.length ? `<h2>Your write-up</h2>${writeup(yn.text)}` : ''}
+  ${era ? `<h2>Your era notes <small>${era[0]}${era[1] !== era[0] ? '–' + era[1] : ''}</small></h2><p style="margin:0">${esc(era[2])}</p>${era[3] ? `<p class="note" style="margin-top:4px">Black clubs and independents: ${esc(era[3])}</p>` : ''}` : ''}
   ${pins.length ? `<h2>Your pins</h2><div class="list">${pins.map(([id, s]) => `<button class="row" onclick="go('s_${id}')"><span class="yr">${esc(s.kind || 'pin')}</span><span class="rn">${esc(s.title)}</span><span class="meta">${dotsHTML('s_' + id)}</span></button>`).join('')}</div>` : ''}
-  ${tms.length ? `<h2>Every team</h2><div class="chips">${tms.sort((a, b) => a[1].lg.localeCompare(b[1].lg) || a[1].rk - b[1].rk).map(([tid, t]) => `<button class="chip ${litN('t_' + tid) ? 'lit' : ''}" onclick="go('t_${tid}')"><span class="k">${esc(t.lg)}</span>${esc(t.n)}</button>`).join('')}</div>` : `<p class="empty">No league teams in the database this year. Your pins and era notes are the way in.</p>`}
+  ${tms.length ? `<details class="allteams"><summary>All ${tms.length} teams</summary><div class="chips">${tms.sort((a, b) => a[1].lg.localeCompare(b[1].lg) || a[1].rk - b[1].rk).map(([tid, t]) => `<button class="chip ${litN('t_' + tid) ? 'lit' : ''}" onclick="go('t_${tid}')"><span class="k">${esc(t.lg)}</span>${esc(t.n)}</button>`).join('')}</div></details>` : `<p class="empty">No league teams in the database this year. Your pins and era notes are the way in.</p>`}
   ${saveBox()}`;
 }
 function saveBox() {
@@ -576,6 +576,7 @@ const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.<
 function mapFor() {
   const t = view.type; highlight = null; focusPts = null; let fit = null;
   if (t === 'y' || t === 'a') MAPMODE = 'teams';
+  if (t === 'y') { const lls = Object.values(D.teams).filter(x => x.y === YEAR && x.ll).map(x => x.ll); if (lls.length) fit = lls; }
   if (t === 'd') { MAPMODE = 'teams'; const d0 = view.id === 'pre' ? 1845 : +view.id; if (YEAR < d0 || YEAR > (view.id === 'pre' ? 1870 : d0 + 9)) { YEAR = view.id === 'pre' ? 1870 : Math.max(d0, 1871); $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; } }
   if (t === 't') { const tm = D.teams[view.id]; if (tm) { MAPMODE = 'teams'; if (YEAR !== tm.y) { YEAR = tm.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; } highlight = 't_' + view.id; if (tm.ll) fit = [tm.ll]; } }
   if (t === 'g') { const g = D.games[view.id]; if (g) { MAPMODE = 'teams'; YEAR = g.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; if (g.tid) { highlight = 't_' + g.tid; const tm = D.teams[g.tid]; if (tm.ll) fit = [tm.ll]; } } }
@@ -613,7 +614,7 @@ function placeMap(restore) {
   if (want !== sizedFor) { sizedFor = want; sizeMap(); }
   const fit = mapFor(); refreshMap();
   if (restore && mapT && homeOf(view) === 'map') svg.call(zoom.transform, mapT);
-  else if (fit && fit.length) fitTo(fit, view.type === 't' || view.type === 'g' ? 5 : 30); else fitNorthAmerica();
+  else if (fit && fit.length) fitTo(fit, view.type === 't' || view.type === 'g' ? 5 : view.type === 'y' ? 14 : 30); else fitNorthAmerica();
 }
 function curKey() { return view.type + '_' + view.id; }
 function wire() {
@@ -700,7 +701,7 @@ function doSearch(q) {
   const top = out.slice(0, 12); selI = 0;
   box.innerHTML = top.length ? top.map((r, i) => `<button data-key="${esc(r.key)}" class="${i === 0 ? 'sel' : ''}"><span>${esc(r.t)}</span><small>${esc(r.s)}</small></button>`).join('') : '<div style="padding:10px 12px" class="note">Nothing matches. Try a last name, a team, a city, or a year.</div>';
   box.hidden = false;
-  box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { box.hidden = true; $('#q').value = ''; go(b.dataset.key); }));
+  box.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { box.hidden = true; $('#q').value = ''; $('#top').classList.remove('searching'); go(b.dataset.key); }));
 }
 
 /* ================================================================ play */
@@ -732,6 +733,10 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
   $('#mapclose').addEventListener('click', () => setFull(false));
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && FULL) setFull(false); });
   $('#spin').addEventListener('click', spin);
+  $('#yprev').addEventListener('click', () => { stopPlay(); setYear(YEAR - 1); });
+  $('#ynext').addEventListener('click', () => { stopPlay(); setYear(YEAR + 1); });
+  $('#searchbtn').addEventListener('click', () => { const on = $('#top').classList.toggle('searching'); if (on) $('#q').focus(); });
+  $('#q').addEventListener('blur', () => setTimeout(() => { if (!$('#q').value) $('#top').classList.remove('searching'); }, 200));
   const m = (location.hash || '').slice(1).match(/^([ptgsyarld])-(.+)$/);
   if (m) { view = { type: m[1], id: m[1] === 'r' && !HOMES.includes(m[2]) ? 'players' : m[2] }; if (m[1] === 'y') YEAR = +m[2]; }
   if (homeOf(view) === 'map') lastMap = view;

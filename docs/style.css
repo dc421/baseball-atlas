@@ -236,3 +236,53 @@ ul.quick{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px;max-widt
 body.lay-page:not(.mapfull) .maplabel{display:none}
 .writeup,ul.quick,.row .rn{overflow-wrap:anywhere}
 aside.panel{min-width:0}
+
+/* v4 (option A): one slim top bar, bottom tabs on phones, a floating year pill on the map */
+header.top{flex-wrap:nowrap;gap:18px;padding-block:8px}
+.mark i{font-style:normal;color:var(--lit)}
+nav.tabs svg{display:none}
+.search{margin-left:auto;max-width:380px}
+.tools{display:flex;gap:6px;flex:none}
+.tool{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:600;font-size:14px}
+.tool svg,nav.tabs svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tool svg{width:17px;height:17px}
+#spin{border-color:var(--lit);background:var(--lit-soft)}
+#searchbtn{display:none}
+
+.mapbar{left:14px;top:14px;right:auto;bottom:auto;gap:6px;padding:5px;border-radius:999px;flex-wrap:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.mapbar .iconbtn{width:30px;height:30px;border-radius:50%}
+.mapbar .play{background:var(--lit);border-color:var(--lit);color:var(--bg)}
+.bigyear{font-size:28px;min-width:2.3em;text-align:center}
+.mapbar input[type=range]{flex:none;width:180px;min-width:0}
+.maplayers{left:auto;right:12px}
+.legend{top:auto;bottom:12px;left:12px;right:auto}
+.maphint,.maplayers + .mapexpand + .mapclose + .maphint{top:auto;bottom:34px}
+details.allteams{margin-top:26px}
+details.allteams summary{cursor:pointer;font-family:var(--f-display);font-weight:600;font-size:18px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px}
+
+@media (max-width:820px){
+  header.top{flex-wrap:wrap;gap:10px;padding-block:8px}
+  .mark{font-size:19px}
+  .tools{margin-left:auto}
+  .tool{width:36px;padding:0}
+  .tool span{display:none}
+  #searchbtn{display:inline-flex}
+  .search{display:none;order:5;flex-basis:100%;max-width:none;margin:0}
+  header.top.searching .search{display:block}
+  .app{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+  nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:25;display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:var(--panel);border-top:1px solid var(--line);
+    padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+  nav.tabs button{display:grid;justify-items:center;gap:2px;border:0;background:none;border-radius:0;padding:4px 0;font-size:11px;color:var(--muted)}
+  nav.tabs button svg{display:block;width:22px;height:22px}
+  nav.tabs button[aria-current="true"]{color:var(--lit);background:none;border:0}
+  nav.tabs button.from{text-decoration:none;color:var(--ink)}
+  body.lay-map .mapwrap{height:52vh}
+  .mapbar input[type=range],#ly-pins{display:none}
+  .bigyear{font-size:26px}
+  body.lay-page .mapfab{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+}
+@media (max-width:820px){
+  .maplayers{top:auto;bottom:10px;right:10px}
+  .maplayers .chip{font-size:12px;padding:2px 9px}
+  .maphint{display:none}
+}

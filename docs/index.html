@@ -10,17 +10,20 @@
 </head>
 <body>
 <div class="app">
-<header class="top">
-  <div class="mark" id="home" role="link" tabindex="0">Living Atlas <span>of</span> Baseball</div>
+<header class="top" id="top">
+  <div class="mark" id="home" role="link" tabindex="0">Living Atlas <i>of</i> Baseball</div>
   <nav class="tabs" aria-label="Homes">
-    <button id="home-map">Map</button>
-    <button id="home-teams">Teams</button>
-    <button id="home-players">Players</button>
-    <button id="home-games">Games</button>
+    <button id="home-map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg><span>Map</span></button>
+    <button id="home-teams"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6l-8-3z"/></svg><span>Teams</span></button>
+    <button id="home-players"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Players</span></button>
+    <button id="home-games"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 21 12 12 21 3 12z"/></svg><span>Games</span></button>
   </nav>
-  <button class="spinbtn" id="spin" title="Take me somewhere I haven't been">Spin</button>
-  <button class="pinbtn" id="addpin" title="Add a pin, or see your pins">+ Pin</button>
   <div class="search"><input id="q" type="search" placeholder="Find a player, team, place, game…" autocomplete="off" aria-label="Search the atlas"><div class="results" id="results" hidden></div></div>
+  <div class="tools">
+    <button class="tool" id="searchbtn" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-5-5"/></svg></button>
+    <button class="tool" id="spin" title="Take me somewhere I haven't been"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h5v5M20 20h-5v-5M5 9a8 8 0 0 1 14-2M19 15a8 8 0 0 1-14 2"/></svg><span>Spin</span></button>
+    <button class="tool" id="addpin" title="Add a pin, or see your pins"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Pin</span></button>
+  </div>
 </header>
 <main class="split">
   <div class="mapwrap">
@@ -31,10 +34,12 @@
     <div class="maphint" id="maphint"></div>
     <div class="legend"><span><i style="background:var(--ghost)"></i>not yet explored</span><span><i style="background:var(--lit)"></i>lit up</span></div>
     <div class="mapbar" id="mapbar">
-      <button class="iconbtn" id="play" aria-label="Play through the years" title="Play through the years">▶</button>
+      <button class="iconbtn" id="yprev" aria-label="Previous year">‹</button>
       <div class="bigyear" id="bigyear">1897</div>
+      <button class="iconbtn" id="ynext" aria-label="Next year">›</button>
+      <button class="iconbtn play" id="play" aria-label="Play through the years" title="Play through the years">▶</button>
       <input type="range" id="yr" min="1845" max="2025" value="1897" aria-label="Year">
-      <div class="layers"><button class="chip" id="ly-pins" aria-pressed="true">Your pins</button></div>
+      <button class="chip" id="ly-pins" aria-pressed="true">Your pins</button>
     </div>
   </div>
   <aside class="panel" id="panel" aria-live="polite"><p class="note">Loading the atlas…</p></aside>

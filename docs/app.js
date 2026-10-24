@@ -797,14 +797,11 @@ function wire() {
     try { const j = JSON.parse(await f.text()); loadStore(j); persist(); buildPlaces(); render(true); setTimeout(() => { const m = $('#savemsg'); if (m) m.textContent = 'Imported.'; }, 0); }
     catch (err) { $('#savemsg').textContent = 'That file isn’t an atlas progress export.'; } });
 }
-function spin() {
-  const pool = [
-    ...Object.keys(D.players).flatMap(k => ['p_' + k, 'p_' + k]),
-    ...Object.entries(D.teams).filter(([, t]) => t.pen || t.ws || (t.ro && t.ro.length >= 3)).map(([k]) => 't_' + k),
-    ...Object.keys(D.games).filter(k => D.games[k].gr).map(k => 'g_' + k),
-  ];
-  for (let i = 0; i < 300; i++) { const k = pool[Math.floor(Math.random() * pool.length)]; if (!litN(k)) { go(k); return; } }
-  go(pool[Math.floor(Math.random() * pool.length)]);
+function spin() {  // a random tracked page you haven't marked complete
+  const pool = [...trackKeys().all].filter(k => !isDone(k));
+  if (!pool.length) { setNote('Everything on your tracker is complete.'); return; }
+  const k = pool[Math.floor(Math.random() * pool.length)];
+  go(k.startsWith('l_') ? 'l_' + enc(k.slice(2)) : k);  // place links carry the key encoded
 }
 
 /* ================================================================ search */

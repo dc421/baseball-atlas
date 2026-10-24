@@ -421,6 +421,8 @@ function vTracker() {
   const all = [...K.all], allDone = done(all);
   return `${banner()}<div class="eyebrow">Your progress</div><h1 class="name">Tracker</h1>
    <p class="note">A page counts once you tick “Mark complete” on it. Everything starts incomplete.</p>
+   <div class="overall"><div class="big"><b>${allDone}</b> of ${all.length} pages complete <span class="pc">${pct(allDone, all.length)}%</span></div>${bar(allDone, all.length)}</div>
+   <h2>By page type</h2>
    <table class="track"><tr><th></th><th>Complete</th><th class="wide"></th></tr>${types.map(row).join('')}</table>
    <h2>Year by year <small>each season’s year page, best team, games and your top 5</small></h2>
    <div class="ygrid">${grid.join('')}</div>
@@ -431,9 +433,6 @@ function vTracker() {
    ${nP.length ? `<h3 class="sm">Players, by your list</h3><div class="list">${nP.map(nextRow).join('')}</div>` : ''}
    ${nT.length ? `<h3 class="sm">Team seasons, best first by your model</h3><div class="list">${nT.map(nextRow).join('')}</div>` : ''}
    ${nG.length ? `<h3 class="sm">Games, by your list</h3><div class="list">${nG.map(nextRow).join('')}</div>` : ''}
-   <h2>Overall</h2>
-   <div class="overall"><div class="big"><b>${allDone}</b> of ${all.length} pages complete <span class="pc">${pct(allDone, all.length)}%</span></div>${bar(allDone, all.length)}
-   <div class="sub">${types.map(([l, ks]) => `<span>${l}: <b>${done(ks)}</b>/${ks.length}</span>`).join('')}</div></div>
    ${saveBox()}`;
 }
 const KINDS = [['story', 'Story'], ['quote', 'Quote'], ['scouting', 'Scouting'], ['personal', 'Personal'], ['video', 'Video'], ['link', 'Link']];

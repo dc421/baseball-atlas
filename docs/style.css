@@ -348,7 +348,7 @@ table.track.lights3 .tbar{display:inline-block;width:calc(100% - 44px);vertical-
 .donebtn[aria-pressed="true"]{border-color:var(--lit);background:var(--lit-soft)}
 .donebtn[aria-pressed="true"] .box{background:var(--lit);border-color:var(--lit)}
 .donebtn[aria-pressed="true"] .box::after{content:"";width:8px;height:4px;border:solid var(--bg);border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg)}
-.overall{background:var(--raise);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.overall{margin-top:14px;background:var(--raise);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .overall .big{font-size:18px;margin-bottom:10px}
 .overall .big b{font-family:var(--f-display);font-size:30px;font-weight:800}
 .overall .tbar{height:14px;border-radius:7px}

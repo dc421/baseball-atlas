@@ -402,15 +402,19 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
                        top=[[r.name, r.key if isinstance(r.key, str) else None, round(r.war * k, 1)] for r in top.itertuples()])
     TR = pd.DataFrame([dict(tid=tid, y=teams[tid]['y'], lg=teams[tid]['lg'], v=o['v'], w=teams[tid]['w'], l=teams[tid]['l'],
                             rs=teams[tid]['rs'], ra=teams[tid]['ra']) for tid, o in tr.items()]).astype({'rs': float, 'ra': float})
-    # score, in wins above an average team per 162: 60% talent (WAR sum vs. a cubic curve of typical team WAR over
-    # time; no per-era spread scaling, like the player model's comparison curves), 25% Pythagorean record (exp 1.83),
-    # 15% actual record; then the model's 1800s discount on positives
+    # score, in wins above an average team per 162: 70% talent (WAR sum vs. a cubic curve of typical team WAR over
+    # time; no per-era spread scaling, like the player model's comparison curves), 20% Pythagorean record (exp 1.83),
+    # 10% actual record; then the model's 1800s discount on positives. Records are shrunk toward .500 for short
+    # seasons: x G/(G+70), relative to a 162-game season (so full seasons count at face value)
     x = (TR.y - 1950) / 50
     TR['tal'] = TR.v - np.polyval(np.polyfit(x, TR.v, 3), x)
     TR['wp'] = (TR.w / (TR.w + TR.l) - .5) * 162
     TR['py'] = ((TR.rs ** 1.83 / (TR.rs ** 1.83 + TR.ra ** 1.83)) - .5) * 162
     TR['py'] = TR.py.fillna(TR.wp)  # no runs recorded: lean on the record
-    TR['a'] = .60 * TR.tal + .25 * TR.py + .15 * TR.wp
+    gp = TR.w + TR.l
+    shrink = np.minimum(1, (gp / (gp + 70)) / (162 / (162 + 70)))
+    TR['py'], TR['wp'] = TR.py * shrink, TR.wp * shrink
+    TR['a'] = .70 * TR.tal + .20 * TR.py + .10 * TR.wp
     TR['a'] = np.where(TR.a > 0, TR.a / (1 + np.exp(-((TR.y - 1870) / 10 - .7))) ** 2, TR.a)
     TR['yr'] = TR.groupby('y').a.rank(ascending=False, method='min').astype(int)
     TR['ar'] = TR.a.rank(ascending=False, method='min').astype(int)

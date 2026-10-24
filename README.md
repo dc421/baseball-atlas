@@ -23,6 +23,7 @@ pip install -r requirements.txt
 python scripts/export_sheet.py ~/path/to/Baseball_Watch_List.numbers   # your list -> data/source/*.csv
 python scripts/build_data.py                                            # -> docs/data/atlas.json
 python scripts/fetch_photos.py                                          # Wikipedia photos -> docs/photos/
+python scripts/fetch_logos.py                                           # Wikipedia logos -> docs/logos/ (then rerun build_data.py)
 ```
 
 - **Your list** comes from the IN, Year-by-Year Top 5, Games, Parks R/L and Checklist tabs. Only the IN columns the site uses are exported.
@@ -44,7 +45,7 @@ Check-offs, grades, clippings, pins and "from" changes save in the browser you u
 
 ```
 docs/            the website (index.html, app.js, style.css, data/, photos/, logos/, vendor/)
-scripts/         export_sheet.py, build_data.py, fetch_photos.py
+scripts/         export_sheet.py, build_data.py, fetch_photos.py, fetch_logos.py
 data/source/     CSVs exported from your spreadsheet
 data/overrides/  hand fixes
 ```

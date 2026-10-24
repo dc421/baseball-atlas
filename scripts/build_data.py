@@ -297,7 +297,7 @@ for tid, ks in roster.items():
     teams[tid]['ro'] = sorted(set(ks), key=lambda k: players[k]['ovr'] or 999)
 
 # ---------------------------------------------------------------- logos manifest
-logos = sorted(p.name for p in (ROOT / 'docs' / 'logos').glob('*') if p.suffix.lower() in ('.png', '.svg', '.jpg', '.jpeg', '.webp'))
+logos = sorted(p.name for p in (ROOT / 'docs' / 'logos').glob('*') if p.suffix.lower() in ('.png', '.svg', '.jpg', '.jpeg', '.webp', '.none'))
 photos_manifest = ROOT / 'docs' / 'data' / 'photos.json'
 
 DATA = dict(players=players, teams=teams, franch=franch, parks=parks, years={str(k): v for k, v in years.items()},

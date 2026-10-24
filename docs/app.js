@@ -187,7 +187,7 @@ function logoFor(t) {
     const score = rank * 10000 + yr;
     if (score > bestScore) { bestScore = score; best = f; }
   }
-  return best;
+  return best && !best.endsWith('.none') ? best : null;
 }
 function teamColors(t) { const c = D.franch[t.fr]?.col; return c || ['#53635b', '#eef1ea']; }
 

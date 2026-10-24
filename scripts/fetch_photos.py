@@ -10,7 +10,7 @@ Wrong person or a bad crop? Add a row to data/overrides/photo_titles.csv
 or title = NONE to skip that player), then rerun with --only <key>.
 Check data/photo_review.csv after a run to spot mismatches quickly.
 """
-import argparse, csv, html, json, re, sys, time
+import argparse, csv, html, json, re, sys, time, unicodedata
 from pathlib import Path
 import requests
 
@@ -21,6 +21,7 @@ PHOTOS = ROOT / 'docs' / 'photos'
 OVERRIDES = ROOT / 'data' / 'overrides' / 'photo_titles.csv'
 REVIEW = ROOT / 'data' / 'photo_review.csv'
 API = 'https://en.wikipedia.org/w/api.php'
+SPARQL = 'https://query.wikidata.org/sparql'
 S = requests.Session()
 S.headers['User-Agent'] = 'LivingAtlasOfBaseball/1.0 (personal hobby project; https://github.com/dc421/baseball-atlas)'
 
@@ -36,14 +37,33 @@ def api(**params):
     raise RuntimeError('Wikipedia kept saying slow down; try again later')
 
 
+def wikidata_titles(br_ids):
+    """Map Baseball-Reference ids to English Wikipedia titles via Wikidata (P4409)."""
+    out = {}
+    ids = sorted(set(br_ids))
+    for i in range(0, len(ids), 200):
+        values = ' '.join(f'"{b}"' for b in ids[i:i + 200])
+        q = f'''SELECT ?id ?title WHERE {{ VALUES ?id {{ {values} }} ?item wdt:P4409 ?id .
+            ?art schema:about ?item; schema:isPartOf <https://en.wikipedia.org/>; schema:name ?title . }}'''
+        r = S.get(SPARQL, params={'query': q, 'format': 'json'}, timeout=60)
+        r.raise_for_status()
+        for b in r.json()['results']['bindings']:
+            out[b['id']['value']] = b['title']['value']
+    return out
+
+
+def fold(s):
+    return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode().lower()
+
+
 def find_title(p):
     name = f"{p['f']} {p['l']}"
     res = api(action='query', list='search', srsearch=f'{name} baseball', srlimit=5)
-    last = p['l'].split()[-1].lower()
+    last = fold(p['l'].split()[-1])
     for hit in res['query']['search']:
-        t = hit['title']
-        if last in t.lower() and 'list of' not in t.lower() and 'season' not in t.lower():
-            return t
+        t = fold(hit['title'])
+        if last in t and not any(w in t for w in ('list of', 'season', 'league', 'award', 'stadium', 'field')):
+            return hit['title']
     return None
 
 
@@ -78,22 +98,22 @@ def main():
     PHOTOS.mkdir(parents=True, exist_ok=True)
     todo = [k for k in players if (args.only and k in args.only) or (not args.only and (args.refresh or k not in manifest))]
     print(f'{len(todo)} players to look up')
-    review = []
+    wd = wikidata_titles(players[k]['br'] for k in todo if players[k].get('br'))
+    print(f'{len(wd)} matched by Baseball-Reference id on Wikidata')
     for i, k in enumerate(todo, 1):
         p = players[k]; name = f"{p['f']} {p['l']}"
         try:
-            title = overrides.get(k) or find_title(p)
-            if not title or title == 'NONE':
-                print(f'[{i}/{len(todo)}] {name}: no article found'); continue
-            ph = photo_for(title)
+            title = overrides.get(k) or wd.get(p.get('br')) or find_title(p)
+            ph = photo_for(title) if title and title != 'NONE' else None
             if not ph:
-                print(f'[{i}/{len(todo)}] {name}: article "{title}" has no lead photo'); continue
+                old = manifest.pop(k, None)  # drop any earlier (wrong) photo
+                if old: (PHOTOS / old['file']).unlink(missing_ok=True)
+                print(f'[{i}/{len(todo)}] {name}: ' + (f'article "{title}" has no lead photo' if title and title != 'NONE' else 'no article found')); continue
             ext = Path(ph['thumb'].split('?')[0]).suffix.lower() or '.jpg'
             out = PHOTOS / f'{k}{ext}'
             img = S.get(ph['thumb'], timeout=60); img.raise_for_status()
             out.write_bytes(img.content)
             manifest[k] = dict(file=out.name, page=ph['page'], source=ph['file_name'], credit=ph['credit'] or 'Wikimedia Commons', license=ph['license'])
-            review.append([k, name, ph['page'], ph['file_name'], ph['license']])
             print(f'[{i}/{len(todo)}] {name}: {ph["page"]} ({ph["license"] or "license unknown"})')
         except Exception as e:  # keep going; one bad lookup shouldn't stop the run
             print(f'[{i}/{len(todo)}] {name}: error {e}', file=sys.stderr)
@@ -102,7 +122,7 @@ def main():
             MANIFEST.write_text(json.dumps(manifest, indent=1, ensure_ascii=False))
     MANIFEST.write_text(json.dumps(manifest, indent=1, ensure_ascii=False))
     with REVIEW.open('w', newline='') as f:
-        w = csv.writer(f); w.writerow(['key', 'player', 'wikipedia_article', 'file', 'license']); w.writerows(review)
+        w = csv.writer(f); w.writerow(['key', 'player', 'wikipedia_article', 'file', 'license']); w.writerows([k, f"{players[k]['f']} {players[k]['l']}", m['page'], m['source'], m['license']] for k, m in manifest.items() if k in players)
     print(f'done: {len(manifest)} players have photos. Review matches in {REVIEW.relative_to(ROOT)}')
 
 

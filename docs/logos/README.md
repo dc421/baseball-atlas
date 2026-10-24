@@ -15,3 +15,8 @@ Any team without a logo shows a round badge in its colors with its initials.
 Codes: the franchise code (`BOS`, `NYY`, `ATL`…) or the season's Baseball-Reference/Lahman team code (`BSN`, `NY1`, `BRO`…).
 A season-code file beats a franchise-code file; among dated files, the latest year not after the season wins.
 The codes for any team are shown on its badge on the map.
+
+A `.none` file (e.g. `LAD_1914.none`) means "no logo from this year on": those seasons show the colored badge instead of the previous logo.
+
+`python scripts/fetch_logos.py` fills this folder from Wikipedia, one file per team name. Fix wrong picks in
+`data/overrides/logo_titles.csv` (see the script's docstring) and check `data/logo_review.csv`.

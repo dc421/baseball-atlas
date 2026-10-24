@@ -1,1 +1,2284 @@
-{}
+{
+ "bondsba01": {
+  "file": "bondsba01.jpg",
+  "page": "Barry Bonds",
+  "source": "BarryBonds1993.jpg",
+  "credit": "Jim Accordino at https://www.flickr.com/photos/jimmyack205/",
+  "license": "CC BY 2.0"
+ },
+ "ruthba01": {
+  "file": "ruthba01.jpg",
+  "page": "Babe Ruth",
+  "source": "Babe_Ruth2.jpg",
+  "credit": "Irwin, La Broad, & Pudlin.",
+  "license": "Public domain"
+ },
+ "martipe02": {
+  "file": "martipe02.jpg",
+  "page": "Pedro Martínez",
+  "source": "Pedro's_return.jpg",
+  "credit": "Andrew Malone",
+  "license": "CC BY 2.0"
+ },
+ "xyamadte": {
+  "file": "xyamadte.jpg",
+  "page": "Tetsuto Yamada",
+  "source": "Tetsuto_Yamada_2016-04-16_(28291493436).jpg",
+  "credit": "m-louis .® from Osaka, Japan",
+  "license": "CC BY-SA 2.0"
+ },
+ "cobbty01": {
+  "file": "cobbty01.png",
+  "page": "Ty Cobb",
+  "source": "1913_Ty_Cobb_portrait_photo.png",
+  "credit": "International Film Service",
+  "license": "Public domain"
+ },
+ "willite01": {
+  "file": "willite01.jpg",
+  "page": "Ted Williams",
+  "source": "Ted_Williams_(cropped).jpg",
+  "credit": "Unknown author",
+  "license": "Public domain"
+ },
+ "gibsojo99": {
+  "file": "gibsojo99.jpg",
+  "page": "Josh Gibson",
+  "source": "Josh_Gibson_1931.jpg",
+  "credit": "Harrison Studio",
+  "license": "Public domain"
+ },
+ "mayswi01": {
+  "file": "mayswi01.jpg",
+  "page": "Willie Mays",
+  "source": "Willie_Mays_(1955)_(cropped).jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "johnsra05": {
+  "file": "johnsra05.jpg",
+  "page": "Randy Johnson",
+  "source": "Randy_Johnson_2016.jpg",
+  "credit": "Arturo Pardavila III",
+  "license": "CC BY 2.0"
+ },
+ "hornsro01": {
+  "file": "hornsro01.jpg",
+  "page": "Rogers Hornsby",
+  "source": "Rogers_Hornsby.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "mantlmi01": {
+  "file": "mantlmi01.jpg",
+  "page": "Mickey Mantle",
+  "source": "Mickey_Mantle_1957_(cropped).jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "johnswa01": {
+  "file": "johnswa01.jpg",
+  "page": "Walter Johnson",
+  "source": "Walter_Johnson_1924.jpg",
+  "credit": "Jackson, William Henry, 1843-1942, photographer",
+  "license": "Public domain"
+ },
+ "paigesa01": {
+  "file": "paigesa01.jpg",
+  "page": "Satchel Paige",
+  "source": "Satchel_Paige_seated_next_to_bleachers_(1).jpg",
+  "credit": "Los Angeles Times",
+  "license": "CC BY 4.0"
+ },
+ "wagneho01": {
+  "file": "wagneho01.jpg",
+  "page": "Honus Wagner",
+  "source": "Honus_Wagner_(crop).JPG",
+  "credit": "Chicago Daily News",
+  "license": "Public domain"
+ },
+ "gibsobo01": {
+  "file": "gibsobo01.png",
+  "page": "Bob Gibson",
+  "source": "Bob_Gibson_1962.png",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "morgajo02": {
+  "file": "morgajo02.jpg",
+  "page": "Joe Morgan",
+  "source": "Joe_Morgan_Reds_1972.jpg",
+  "credit": "Cincinnati Reds",
+  "license": "Public domain"
+ },
+ "ohtansh01": {
+  "file": "ohtansh01.jpg",
+  "page": "Shohei Ohtani",
+  "source": "Dodgers_at_Nationals_(53677192000)_(cropped).jpg",
+  "credit": "All-Pro Reels from District of Columbia, USA",
+  "license": "CC BY-SA 2.0"
+ },
+ "collied01": {
+  "file": "collied01.jpg",
+  "page": "Eddie Collins",
+  "source": "Eddie_Collins_1911.jpg",
+  "credit": "Bain News Service, publisher.",
+  "license": "Public domain"
+ },
+ "judgeaa01": {
+  "file": "judgeaa01.jpg",
+  "page": "Aaron Judge",
+  "source": "Aaron_Judge_posing_with_Donald_Trump_2025-09-11_(cropped).jpg",
+  "credit": "The White House",
+  "license": "Public domain"
+ },
+ "speaktr01": {
+  "file": "speaktr01.jpg",
+  "page": "Tris Speaker",
+  "source": "Tris_Speaker.jpg",
+  "credit": "Bain News Service",
+  "license": "Public domain"
+ },
+ "henderi01": {
+  "file": "henderi01.jpg",
+  "page": "Rickey Henderson",
+  "source": "RickeyHenderson1983.jpg",
+  "credit": "Fleer",
+  "license": "PD-US"
+ },
+ "vanceda01": {
+  "file": "vanceda01.jpeg",
+  "page": "Dazzy Vance",
+  "source": "Dazzy_Vance_1922.jpeg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "clemero02": {
+  "file": "clemero02.jpg",
+  "page": "Roger Clemens",
+  "source": "Roger_Clemens_2025.jpg",
+  "credit": "YES Network",
+  "license": "CC BY 4.0"
+ },
+ "dimagjo01": {
+  "file": "dimagjo01.jpg",
+  "page": "Joe DiMaggio",
+  "source": "Joe_DiMaggio.jpg",
+  "credit": "Tom Sande",
+  "license": "Public domain"
+ },
+ "goodedw01": {
+  "file": "goodedw01.jpg",
+  "page": "Dwight Gooden",
+  "source": "Dwight_Gooden_1986_by_Barry_Colla.jpg",
+  "credit": "Barry Colla Photography",
+  "license": "Public domain"
+ },
+ "musiast01": {
+  "file": "musiast01.jpg",
+  "page": "Stan Musial",
+  "source": "Stan_Musial_1953.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "koufasa01": {
+  "file": "koufasa01.jpg",
+  "page": "Sandy Koufax",
+  "source": "Sandy_Koufax.jpg",
+  "credit": "publicity still",
+  "license": "Public domain"
+ },
+ "schmimi01": {
+  "file": "schmimi01.jpg",
+  "page": "Mike Schmidt",
+  "source": "Mike_Schmidt_Press_Box.jpg",
+  "credit": "The Press Box",
+  "license": "Public domain"
+ },
+ "troutmi01": {
+  "file": "troutmi01.jpg",
+  "page": "Mike Trout",
+  "source": "Mike_Trout_(52252097714)_(cropped).jpg",
+  "credit": "Mogami Kariya",
+  "license": "CC BY-SA 2.0"
+ },
+ "lajoina01": {
+  "file": "lajoina01.jpg",
+  "page": "Nap Lajoie",
+  "source": "Nap_Lajoie_1913.jpg",
+  "credit": "Harris & Ewing, photographer.",
+  "license": "Public domain"
+ },
+ "seaveto01": {
+  "file": "seaveto01.jpg",
+  "page": "Tom Seaver",
+  "source": "Tom_Seaver_Mets.jpg",
+  "credit": "New York Mets",
+  "license": "Public domain"
+ },
+ "wadderu01": {
+  "file": "wadderu01.jpg",
+  "page": "Rube Waddell",
+  "source": "Waddell.jpg",
+  "credit": "uploaded by KV5 (Talk • Phils)",
+  "license": "Public domain"
+ },
+ "mathech01": {
+  "file": "mathech01.jpeg",
+  "page": "Christy Mathewson",
+  "source": "Christy-Mathewson-1910.jpeg",
+  "credit": "Paul Thompson, photographer.",
+  "license": "Public domain"
+ },
+ "aaronha01": {
+  "file": "aaronha01.jpg",
+  "page": "Hank Aaron",
+  "source": "Hank_Aaron_1974.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "gehrilo01": {
+  "file": "gehrilo01.jpg",
+  "page": "Lou Gehrig",
+  "source": "Lou_Gehrig_in_1923_(cropped).jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "newhoha01": {
+  "file": "newhoha01.jpg",
+  "page": "Hal Newhouser",
+  "source": "Hal_Newhouser_1953.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "kershcl01": {
+  "file": "kershcl01.jpg",
+  "page": "Clayton Kershaw",
+  "source": "Clayton_Kershaw_on_July_23,_2015_(2).jpg",
+  "credit": "Arturo Pardavila III on Flickr",
+  "license": "CC BY 2.0"
+ },
+ "foxxji01": {
+  "file": "foxxji01.jpg",
+  "page": "Jimmie Foxx",
+  "source": "Jimmie_Foxx_(Boston_Red_Sox,_1936-37).jpg",
+  "credit": "Charles M. Conlon",
+  "license": "Public domain"
+ },
+ "maddugr01": {
+  "file": "maddugr01.jpg",
+  "page": "Greg Maddux",
+  "source": "Maddux_53.jpg",
+  "credit": "User ScottRAnselmo on en.wikipedia ScottRAnselmo (talk)",
+  "license": "CC BY-SA 3.0"
+ },
+ "schilcu01": {
+  "file": "schilcu01.jpg",
+  "page": "Curt Schilling",
+  "source": "SchillingNew.JPG",
+  "credit": "User Googie man on en.wikipedia",
+  "license": "CC BY-SA 3.0"
+ },
+ "grovele01": {
+  "file": "grovele01.jpeg",
+  "page": "Lefty Grove",
+  "source": "Lefty_Grove_1939.jpeg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "guidrro01": {
+  "file": "guidrro01.jpg",
+  "page": "Ron Guidry",
+  "source": "Ron_Guidry_-_New_York_Yankees_-_1981.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "robinja02": {
+  "file": "robinja02.jpg",
+  "page": "Jackie Robinson",
+  "source": "Jackie_Robinson,_NPG_97_135.jpg",
+  "credit": "Harry Warnecke / Frank Livia / Robert F. Cranston / William Klein",
+  "license": "CC0"
+ },
+ "griffke02": {
+  "file": "griffke02.jpg",
+  "page": "Ken Griffey Jr.",
+  "source": "Ken_Griffey,_Jr._June_2009_(cropped).jpg",
+  "credit": "Keith Allison",
+  "license": "CC BY-SA 2.0"
+ },
+ "pujolal01": {
+  "file": "pujolal01.jpg",
+  "page": "Albert Pujols",
+  "source": "Albert_Pujols_(MLB_All-Star_Game_July_11,_2006).jpg",
+  "credit": "Rafael Amado Deras",
+  "license": "CC BY 2.0"
+ },
+ "degroja01": {
+  "file": "degroja01.jpg",
+  "page": "Jacob deGrom",
+  "source": "Jacob_deGrom_pitches_in_the_2nd_inning_from_Nationals_vs._Mets_at_Nationals_Park,_September_26th,_2020_(All-Pro_Reels_Photography)_(50389894478)_(cropped).jpg",
+  "credit": "All-Pro Reels from District of Columbia, USA",
+  "license": "CC BY-SA 2.0"
+ },
+ "blylebe01": {
+  "file": "blylebe01.jpg",
+  "page": "Bert Blyleven",
+  "source": "Bert_Blyleven_1987.jpg",
+  "credit": "Park Press Inc.",
+  "license": "Public domain"
+ },
+ "hamilbi01": {
+  "file": "hamilbi01.jpg",
+  "page": "Billy Hamilton (baseball, born 1866)",
+  "source": "Billy_Hamilton_Baseball_Card.jpg",
+  "credit": "Goodwin & Companybaseball card",
+  "license": "Public domain"
+ },
+ "charlos99": {
+  "file": "charlos99.jpg",
+  "page": "Oscar Charleston",
+  "source": "Oscar_Charleston_Almendares.jpg",
+  "credit": "Almendares baseball club (Cuba)",
+  "license": "Public domain"
+ },
+ "matheed01": {
+  "file": "matheed01.jpg",
+  "page": "Eddie Mathews",
+  "source": "Edwin_Lee_Mathews_head_shot,_circa_1963.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "jacksjo01": {
+  "file": "jacksjo01.jpeg",
+  "page": "Shoeless Joe Jackson",
+  "source": "Shoeless_Joe_Jackson_by_Conlon,_1913.jpeg",
+  "credit": "Charles M. Conlon",
+  "license": "Public domain"
+ },
+ "brettge01": {
+  "file": "brettge01.jpg",
+  "page": "George Brett",
+  "source": "George_Brett_by_Gage_Skidmore_2.jpg",
+  "credit": "Gage Skidmore",
+  "license": "CC BY-SA 3.0"
+ },
+ "fellebo01": {
+  "file": "fellebo01.jpg",
+  "page": "Bob Feller",
+  "source": "Bob_Feller_1953.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "dihigma99": {
+  "file": "dihigma99.jpg",
+  "page": "Martín Dihigo",
+  "source": "Martin_Dihigo.jpg",
+  "credit": "Fotos",
+  "license": "Public domain"
+ },
+ "rodrial01": {
+  "file": "rodrial01.jpg",
+  "page": "Alex Rodriguez",
+  "source": "P20260305MR-0276_President_Donald_J._Trump_hosts_MLS_Champions_Inter_Miami_CF_at_the_White_House_(cropped)_(cropped).jpg",
+  "credit": "The White House",
+  "license": "Public domain"
+ },
+ "jenkife01": {
+  "file": "jenkife01.jpg",
+  "page": "Ferguson Jenkins",
+  "source": "Fergie_Jenkins_1973.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "sislege01": {
+  "file": "sislege01.jpg",
+  "page": "George Sisler",
+  "source": "Sisler,_St._Louis,_1924_LOC_npcc.11451.jpg",
+  "credit": "National Photo Company Collection",
+  "license": "Public domain"
+ },
+ "mcgrajo01": {
+  "file": "mcgrajo01.jpeg",
+  "page": "John McGraw",
+  "source": "John-McGraw-1910_(retouched).jpeg",
+  "credit": "File:John-McGraw-1910.jpeg: Paul Thompson, photographer. derivative work: Pbrks",
+  "license": "Public domain"
+ },
+ "carltst01": {
+  "file": "carltst01.jpg",
+  "page": "Steve Carlton",
+  "source": "Steve_Carlton_-_Philadelphia_Phillies_-_1983.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "alexape01": {
+  "file": "alexape01.jpg",
+  "page": "Grover Cleveland Alexander",
+  "source": "Grover_Cleveland_Alexander_by_Conlon,_1915-crop.jpg",
+  "credit": "Charles M. Conlon",
+  "license": "Public domain"
+ },
+ "delahed01": {
+  "file": "delahed01.jpg",
+  "page": "Ed Delahanty",
+  "source": "Ed_Delahanty.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "youngcy01": {
+  "file": "youngcy01.jpg",
+  "page": "Cy Young",
+  "source": "Cy_Young_by_Conlon,_1911-crop.jpg",
+  "credit": "Charles M. Conlon",
+  "license": "Public domain"
+ },
+ "torricr99": {
+  "file": "torricr99.jpg",
+  "page": "Cristóbal Torriente",
+  "source": "Cristobal_Torriente.jpg",
+  "credit": "Wikimedia Commons",
+  "license": "PD-US"
+ },
+ "bettsmo01": {
+  "file": "bettsmo01.jpg",
+  "page": "Mookie Betts",
+  "source": "Dodgers_at_Nationals_(53676957188)_(cropped).jpg",
+  "credit": "All-Pro Reels from District of Columbia, USA",
+  "license": "CC BY-SA 2.0"
+ },
+ "yastrca01": {
+  "file": "yastrca01.jpg",
+  "page": "Carl Yastrzemski",
+  "source": "Carl_Yastrzemski_1966.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "piazzmi01": {
+  "file": "piazzmi01.jpg",
+  "page": "Mike Piazza",
+  "source": "Mike_Piazza_HOF_Press_Conference.jpg",
+  "credit": "Arturo Pardavila III from Hoboken, NJ, USA",
+  "license": "CC BY 2.0"
+ },
+ "clemero01": {
+  "file": "clemero01.jpg",
+  "page": "Roberto Clemente",
+  "source": "Roberto_Clemente.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "benchjo01": {
+  "file": "benchjo01.jpg",
+  "page": "Johnny Bench",
+  "source": "Bench_Johnny.jpg",
+  "credit": "Rafael Amado Deras",
+  "license": "CC BY 2.0"
+ },
+ "hahnno01": {
+  "file": "hahnno01.jpg",
+  "page": "Noodles Hahn",
+  "source": "(46)_Noodles_Hahn.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "tananfr01": {
+  "file": "tananfr01.jpg",
+  "page": "Frank Tanana",
+  "source": "Frank_Tanana.jpg",
+  "credit": "California Angels",
+  "license": "Public domain"
+ },
+ "cartega01": {
+  "file": "cartega01.jpg",
+  "page": "Gary Carter",
+  "source": "Gary_Carter_Mets.jpg",
+  "credit": "Scott Cunningham",
+  "license": "Public domain"
+ },
+ "vaughar01": {
+  "file": "vaughar01.jpg",
+  "page": "Arky Vaughan",
+  "source": "ArkyVaughanGoudeycard.jpg",
+  "credit": "Goudey",
+  "license": "Public domain"
+ },
+ "camparo01": {
+  "file": "camparo01.jpg",
+  "page": "Roy Campanella",
+  "source": "Roy_Campanella_1956.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "brownke01": {
+  "file": "brownke01.jpg",
+  "page": "Kevin Brown (right-handed pitcher)",
+  "source": "Kevin_Brown_June_17,_2003_(4032681)_(cropped).jpg",
+  "credit": "Ryosuke Yagi",
+  "license": "CC BY 2.0"
+ },
+ "jennihu01": {
+  "file": "jennihu01.jpeg",
+  "page": "Hughie Jennings",
+  "source": "Hughie_Jennings_(2).jpeg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "scorehe01": {
+  "file": "scorehe01.jpg",
+  "page": "Herb Score",
+  "source": "Herb_Score_1955.JPG",
+  "credit": "Cleveland Indians / MLB",
+  "license": "Public domain"
+ },
+ "walshed01": {
+  "file": "walshed01.jpg",
+  "page": "Ed Walsh",
+  "source": "Ed_Walsh_portrait_1911.jpg",
+  "credit": "Paul Thompson",
+  "license": "Public domain"
+ },
+ "bankser01": {
+  "file": "bankser01.jpg",
+  "page": "Ernie Banks",
+  "source": "Ernie_Banks_1969.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "scherma01": {
+  "file": "scherma01.jpg",
+  "page": "Max Scherzer",
+  "source": "Max_Scherzer_pitching,_March_30,_2023_(1)_(cropped).jpg",
+  "credit": "D. Benjamin Miller",
+  "license": "CC0"
+ },
+ "roganbu99": {
+  "file": "roganbu99.jpg",
+  "page": "Bullet Rogan",
+  "source": "Bullet_Joe_Rogan_1924.jpg",
+  "credit": "1924_Negro_League_World_Series.jpg: J.E. Mille[r], K.C. derivative work: Delaywaves talk • contribs",
+  "license": "Public domain"
+ },
+ "bakerfr01": {
+  "file": "bakerfr01.jpg",
+  "page": "Home Run Baker",
+  "source": "Frank_Baker,_N.Y.,_1921_-_LOC_npcc.04929_(cropped).jpg",
+  "credit": "National Photo Company Collection",
+  "license": "Public domain"
+ },
+ "bagweje01": {
+  "file": "bagweje01.jpg",
+  "page": "Jeff Bagwell",
+  "source": "Jeff_Bagwell_2009_(cropped).jpg",
+  "credit": "Mojo",
+  "license": "CC BY 2.0"
+ },
+ "boggswa01": {
+  "file": "boggswa01.jpg",
+  "page": "Wade Boggs",
+  "source": "Wade_Boggs_(9386153908)_(cropped).jpg",
+  "credit": "Chris Evans from same, United States",
+  "license": "CC BY 2.0"
+ },
+ "robinfr02": {
+  "file": "robinfr02.jpg",
+  "page": "Frank Robinson",
+  "source": "Frank_Robinson_1961.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "santajo01": {
+  "file": "santajo01.jpg",
+  "page": "Johan Santana",
+  "source": "Johan_Santana_on_May_5,_2012.jpg",
+  "credit": "slgckgc on Flickr (Original version) UCinternational (Crop)",
+  "license": "CC BY 2.0"
+ },
+ "blackew01": {
+  "file": "blackew01.jpeg",
+  "page": "Ewell Blackwell",
+  "source": "Ewell_Blackwell.jpeg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "roberro01": {
+  "file": "roberro01.jpg",
+  "page": "Robin Roberts (baseball)",
+  "source": "Robin_Roberts_1961.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "connoro01": {
+  "file": "connoro01.jpg",
+  "page": "Roger Connor",
+  "source": "Connor_Roger_751.86_PD.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "maricju01": {
+  "file": "maricju01.png",
+  "page": "Juan Marichal",
+  "source": "Juan_Marichal_1962.png",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "boudrlo01": {
+  "file": "boudrlo01.jpg",
+  "page": "Lou Boudreau",
+  "source": "LOU_BOUDREAU.jpg",
+  "credit": "RF",
+  "license": "Public domain"
+ },
+ "salech01": {
+  "file": "salech01.jpg",
+  "page": "Chris Sale",
+  "source": "Chris_Sale_in_2017_(37185846582)_(cropped).jpg",
+  "credit": "Keith Allison from Hanover, MD, USA",
+  "license": "CC BY-SA 2.0"
+ },
+ "lloydpo99": {
+  "file": "lloydpo99.jpg",
+  "page": "John Henry Lloyd",
+  "source": "Pop_Lloyd_Habana.jpg",
+  "credit": "Aguilitas Cigars (Cuba)",
+  "license": "Public domain"
+ },
+ "broutda01": {
+  "file": "broutda01.jpg",
+  "page": "Dan Brouthers",
+  "source": "Danbrouthers.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "chancfr01": {
+  "file": "chancfr01.jpg",
+  "page": "Frank Chance",
+  "source": "Frank_Chance.jpg",
+  "credit": "Bain News Service",
+  "license": "Public domain"
+ },
+ "allendi01": {
+  "file": "allendi01.jpg",
+  "page": "Dick Allen",
+  "source": "Dick_Allen.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "woodjo02": {
+  "file": "woodjo02.jpg",
+  "page": "Smoky Joe Wood",
+  "source": "Joe_Wood_1915.jpg",
+  "credit": "Harris & Ewing, photographer.",
+  "license": "Public domain"
+ },
+ "pascuca02": {
+  "file": "pascuca02.jpg",
+  "page": "Camilo Pascual",
+  "source": "1962_Baseball_Guide.jpg",
+  "credit": "J. G. Taylor Spink",
+  "license": "Public domain"
+ },
+ "poseybu01": {
+  "file": "poseybu01.jpg",
+  "page": "Buster Posey",
+  "source": "Buster_Posey_in_2018_(cropped).jpg",
+  "credit": "Ian D'Andrea",
+  "license": "CC BY-SA 2.0"
+ },
+ "mizejo01": {
+  "file": "mizejo01.png",
+  "page": "Johnny Mize",
+  "source": "Johnny_Mize.png",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "ottme01": {
+  "file": "ottme01.jpg",
+  "page": "Mel Ott",
+  "source": "Mel_Ott.jpg",
+  "credit": "Unknown author",
+  "license": "Public domain"
+ },
+ "garcino01": {
+  "file": "garcino01.jpg",
+  "page": "Nomar Garciaparra",
+  "source": "Nomar_Garciaparra_IMG_9542_(4308826992).jpg",
+  "credit": "Rob Poetsch",
+  "license": "CC BY 2.0"
+ },
+ "rolensc01": {
+  "file": "rolensc01.jpg",
+  "page": "Scott Rolen",
+  "source": "Scott_Rolen_on_June_25,_2011.jpg",
+  "credit": "Keith Allison on Flickr",
+  "license": "CC BY-SA 2.0"
+ },
+ "friscfr01": {
+  "file": "friscfr01.png",
+  "page": "Frankie Frisch",
+  "source": "Frisch_Fordham_photo_(cropped).png",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "simmoal01": {
+  "file": "simmoal01.jpg",
+  "page": "Al Simmons",
+  "source": "Simmons,_Phila.,_1924_LOC_npcc.10883_(cropped).jpg",
+  "credit": "National Photo Company Collection",
+  "license": "Public domain"
+ },
+ "sotoju01": {
+  "file": "sotoju01.jpg",
+  "page": "Juan Soto",
+  "source": "Mets_Spring_Training,_March_23,_2025_(Leo_Altes)_-_00010_(cropped).jpg",
+  "credit": "Leo Altes",
+  "license": "CC BY-SA 4.0"
+ },
+ "keelewi01": {
+  "file": "keelewi01.jpg",
+  "page": "Willie Keeler",
+  "source": "Willie_Keeler.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "greenha01": {
+  "file": "greenha01.jpg",
+  "page": "Hank Greenberg",
+  "source": "Hank_Greenberg_1946.jpg",
+  "credit": "Frank Lyerla",
+  "license": "Public domain"
+ },
+ "bondsbo01": {
+  "file": "bondsbo01.jpg",
+  "page": "Bobby Bonds",
+  "source": "Bobby_Bonds_in_1975.jpg",
+  "credit": "MLB Photos",
+  "license": "Public domain"
+ },
+ "robinbr01": {
+  "file": "robinbr01.jpg",
+  "page": "Brooks Robinson",
+  "source": "Brooks_Robinson_1966_(2).jpg",
+  "credit": "Sports Service",
+  "license": "Public domain"
+ },
+ "reesepe01": {
+  "file": "reesepe01.jpg",
+  "page": "Pee Wee Reese",
+  "source": "Pee_Wee_Reese_1956.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "ramirma02": {
+  "file": "ramirma02.jpg",
+  "page": "Manny Ramirez",
+  "source": "Manny_Ramirez.JPG",
+  "credit": "User Googie man on en.wikipedia",
+  "license": "CC BY-SA 3.0"
+ },
+ "boyerke01": {
+  "file": "boyerke01.jpg",
+  "page": "Ken Boyer",
+  "source": "Ken_Boyer_-_St._Louis_Cardinals_-_1965.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "guerrvl01": {
+  "file": "guerrvl01.jpg",
+  "page": "Vladimir Guerrero",
+  "source": "Vladimir_Guerrero_(1428701289).jpg",
+  "credit": "Derral Chen from Los Angeles, U.S.A",
+  "license": "CC BY-SA 2.0"
+ },
+ "hernake01": {
+  "file": "hernake01.jpg",
+  "page": "Keith Hernandez",
+  "source": "Keith_Hernandez_1986.jpg",
+  "credit": "Barry Colla Photography",
+  "license": "Public domain"
+ },
+ "dibblro01": {
+  "file": "dibblro01.jpg",
+  "page": "Rob Dibble",
+  "source": "Rob_dibble_motion_1991.jpg",
+  "credit": "User Rdikeman on en.wikipedia",
+  "license": "CC BY-SA 3.0"
+ },
+ "radatdi01": {
+  "file": "radatdi01.jpg",
+  "page": "Dick Radatz",
+  "source": "Dick_Radatz.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "gossari01": {
+  "file": "gossari01.jpg",
+  "page": "Goose Gossage",
+  "source": "GooseGossage_8_2007.JPG",
+  "credit": "Philkon Phil Konstantin",
+  "license": "Public domain"
+ },
+ "wagnebi02": {
+  "file": "wagnebi02.jpg",
+  "page": "Billy Wagner",
+  "source": "Billy_Wagner_pitches_on_Old-Timers'_Day,_Aug_27_2022_(cropped).jpg",
+  "credit": "D. Benjamin Miller",
+  "license": "CC0"
+ },
+ "grichbo01": {
+  "file": "grichbo01.jpg",
+  "page": "Bobby Grich",
+  "source": "Bobby_Grich_Orioles.jpg",
+  "credit": "Baltimore Orioles",
+  "license": "Public domain"
+ },
+ "rodriiv01": {
+  "file": "rodriiv01.jpg",
+  "page": "Iván Rodríguez",
+  "source": "Pudge-rodriguez-2009-09-01.jpg",
+  "credit": "RWHmedia",
+  "license": "CC BY-SA 3.0"
+ },
+ "raineti01": {
+  "file": "raineti01.jpg",
+  "page": "Tim Raines",
+  "source": "Tim_Raines_(51276088029)_(cropped).jpg",
+  "credit": "Jeffrey Hyde",
+  "license": "CC BY-SA 2.0"
+ },
+ "nathajo01": {
+  "file": "nathajo01.jpg",
+  "page": "Joe Nathan",
+  "source": "0923_493c_Joe_Nathan.jpg",
+  "credit": "User Keith Allison on Flickr",
+  "license": "CC BY-SA 2.0"
+ },
+ "ripkeca01": {
+  "file": "ripkeca01.jpg",
+  "page": "Cal Ripken Jr.",
+  "source": "Lieutenant_Governor_Boyd_Rutherford_with_Cal_Ripken_Jr_(cropped).jpg",
+  "credit": "Maryland GovPics",
+  "license": "CC BY 2.0"
+ },
+ "sosasa01": {
+  "file": "sosasa01.jpg",
+  "page": "Sammy Sosa",
+  "source": "Sammy_Sosa_2012_(cropped).jpg",
+  "credit": "Sammy Sosa",
+  "license": "CC BY 2.0"
+ },
+ "berrayo01": {
+  "file": "berrayo01.jpg",
+  "page": "Yogi Berra",
+  "source": "Yogi_Berra_(1957)_(cropped).jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "lidgebr01": {
+  "file": "lidgebr01.jpg",
+  "page": "Brad Lidge",
+  "source": "Brad_Lidge.jpg",
+  "credit": "Darrin",
+  "license": "CC BY-SA 2.0"
+ },
+ "mcgwima01": {
+  "file": "mcgwima01.jpg",
+  "page": "Mark McGwire",
+  "source": "Mark_McGwire_on_June_29,_2011.jpg",
+  "credit": "Keith Allison on Flickr",
+  "license": "CC BY-SA 2.0"
+ },
+ "yountro01": {
+  "file": "yountro01.jpg",
+  "page": "Robin Yount",
+  "source": "Robin_Yount_-_Rubenstein_-_2008_All_Star_Game_Red_Carpet_Parade.jpg",
+  "credit": "Rubenstein",
+  "license": "CC BY 2.0"
+ },
+ "millean01": {
+  "file": "millean01.jpg",
+  "page": "Andrew Miller (baseball)",
+  "source": "2016-10-23_Andrew_Miller_Baseball_Pitcher_(cropped-2).jpg",
+  "credit": "Arturo Pardavila III from Hoboken, NJ, USA",
+  "license": "CC BY 2.0"
+ },
+ "rosenal01": {
+  "file": "rosenal01.jpg",
+  "page": "Al Rosen",
+  "source": "Al_Rosen_1953.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "fostege01": {
+  "file": "fostege01.jpg",
+  "page": "George Foster (baseball)",
+  "source": "George_Foster_(5937514923)_(cropped).jpg",
+  "credit": "Sgt. 1st Class Scott D. Turner, USAAC G7",
+  "license": "Public domain"
+ },
+ "gagneer01": {
+  "file": "gagneer01.jpg",
+  "page": "Éric Gagné",
+  "source": "Éric_Gagné_Makes_His_Return_to_Dodger_Blue.jpg",
+  "credit": "OctopusHat",
+  "license": "CC BY-SA 2.0"
+ },
+ "snidedu01": {
+  "file": "snidedu01.jpg",
+  "page": "Duke Snider",
+  "source": "Duke_Snider_1953.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "thomafr04": {
+  "file": "thomafr04.jpg",
+  "page": "Frank Thomas",
+  "source": "Frank_Thomas_1997_CROP.jpg",
+  "credit": "File:Frank_Thomas_1997.jpg: clare_and_ben derivative work: User:Delaywaves",
+  "license": "CC BY-SA 2.0"
+ },
+ "longoev01": {
+  "file": "longoev01.jpg",
+  "page": "Evan Longoria",
+  "source": "Evan_Longoria_at-bat_2017_(35511678331)_(cropped).jpg",
+  "credit": "Keith Allison from Hanover, MD, USA",
+  "license": "CC BY-SA 2.0"
+ },
+ "utleych01": {
+  "file": "utleych01.jpg",
+  "page": "Chase Utley",
+  "source": "Chase_Utley_2009.jpg",
+  "credit": "L-Rey on Picasa Web Albums (Original version) UCinternational (Crop)",
+  "license": "CC BY 3.0"
+ },
+ "dawsoan01": {
+  "file": "dawsoan01.jpg",
+  "page": "Andre Dawson",
+  "source": "Andre_Dawson_2009_CROP.jpg",
+  "credit": "Andre_Dawson_2009.jpg: Barbara moore from Springfield, USA derivative work: Delaywaves talk",
+  "license": "CC BY-SA 2.0"
+ },
+ "wilsowi02": {
+  "file": "wilsowi02.jpg",
+  "page": "Willie Wilson (baseball)",
+  "source": "Willie_Wilson_1978.jpg",
+  "credit": "Major League Baseball / Kansas City Royals",
+  "license": "Public domain"
+ },
+ "chapmar01": {
+  "file": "chapmar01.png",
+  "page": "Aroldis Chapman",
+  "source": "Aroldis_Chapman_(R9aL4A0TJTo).png",
+  "credit": "Latinos En Pelota",
+  "license": "CC BY 4.0"
+ },
+ "donaljo02": {
+  "file": "donaljo02.jpg",
+  "page": "Josh Donaldson",
+  "source": "Josh_Donaldson_on_September_30,_2015.jpg",
+  "credit": "Keith Allison on Flickr",
+  "license": "CC BY-SA 2.0"
+ },
+ "belleal01": {
+  "file": "belleal01.jpg",
+  "page": "Albert Belle",
+  "source": "Albert_Belle_1997.jpg",
+  "credit": "clare_and_ben",
+  "license": "CC BY-SA 2.0"
+ },
+ "edmonji01": {
+  "file": "edmonji01.png",
+  "page": "Jim Edmonds",
+  "source": "Jim_Edmonds_St.Louis_Cardinals_HOF.png",
+  "credit": "Johnmaxmena2",
+  "license": "CC BY 4.0"
+ },
+ "bellbu01": {
+  "file": "bellbu01.jpg",
+  "page": "Buddy Bell",
+  "source": "Buddy_Bell_-_Cleveland_Indians.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "larkiba01": {
+  "file": "larkiba01.jpg",
+  "page": "Barry Larkin",
+  "source": "Barry_Larkin_by_Gage_Skidmore.jpg",
+  "credit": "Gage Skidmore",
+  "license": "CC BY-SA 3.0"
+ },
+ "carewro01": {
+  "file": "carewro01.jpg",
+  "page": "Rod Carew",
+  "source": "1978_Minnesota_Twins_Postcards_Rod_Carew.jpg",
+  "credit": "Minnesota Twins",
+  "license": "Public domain"
+ },
+ "irvinmo01": {
+  "file": "irvinmo01.jpg",
+  "page": "Monte Irvin",
+  "source": "Monte_Irvin_1953.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "sandbry01": {
+  "file": "sandbry01.jpg",
+  "page": "Ryne Sandberg",
+  "source": "Pic_of_ryne_sandberg_from_the_early_90's.jpg",
+  "credit": "Wjmummert",
+  "license": "CC BY-SA 3.0"
+ },
+ "daviser01": {
+  "file": "daviser01.jpg",
+  "page": "Eric Davis (baseball)",
+  "source": "Eric_Davis.jpg",
+  "credit": "Rick Dikeman",
+  "license": "CC BY-SA 3.0"
+ },
+ "nettlgr01": {
+  "file": "nettlgr01.jpg",
+  "page": "Graig Nettles",
+  "source": "Graig_Nettles_-_New_York_Yankees_-_1981.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "tatisfe02": {
+  "file": "tatisfe02.jpg",
+  "page": "Fernando Tatís Jr.",
+  "source": "Padres_Visit_3rd_MAW_Marines_at_Miramar_(2)_(cropped).jpg",
+  "credit": "Sgt. Rachelanne Woodward",
+  "license": "Public domain"
+ },
+ "giambja01": {
+  "file": "giambja01.jpg",
+  "page": "Jason Giambi",
+  "source": "New_York_Yankees_player_by_Keith_Allison.jpg",
+  "credit": "Keith Allison",
+  "license": "CC BY-SA 2.0"
+ },
+ "jonesan01": {
+  "file": "jonesan01.jpg",
+  "page": "Andruw Jones",
+  "source": "00077342_Andruw_Jones.jpg",
+  "credit": "User Keith Allison on Flickr",
+  "license": "CC BY-SA 2.0"
+ },
+ "callijo01": {
+  "file": "callijo01.jpg",
+  "page": "Johnny Callison",
+  "source": "John_Callison_1961.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "loftoke01": {
+  "file": "loftoke01.jpg",
+  "page": "Kenny Lofton",
+  "source": "Kenny_Lofton_(48250695222)_(cropped).jpg",
+  "credit": "Erik Drost",
+  "license": "CC BY 2.0"
+ },
+ "whitero01": {
+  "file": "whitero01.jpg",
+  "page": "Roy White",
+  "source": "Roy_White_1970.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "trammal01": {
+  "file": "trammal01.jpg",
+  "page": "Alan Trammell",
+  "source": "Alan_Trammell.jpg",
+  "credit": "James Phelps (mandj98) from USA",
+  "license": "CC BY 2.0"
+ },
+ "cedence01": {
+  "file": "cedence01.jpg",
+  "page": "César Cedeño",
+  "source": "Cesar_Cedeno_-_Houston_Astros.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "braunry02": {
+  "file": "braunry02.jpg",
+  "page": "Ryan Braun",
+  "source": "Ryan_Braun_(41976772944)_(cropped).jpg",
+  "credit": "Ian D'Andrea from Philadelphia, PA",
+  "license": "CC BY-SA 2.0"
+ },
+ "beltrca01": {
+  "file": "beltrca01.jpg",
+  "page": "Carlos Beltrán",
+  "source": "Carlos_Beltrán_R.jpg",
+  "credit": "Keith Allison on Flickr (Original version) UCinternational (Crop)",
+  "license": "CC BY-SA 2.0"
+ },
+ "dykstle01": {
+  "file": "dykstle01.jpg",
+  "page": "Lenny Dykstra",
+  "source": "Lenny_Dykstra_(27056320400).jpg",
+  "credit": "flickr user slgckgc",
+  "license": "CC BY 2.0"
+ },
+ "wynnji01": {
+  "file": "wynnji01.jpg",
+  "page": "Jimmy Wynn",
+  "source": "Jimmy_Wynn_2011.jpg",
+  "credit": "Gary Paul Smith from Cypress, TX, USA",
+  "license": "CC BY-SA 2.0"
+ },
+ "mcdowsa01": {
+  "file": "mcdowsa01.jpg",
+  "page": "Sam McDowell",
+  "source": "Sam_McDowell_Indians.jpg",
+  "credit": "AP",
+  "license": "Public domain"
+ },
+ "bluevi01": {
+  "file": "bluevi01.png",
+  "page": "Vida Blue",
+  "source": "VidaBlue.png",
+  "credit": "Doug McWilliams",
+  "license": "Public domain"
+ },
+ "hallaro01": {
+  "file": "hallaro01.jpg",
+  "page": "Roy Halladay",
+  "source": "Roy_Halladay_pitches_allison_full.jpg",
+  "credit": "User Keith Allison on Flickr",
+  "license": "CC BY-SA 2.0"
+ },
+ "bunniji01": {
+  "file": "bunniji01.jpg",
+  "page": "Jim Bunning",
+  "source": "Jim_Bunning,_official_photo_portrait,_111th_Congress.jpg",
+  "credit": "United States Government",
+  "license": "Public domain"
+ },
+ "leecl02": {
+  "file": "leecl02.jpg",
+  "page": "Cliff Lee",
+  "source": "Cliff_Lee_on_June_10,_2012.jpg",
+  "credit": "Keith Allison on Flickr (Original version) UCinternational (Crop)",
+  "license": "CC BY-SA 2.0"
+ },
+ "priorma01": {
+  "file": "priorma01.jpg",
+  "page": "Mark Prior",
+  "source": "Mark_Prior_2006_(Cropped).jpg",
+  "credit": "Scott Ableman on Flickr (Original version) 佾珜 (Crop)",
+  "license": "CC BY-SA 2.0"
+ },
+ "spahnwa01": {
+  "file": "spahnwa01.png",
+  "page": "Warren Spahn",
+  "source": "WarrenSpahnBOS.png",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "smoltjo01": {
+  "file": "smoltjo01.jpg",
+  "page": "John Smoltz",
+  "source": "Hall_of_Famer_John_Smoltz_speaks_to_reporters_before_the_MLBPAA's_2016_Legends_for_Youth_Dinner_(cropped).jpg",
+  "credit": "apardavila",
+  "license": "CC BY 2.0"
+ },
+ "malonji01": {
+  "file": "malonji01.jpg",
+  "page": "Jim Maloney",
+  "source": "Jim_Maloney_Reds.jpg",
+  "credit": "Cincinnati Reds",
+  "license": "Public domain"
+ },
+ "rijojo01": {
+  "file": "rijojo01.jpg",
+  "page": "José Rijo",
+  "source": "Jose_Rijo_1984.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "piercbi02": {
+  "file": "piercbi02.jpg",
+  "page": "Billy Pierce",
+  "source": "Billy_Pierce_1953.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "mussimi01": {
+  "file": "mussimi01.jpg",
+  "page": "Mike Mussina",
+  "source": "Mike_Mussina_on_September_28,_2007.jpg",
+  "credit": "Keith Allison",
+  "license": "CC BY-SA 2.0"
+ },
+ "klubeco01": {
+  "file": "klubeco01.jpg",
+  "page": "Corey Kluber",
+  "source": "Corey_Kluber_with_Texas_Rangers.jpg",
+  "credit": "YESNetwork",
+  "license": "CC BY 3.0"
+ },
+ "newcodo01": {
+  "file": "newcodo01.png",
+  "page": "Don Newcombe",
+  "source": "Don_Newcombe_1955.png",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "verlaju01": {
+  "file": "verlaju01.jpg",
+  "page": "Justin Verlander",
+  "source": "Justin_Verlander_in_2016.jpg",
+  "credit": "Keith Allison on Flickr",
+  "license": "CC BY-SA 2.0"
+ },
+ "niekrph01": {
+  "file": "niekrph01.jpg",
+  "page": "Phil Niekro",
+  "source": "Phil_Niekro_1974.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "higuete01": {
+  "file": "higuete01.jpg",
+  "page": "Teddy Higuera",
+  "source": "Teddy_Higuera_1991.jpg",
+  "credit": "Jerry Reuss",
+  "license": "CC BY-SA 2.0"
+ },
+ "coneda01": {
+  "file": "coneda01.jpg",
+  "page": "David Cone",
+  "source": "David_Cone_2009.jpg",
+  "credit": "Mark Rosal",
+  "license": "CC BY-SA 2.0"
+ },
+ "sabatcc01": {
+  "file": "sabatcc01.jpeg",
+  "page": "CC Sabathia",
+  "source": "CC_Sabathia_pitching_against_Rays_9-8-16_(3).jpeg",
+  "credit": "Arturo Pardavila III from Hoboken, NJ, USA",
+  "license": "CC BY 2.0"
+ },
+ "tiantlu01": {
+  "file": "tiantlu01.jpg",
+  "page": "Luis Tiant",
+  "source": "Luis_Tiant_1976.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "matlajo01": {
+  "file": "matlajo01.jpg",
+  "page": "Jon Matlack",
+  "source": "Jon_Matlack_2012.jpg",
+  "credit": "Roger DeWitt from Same, USA",
+  "license": "CC BY 2.0"
+ },
+ "hubbeca01": {
+  "file": "hubbeca01.jpg",
+  "page": "Carl Hubbell",
+  "source": "Carl_Hubbell.jpg",
+  "credit": "AP",
+  "license": "Public domain"
+ },
+ "shantbo01": {
+  "file": "shantbo01.jpg",
+  "page": "Bobby Shantz",
+  "source": "Bobby_Shantz_1953.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "leonadu02": {
+  "file": "leonadu02.jpeg",
+  "page": "Dutch Leonard (right-handed pitcher)",
+  "source": "Dutch_Leonard_1948.jpeg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "barfije01": {
+  "file": "barfije01.jpg",
+  "page": "Jesse Barfield",
+  "source": "Jesse_Barfield_2009.jpg",
+  "credit": "Steve Bowles from El Cerrito, CA, USA",
+  "license": "CC BY 2.0"
+ },
+ "smithoz01": {
+  "file": "smithoz01.jpg",
+  "page": "Ozzie Smith",
+  "source": "Ozzie_Smith_1983_Saint_Louis.jpg",
+  "credit": "Johnmaxmena",
+  "license": "CC BY-SA 4.0"
+ },
+ "martied01": {
+  "file": "martied01.jpg",
+  "page": "Edgar Martínez",
+  "source": "Edgar_Martinez_1997.jpg",
+  "credit": "clare_and_ben",
+  "license": "CC BY-SA 2.0"
+ },
+ "sotoma01": {
+  "file": "sotoma01.jpg",
+  "page": "Mario Soto (baseball)",
+  "source": "Mario_Soto_-_Indianapolis_Indians.jpg",
+  "credit": "Indianapolis Indians",
+  "license": "Public domain"
+ },
+ "thomeji01": {
+  "file": "thomeji01.jpg",
+  "page": "Jim Thome",
+  "source": "Jim_Thome_(18421174923).jpg",
+  "credit": "Erik Drost",
+  "license": "CC BY 2.0"
+ },
+ "santoro01": {
+  "file": "santoro01.jpg",
+  "page": "Ron Santo",
+  "source": "Ron_Santo_1961.JPG",
+  "credit": "Photographer-Matt Giblin Photography, St. Louis. While this was at one time part of the photo files/library of the Sport",
+  "license": "Public domain"
+ },
+ "kalinal01": {
+  "file": "kalinal01.jpg",
+  "page": "Al Kaline",
+  "source": "Al_Kaline_1957.jpg",
+  "credit": "From collection of User:JGHowes, self-scanned for Wikipedia. Original uploader was JGHowes at en.wikipedia",
+  "license": "Public domain"
+ },
+ "stargwi01": {
+  "file": "stargwi01.jpg",
+  "page": "Willie Stargell",
+  "source": "Willie_Stargell_1965.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "terrybi01": {
+  "file": "terrybi01.png",
+  "page": "Bill Terry",
+  "source": "Bill_Terry_pitching.png",
+  "credit": "Conlon, Charles Martin, 1868-1945 (Photographer) New York World-Telegram (Publisher)",
+  "license": "Public domain"
+ },
+ "ashburi01": {
+  "file": "ashburi01.jpg",
+  "page": "Richie Ashburn",
+  "source": "Richie_Ashburn_1953.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "haddiha01": {
+  "file": "haddiha01.png",
+  "page": "Harvey Haddix",
+  "source": "Harvey_Haddix_1953.png",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "hughste01": {
+  "file": "hughste01.jpg",
+  "page": "Tex Hughson",
+  "source": "Tex_Hughson.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "gomezle01": {
+  "file": "gomezle01.jpeg",
+  "page": "Lefty Gomez",
+  "source": "Lefty_Gomez_1936.jpeg",
+  "credit": "Goudey Gum",
+  "license": "Public domain"
+ },
+ "covelst01": {
+  "file": "covelst01.jpg",
+  "page": "Stan Coveleski",
+  "source": "Stan_Coveleski_npcc_13989.jpg",
+  "credit": "National Photo Company",
+  "license": "Public domain"
+ },
+ "lolicmi01": {
+  "file": "lolicmi01.jpg",
+  "page": "Mickey Lolich",
+  "source": "Mickey_Lolich_1975.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "marioma01": {
+  "file": "marioma01.jpg",
+  "page": "Marty Marion",
+  "source": "Marty_Marion_1953.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "mazerbi01": {
+  "file": "mazerbi01.png",
+  "page": "Bill Mazeroski",
+  "source": "Bill_Mazeroski_1959.png",
+  "credit": "Bazooka",
+  "license": "Public domain"
+ },
+ "willsma01": {
+  "file": "willsma01.jpg",
+  "page": "Maury Wills",
+  "source": "Maury_Wills_-_Los_Angeles_Dodgers_-_1961.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "kimbrcr01": {
+  "file": "kimbrcr01.jpg",
+  "page": "Craig Kimbrel",
+  "source": "Craig_Kimbrel_on_May_31,_2016.jpg",
+  "credit": "Keith Allison on Flickr (Original version) UCinternational (Crop)",
+  "license": "CC BY-SA 2.0"
+ },
+ "eckerde01": {
+  "file": "eckerde01.jpg",
+  "page": "Dennis Eckersley",
+  "source": "Dennis_Eckersley_2008_(crop).jpg",
+  "credit": "Rubenstein",
+  "license": "CC BY 2.0"
+ },
+ "suttebr01": {
+  "file": "suttebr01.png",
+  "page": "Bruce Sutter",
+  "source": "Bruce_Sutter_circa_1984.png",
+  "credit": "Johnmaxmena2",
+  "license": "CC BY-SA 4.0"
+ },
+ "mauerjo01": {
+  "file": "mauerjo01.jpg",
+  "page": "Joe Mauer",
+  "source": "Joe_Mauer_in_2017_(34025539223).jpg",
+  "credit": "Keith Allison from Hanover, MD, USA",
+  "license": "CC BY-SA 2.0"
+ },
+ "biggicr01": {
+  "file": "biggicr01.jpg",
+  "page": "Craig Biggio",
+  "source": "Craig_Biggio_HOF_(cropped).jpg",
+  "credit": "Arturo Pardavila III",
+  "license": "CC BY 2.0"
+ },
+ "cronijo01": {
+  "file": "cronijo01.jpg",
+  "page": "Joe Cronin",
+  "source": "Joe_Cronin_1937_cropped.jpg",
+  "credit": "Harris & Ewing",
+  "license": "Public domain"
+ },
+ "mccovwi01": {
+  "file": "mccovwi01.jpg",
+  "page": "Willie McCovey",
+  "source": "Willie_McCovey_1961.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "riverma01": {
+  "file": "riverma01.jpg",
+  "page": "Mariano Rivera",
+  "source": "Mariano_Rivera_allison_7_29_07.jpg",
+  "credit": "User Keith Allison on Flickr",
+  "license": "CC BY-SA 2.0"
+ },
+ "parkeda01": {
+  "file": "parkeda01.jpg",
+  "page": "Dave Parker",
+  "source": "Dave_Parker_Oakland_A's.jpg",
+  "credit": "Silent Sensei from Santa Cruz, USA",
+  "license": "CC BY 2.0"
+ },
+ "bregmal01": {
+  "file": "bregmal01.jpg",
+  "page": "Alex Bregman",
+  "source": "Alex_Bregman_on_April_23,_2018_(2).jpg",
+  "credit": "thatlostdog-- on Flickr (Original version) UCinternational (Crop)",
+  "license": "CC BY 2.0"
+ },
+ "suzukic01": {
+  "file": "suzukic01.jpg",
+  "page": "Ichiro Suzuki",
+  "source": "Ichiro_Suzuki_(51007034081)_(cropped).jpg",
+  "credit": "Jeffrey Hayes",
+  "license": "CC BY 2.0"
+ },
+ "wrighda03": {
+  "file": "wrighda03.jpg",
+  "page": "David Wright",
+  "source": "WrightMarch2016.jpg",
+  "credit": "slgckgc",
+  "license": "CC BY 2.0"
+ },
+ "jonesch06": {
+  "file": "jonesch06.jpg",
+  "page": "Chipper Jones",
+  "source": "Chipper_Jones_in_San_Diego.jpg",
+  "credit": "Djh57",
+  "license": "CC BY-SA 3.0"
+ },
+ "mccutan01": {
+  "file": "mccutan01.jpg",
+  "page": "Andrew McCutchen",
+  "source": "Andrew_McCutchen_October_2015.jpg",
+  "credit": "Arturo Pardavila III from Hoboken, NJ, USA",
+  "license": "CC BY 2.0"
+ },
+ "linceti01": {
+  "file": "linceti01.jpg",
+  "page": "Tim Lincecum",
+  "source": "Tim_Lincecum_(cropped).jpg",
+  "credit": "shgmom56 (Original version) Beisbol (Crop)",
+  "license": "CC BY-SA 2.0"
+ },
+ "colege01": {
+  "file": "colege01.jpg",
+  "page": "Gerrit Cole",
+  "source": "Gerrit_Cole_(53947688783)_(cropped).jpg",
+  "credit": "Jeffrey Hyde from Bryan, TX, United States",
+  "license": "CC BY-SA 2.0"
+ },
+ "greinza01": {
+  "file": "greinza01.jpg",
+  "page": "Zack Greinke",
+  "source": "Zack_Greinke_on_May_20,_2015.jpg",
+  "credit": "Arturo Pardavila III on Flickr",
+  "license": "CC BY 2.0"
+ },
+ "hernafe02": {
+  "file": "hernafe02.jpg",
+  "page": "Félix Hernández",
+  "source": "Seattle_Mariners_starting_pitcher_Felix_Hernandez_(34)_(5712186216).jpg",
+  "credit": "Keith Allison from Owings Mills, USA",
+  "license": "CC BY-SA 2.0"
+ },
+ "molinya01": {
+  "file": "molinya01.jpg",
+  "page": "Yadier Molina",
+  "source": "Yadier_Molina_(cropped).jpg",
+  "credit": "shgmom56 (Original version) UCinternational (Crop)",
+  "license": "CC BY-SA 2.0"
+ },
+ "cabremi01": {
+  "file": "cabremi01.jpg",
+  "page": "Miguel Cabrera",
+  "source": "Miguel_Cabrera_(2011).jpg",
+  "credit": "Cbl62",
+  "license": "CC BY-SA 3.0"
+ },
+ "heltoto01": {
+  "file": "heltoto01.jpg",
+  "page": "Todd Helton",
+  "source": "Todd_Helton_on_August_18,_2013.jpg",
+  "credit": "Keith Allison on Flickr (Original version) UCinternational (Crop)",
+  "license": "CC BY-SA 2.0"
+ },
+ "gwynnto01": {
+  "file": "gwynnto01.jpg",
+  "page": "Tony Gwynn",
+  "source": "Tony_Gwynn_83.jpg",
+  "credit": "San Diego Padres",
+  "license": "Public domain"
+ },
+ "fernajo02": {
+  "file": "fernajo02.jpg",
+  "page": "José Fernández (right-handed pitcher)",
+  "source": "José_Fernández_on_April_12,_2016.jpg",
+  "credit": "Arturo Pardavila III on Flickr",
+  "license": "CC BY 2.0"
+ },
+ "killeha01": {
+  "file": "killeha01.png",
+  "page": "Harmon Killebrew",
+  "source": "Harmon_Killebrew_1962.png",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "aparilu01": {
+  "file": "aparilu01.png",
+  "page": "Luis Aparicio",
+  "source": "Luis_Aparicio,_70CWS.png",
+  "credit": "Chicago White Sox",
+  "license": "Public domain"
+ },
+ "stirnsn01": {
+  "file": "stirnsn01.jpg",
+  "page": "Snuffy Stirnweiss",
+  "source": "Snuffy_Stirnweiss_1948.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "xohsa": {
+  "file": "xohsa.jpg",
+  "page": "Sadaharu Oh",
+  "source": "Sadaharu_Oh_2026.jpg",
+  "credit": "總統府",
+  "license": "CC BY 4.0"
+ },
+ "xtabucko": {
+  "file": "xtabucko.jpg",
+  "page": "Kōichi Tabuchi",
+  "source": "Kōichi_Tabuchi_IMG_9467-1_20191221.jpg",
+  "credit": "Ogiyoshisan",
+  "license": "CC BY-SA 4.0"
+ },
+ "dobyla01": {
+  "file": "dobyla01.jpg",
+  "page": "Larry Doby",
+  "source": "Larry_Doby_1953.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "xnagassh": {
+  "file": "xnagassh.jpg",
+  "page": "Shigeo Nagashima",
+  "source": "Shigeo_Nagashima_20211103.jpg",
+  "credit": "大臣官房人事課",
+  "license": "CC BY 4.0"
+ },
+ "fordru01": {
+  "file": "fordru01.jpg",
+  "page": "Russ Ford",
+  "source": "Russ_Ford_1911.jpg",
+  "credit": "Bain News Service (publisher)",
+  "license": "Public domain"
+ },
+ "allenjo02": {
+  "file": "allenjo02.jpg",
+  "page": "Johnny Allen (baseball)",
+  "source": "Johnny_Allen_Browns.jpg",
+  "credit": "St. Louis Browns",
+  "license": "Public domain"
+ },
+ "fordwh01": {
+  "file": "fordwh01.jpg",
+  "page": "Whitey Ford",
+  "source": "Whitey_Ford_1953_Bowman.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "moranca01": {
+  "file": "moranca01.jpg",
+  "page": "Carlos Morán (baseball)",
+  "source": "Carlos_Morán,_baseball_player.jpg",
+  "credit": "Spalding's Official Base Ball Guide (Life time: n/a)",
+  "license": "Public domain"
+ },
+ "xnomurka": {
+  "file": "xnomurka.jpg",
+  "page": "Katsuya Nomura",
+  "source": "Katsuya_Nomura_1959_Scan10016_160913.jpg",
+  "credit": "ベースボール・マガジン社 (Baseball Magazine Co., Ltd.)",
+  "license": "Public domain"
+ },
+ "kellech01": {
+  "file": "kellech01.jpg",
+  "page": "Charlie Keller",
+  "source": "CharlieKeller1949bowman.jpg",
+  "credit": "Bowman",
+  "license": "Public domain"
+ },
+ "jacksre01": {
+  "file": "jacksre01.jpg",
+  "page": "Reggie Jackson",
+  "source": "Reggie_Jackson_-_New_York_Yankees_-_1981.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "kinerra01": {
+  "file": "kinerra01.jpg",
+  "page": "Ralph Kiner",
+  "source": "RalphKiner1953bowman.jpg",
+  "credit": "Bowman",
+  "license": "Public domain"
+ },
+ "gehrich01": {
+  "file": "gehrich01.jpg",
+  "page": "Charlie Gehringer",
+  "source": "Charlie_Gehringer_1937.jpg",
+  "credit": "Harris & Ewing",
+  "license": "Public domain"
+ },
+ "dickebi01": {
+  "file": "dickebi01.jpg",
+  "page": "Bill Dickey",
+  "source": "Bill_Dickey_1937_cropped.jpg",
+  "credit": "Harris & Ewing",
+  "license": "Public domain"
+ },
+ "wilheho01": {
+  "file": "wilheho01.jpg",
+  "page": "Hoyt Wilhelm",
+  "source": "Hoyt-wilhelm.jpg",
+  "credit": "Bowman Gum",
+  "license": "Public domain"
+ },
+ "fiskca01": {
+  "file": "fiskca01.jpg",
+  "page": "Carlton Fisk",
+  "source": "Carlton_Fisk_1976.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "sizemgr01": {
+  "file": "sizemgr01.jpg",
+  "page": "Grady Sizemore",
+  "source": "Cleveland_Indians_center_fielder_Grady_Sizemore_(24)_(5938414273)_(cropped1).jpg",
+  "credit": "Keith Allison from Hanover, MD, USA",
+  "license": "CC BY-SA 2.0"
+ },
+ "brechha01": {
+  "file": "brechha01.jpg",
+  "page": "Harry Brecheen",
+  "source": "Harry_Brecheen.jpg",
+  "credit": "From collection of User:JGHowes for Wikipedia",
+  "license": "PD-US"
+ },
+ "perryga01": {
+  "file": "perryga01.jpg",
+  "page": "Gaylord Perry",
+  "source": "Gaylord_Perry_1965.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "saberbr01": {
+  "file": "saberbr01.jpg",
+  "page": "Bret Saberhagen",
+  "source": "Bret_Saberhagen_(4764163)_(cropped).jpg",
+  "credit": "U.S. Army National Guard photo by Sgt. Billie Thompson",
+  "license": "Public domain"
+ },
+ "richajr01": {
+  "file": "richajr01.jpg",
+  "page": "J. R. Richard",
+  "source": "J.R._Richard_-_Houston_Astros_-_1976.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "drysddo01": {
+  "file": "drysddo01.jpg",
+  "page": "Don Drysdale",
+  "source": "Don_Drysdale_-_Los_Angeles_Dodgers_-_1961.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "ryanno01": {
+  "file": "ryanno01.jpg",
+  "page": "Nolan Ryan",
+  "source": "Nolan_Ryan_Tiger_Stadium_1990_CROP.jpg",
+  "credit": "Nolan_Ryan_Tiger_Stadium_1990.jpg: Chuck Andersen derivative work: Delaywaves talk",
+  "license": "CC BY 2.0"
+ },
+ "belanma01": {
+  "file": "belanma01.jpg",
+  "page": "Mark Belanger",
+  "source": "Mark_Belanger_Orioles.jpg",
+  "credit": "Baltimore Orioles",
+  "license": "Public domain"
+ },
+ "brocklo01": {
+  "file": "brocklo01.jpg",
+  "page": "Lou Brock",
+  "source": "Lou_Brock_1964.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "ewingbu01": {
+  "file": "ewingbu01.jpeg",
+  "page": "Buck Ewing",
+  "source": "BuckEwing.jpeg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "gordojo01": {
+  "file": "gordojo01.jpg",
+  "page": "Joe Gordon",
+  "source": "Joe_Gordon_1942_(2).jpg",
+  "credit": "Unknown",
+  "license": "Public domain"
+ },
+ "kellejo01": {
+  "file": "kellejo01.jpg",
+  "page": "Joe Kelley",
+  "source": "Baseball_player,_Joe_Kelley,_Cincinnati_Reds,_standing_at_West_Side_Grounds.jpg",
+  "credit": "Chicago Daily News, Inc., photographer.",
+  "license": "Public domain"
+ },
+ "barnero01": {
+  "file": "barnero01.jpg",
+  "page": "Ross Barnes",
+  "source": "Ross_Barnes_1872.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "wilsoju99": {
+  "file": "wilsoju99.jpg",
+  "page": "Jud Wilson",
+  "source": "Jud_Wilson_1931.jpg",
+  "credit": "Harrison Studio",
+  "license": "Public domain"
+ },
+ "kellyki01": {
+  "file": "kellyki01.jpg",
+  "page": "King Kelly",
+  "source": "Kingkellyphoto.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "mooredo02": {
+  "file": "mooredo02.jpg",
+  "page": "Dobie Moore",
+  "source": "Dobie_Moore_1924.jpg",
+  "credit": "1924_Negro_League_World_Series.jpg: J.E. Mille[r], K.C. derivative work: Delaywaves talk • contribs",
+  "license": "Public domain"
+ },
+ "flickel01": {
+  "file": "flickel01.jpeg",
+  "page": "Elmer Flick",
+  "source": "1899_Elmer_Flick.jpeg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "stonege01": {
+  "file": "stonege01.jpg",
+  "page": "George Stone (outfielder)",
+  "source": "George_Stone_baseball_card.jpg",
+  "credit": "American Tobacco Company",
+  "license": "Public domain"
+ },
+ "bennech01": {
+  "file": "bennech01.jpg",
+  "page": "Charlie Bennett",
+  "source": "Charles_W._Bennett.jpg",
+  "credit": "Allen & Ginter",
+  "license": "Public domain"
+ },
+ "glassja01": {
+  "file": "glassja01.jpg",
+  "page": "Jack Glasscock",
+  "source": "Jack_Glasscock_Hoosiers.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "willike01": {
+  "file": "willike01.jpg",
+  "page": "Ken Williams (baseball)",
+  "source": "Ken-williams.jpg",
+  "credit": "Bain News Service, publisher",
+  "license": "Public domain"
+ },
+ "cochrmi01": {
+  "file": "cochrmi01.jpg",
+  "page": "Mickey Cochrane",
+  "source": "Mickey_Cochrane_card.jpg",
+  "credit": "Becker Brothers",
+  "license": "Public domain"
+ },
+ "dunlafr01": {
+  "file": "dunlafr01.jpg",
+  "page": "Fred Dunlap",
+  "source": "Fred_Dunlap_0559fu.jpg",
+  "credit": "Goodwin & Company",
+  "license": "Public domain"
+ },
+ "hartnga01": {
+  "file": "hartnga01.jpeg",
+  "page": "Gabby Hartnett",
+  "source": "Gabby_Hartnett_1925.jpeg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "richaha01": {
+  "file": "richaha01.jpg",
+  "page": "Hardy Richardson",
+  "source": "Hrichardson.jpg",
+  "credit": "Wikimedia Commons",
+  "license": "Public domain"
+ },
+ "wrighge01": {
+  "file": "wrighge01.jpg",
+  "page": "George Wright (shortstop)",
+  "source": "George_Wright.jpg",
+  "credit": "George Kendall Warren",
+  "license": "Public domain"
+ },
+ "ansonca01": {
+  "file": "ansonca01.png",
+  "page": "Cap Anson",
+  "source": "Cap_Anson_Old_Judge_Card_Cropped.png",
+  "credit": "Goodwin & Company",
+  "license": "Public domain"
+ },
+ "gosligo01": {
+  "file": "gosligo01.jpg",
+  "page": "Goose Goslin",
+  "source": "Goose-goslin.jpg",
+  "credit": "Bain News Service",
+  "license": "Public domain"
+ },
+ "eversjo01": {
+  "file": "eversjo01.jpg",
+  "page": "Johnny Evers",
+  "source": "Johnny_Evers_1910_FINAL2sh.jpg",
+  "credit": "George Grantham Bain Collection",
+  "license": "Public domain"
+ },
+ "whitede01": {
+  "file": "whitede01.jpg",
+  "page": "Deacon White",
+  "source": "Deacon_White_(cropped).jpg",
+  "credit": "Frank N. Tomlinson",
+  "license": "Public domain"
+ },
+ "mageesh01": {
+  "file": "mageesh01.jpg",
+  "page": "Sherry Magee",
+  "source": "Sherry_Magee_circa_1911.jpg",
+  "credit": "Paul Thompson",
+  "license": "Public domain"
+ },
+ "mcveyca01": {
+  "file": "mcveyca01.jpg",
+  "page": "Cal McVey",
+  "source": "Cal_McVey.jpg",
+  "credit": "Warren - Photographer",
+  "license": "Public domain"
+ },
+ "heilmha01": {
+  "file": "heilmha01.jpg",
+  "page": "Harry Heilmann",
+  "source": "Harry_Heilmann.jpg",
+  "credit": "Bain News Service, publisher",
+  "license": "Public domain"
+ },
+ "clarkfr01": {
+  "file": "clarkfr01.jpg",
+  "page": "Fred Clarke",
+  "source": "Fred_Clarke_Baseball.jpg",
+  "credit": "Chicago Daily News photographer",
+  "license": "Public domain"
+ },
+ "davisge01": {
+  "file": "davisge01.jpeg",
+  "page": "George Davis (baseball)",
+  "source": "George_Davis_White_Sox.jpeg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "steartu99": {
+  "file": "steartu99.png",
+  "page": "Turkey Stearnes",
+  "source": "Turkey_Stearnes.png",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "sheckji01": {
+  "file": "sheckji01.jpg",
+  "page": "Jimmy Sheckard",
+  "source": "Jimmy_Sheckard.jpg",
+  "credit": "Paul Thompson",
+  "license": "Public domain"
+ },
+ "hinespa01": {
+  "file": "hinespa01.jpg",
+  "page": "Paul Hines",
+  "source": "Paul_Hines.jpg",
+  "credit": "Goodwin & Co.",
+  "license": "Public domain"
+ },
+ "clarkjo01": {
+  "file": "clarkjo01.jpg",
+  "page": "John Clarkson",
+  "source": "John_Clarkson_Baseball.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "rusieam01": {
+  "file": "rusieam01.jpg",
+  "page": "Amos Rusie",
+  "source": "AmosRusiecrop.jpg",
+  "credit": "National Tobacco Works",
+  "license": "Public domain"
+ },
+ "bondto01": {
+  "file": "bondto01.jpg",
+  "page": "Tommy Bond (baseball)",
+  "source": "Tommy_bond_baseball.jpg",
+  "credit": "Wikimedia Commons",
+  "license": "Public domain"
+ },
+ "keefeti01": {
+  "file": "keefeti01.jpg",
+  "page": "Tim Keefe",
+  "source": "Timothy_John_Tim_Keefe,_Pitcher,_New_York,_from_the_Old_Judge_series_(N172)_for_Old_Judge_Cigarettes_MET_DP825933.jpg",
+  "credit": "Goodwin & Company",
+  "license": "CC0"
+ },
+ "whitnji01": {
+  "file": "whitnji01.jpg",
+  "page": "Jim Whitney",
+  "source": "Jim_Whitney.jpg",
+  "credit": "Randall - Photographer",
+  "license": "Public domain"
+ },
+ "radboch01": {
+  "file": "radboch01.jpg",
+  "page": "Charles Radbourn",
+  "source": "Radbourne_charles_1.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "buffich01": {
+  "file": "buffich01.jpg",
+  "page": "Charlie Buffinton",
+  "source": "Charlie_Buffinton.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "deandi01": {
+  "file": "deandi01.jpg",
+  "page": "Dizzy Dean",
+  "source": "Dizzy_Dean_Time.jpg",
+  "credit": "Cover credit: Acme (Acme Newspictures, Inc.)Time magazine",
+  "license": "Public domain"
+ },
+ "brownmo01": {
+  "file": "brownmo01.jpg",
+  "page": "Mordecai Brown",
+  "source": "Mordecai_Brown_Baseball_(cropped).jpg",
+  "credit": "Wikimedia Commons",
+  "license": "Public domain"
+ },
+ "cicoted01": {
+  "file": "cicoted01.jpg",
+  "page": "Eddie Cicotte",
+  "source": "EddieCicotte55.jpg",
+  "credit": "Wikimedia Commons",
+  "license": "Public domain"
+ },
+ "mendejo99": {
+  "file": "mendejo99.jpg",
+  "page": "José Méndez",
+  "source": "Mendez_Jose_1920.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "willijo99": {
+  "file": "willijo99.jpg",
+  "page": "Smokey Joe Williams",
+  "source": "Williams_Cyclone_Joe.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "devliji01": {
+  "file": "devliji01.jpg",
+  "page": "Jim Devlin",
+  "source": "Jim_Devlin_1876.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "bendech01": {
+  "file": "bendech01.jpg",
+  "page": "Chief Bender",
+  "source": "Chief_Bender,_Philadelphia_Athletics_pitcher_in_1911_(cropped).jpg",
+  "credit": "Paul Thompson",
+  "license": "Public domain"
+ },
+ "cummica01": {
+  "file": "cummica01.jpg",
+  "page": "Candy Cummings",
+  "source": "Candy_Cummings_1872.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "spaldal01": {
+  "file": "spaldal01.jpg",
+  "page": "Albert Spalding",
+  "source": "AGSpalding.jpg",
+  "credit": "George Grantham Bain",
+  "license": "Public domain"
+ },
+ "sandebe01": {
+  "file": "sandebe01.jpg",
+  "page": "Ben Sanders",
+  "source": "Ben_Sanders_Card.jpg",
+  "credit": "Gilbert & Bacon -- Photographer",
+  "license": "Public domain"
+ },
+ "kingsi01": {
+  "file": "kingsi01.jpg",
+  "page": "Silver King (baseball)",
+  "source": "Silver_King,_St._Louis_Browns,_baseball_card_portrait_LCCN2008675143.jpg",
+  "credit": "Goodwin & Co., sponsor",
+  "license": "Public domain"
+ },
+ "vaughhi01": {
+  "file": "vaughhi01.jpg",
+  "page": "Hippo Vaughn",
+  "source": "Hippo_Vaughn.jpg",
+  "credit": "Bain News Service",
+  "license": "Public domain"
+ },
+ "mathebo01": {
+  "file": "mathebo01.jpg",
+  "page": "Bobby Mathews",
+  "source": "Bobby_Matthews_Philadelphia_1.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "overaor01": {
+  "file": "overaor01.jpg",
+  "page": "Orval Overall",
+  "source": "Orval_Overall_Cincinnati.jpg",
+  "credit": "Carl Horner",
+  "license": "Public domain"
+ },
+ "ferguch01": {
+  "file": "ferguch01.jpg",
+  "page": "Charlie Ferguson (1880s pitcher)",
+  "source": "Fergusoncard.jpg",
+  "credit": "Wikimedia Commons",
+  "license": "Public domain"
+ },
+ "tinkejo01": {
+  "file": "tinkejo01.jpg",
+  "page": "Joe Tinker",
+  "source": "Joe_Tinker_NYWTS.jpg",
+  "credit": "Charles M. Conlon",
+  "license": "Public domain"
+ },
+ "mackebi99": {
+  "file": "mackebi99.jpg",
+  "page": "Biz Mackey",
+  "source": "Biz_Mackey_Hilldale.jpg",
+  "credit": "Hilldale Giants",
+  "license": "Public domain"
+ },
+ "fletcar01": {
+  "file": "fletcar01.jpg",
+  "page": "Art Fletcher",
+  "source": "Art_Fletcher.jpg",
+  "credit": "Bain News Service, publisher",
+  "license": "Public domain"
+ },
+ "xmesage": {
+  "file": "xmesage.jpg",
+  "page": "Germán Mesa",
+  "source": "German_Mesa_2021.jpg",
+  "credit": "Cubadebate",
+  "license": "CC BY 3.0"
+ },
+ "schalra01": {
+  "file": "schalra01.jpeg",
+  "page": "Ray Schalk",
+  "source": "1920_Ray_Schalk.jpeg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "tennefr02": {
+  "file": "tennefr02.jpg",
+  "page": "Fred Tenney",
+  "source": "Tenney,_Fred.jpg",
+  "credit": "Elmer Chickering",
+  "license": "Public domain"
+ },
+ "lombaer01": {
+  "file": "lombaer01.jpg",
+  "page": "Ernie Lombardi",
+  "source": "Ernie_Lombardi_Reds.jpg",
+  "credit": "Wikimedia Commons",
+  "license": ""
+ },
+ "burkeje01": {
+  "file": "burkeje01.jpeg",
+  "page": "Jesse Burkett",
+  "source": "1920_Jesse_Burkett.jpeg",
+  "credit": "Charles M. Conlon",
+  "license": "Public domain"
+ },
+ "thompsa01": {
+  "file": "thompsa01.jpeg",
+  "page": "Sam Thompson (outfielder)",
+  "source": "Sam_Thompson_1885.jpeg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "santolo99": {
+  "file": "santolo99.jpg",
+  "page": "Louis Santop",
+  "source": "Louis_Santop_1924.jpg",
+  "credit": "1924_Negro_League_World_Series.jpg: J.E. Mille[r], K.C. derivative work: Delaywaves talk • contribs",
+  "license": "Public domain"
+ },
+ "grantfr99": {
+  "file": "grantfr99.jpg",
+  "page": "Frank Grant (baseball)",
+  "source": "Frank_Grant_1887.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "castiju03": {
+  "file": "castiju03.jpg",
+  "page": "Julián Castillo",
+  "source": "Julian-castillo_2.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain"
+ },
+ "xlinarom": {
+  "file": "xlinarom.jpg",
+  "page": "Omar Linares",
+  "source": "NL-HlmNHA_1478_26540K01_26_(cropped).jpg",
+  "credit": "Fotopersbureau De Boer",
+  "license": "CC0"
+ },
+ "acunaro01": {
+  "file": "acunaro01.png",
+  "page": "Ronald Acuña Jr.",
+  "source": "Ronald_Acuna_Jr._HR_from_Nationals_vs._Braves_at_Nationals_Park,_April_6th,_2021_(All-Pro_Reels_Photography)_(51102624580).png",
+  "credit": "All-Pro Reels from District of Columbia, USA",
+  "license": "CC BY-SA 2.0"
+ },
+ "seageco01": {
+  "file": "seageco01.jpeg",
+  "page": "Corey Seager",
+  "source": "Corey_Seager_during_game_against_Yankees_9-13-16_(11).jpeg",
+  "credit": "Arturo Pardavila III from Hoboken, NJ, USA",
+  "license": "CC BY 2.0"
+ },
+ "peavyja01": {
+  "file": "peavyja01.jpg",
+  "page": "Jake Peavy",
+  "source": "MG_4936_Jake_Peavy.jpg",
+  "credit": "David on Flickr (Original version) UCinternational (Crop)",
+  "license": "CC BY 2.0"
+ },
+ "suttodo01": {
+  "file": "suttodo01.jpg",
+  "page": "Don Sutton",
+  "source": "1971_Ticketron_Don_Sutton.jpg",
+  "credit": "Ticketron",
+  "license": "Public domain"
+ },
+ "valenfe01": {
+  "file": "valenfe01.jpg",
+  "page": "Fernando Valenzuela",
+  "source": "Fernando_Valenzuela_in_wind_up_for_pitch_(cropped).jpg",
+  "credit": "Tony Barnard, Los Angeles Times",
+  "license": "CC BY 4.0"
+ },
+ "skenepa01": {
+  "file": "skenepa01.jpg",
+  "page": "Paul Skenes",
+  "source": "Paul_Skenes_Pitching_2026.jpg",
+  "credit": "Yeroc3103",
+  "license": "CC BY 4.0"
+ },
+ "schmija01": {
+  "file": "schmija01.jpg",
+  "page": "Jason Schmidt",
+  "source": "0308schmidt.jpg",
+  "credit": "User Craigfnp on en.wikipedia",
+  "license": "CC BY-SA 3.0"
+ },
+ "wheelza01": {
+  "file": "wheelza01.png",
+  "page": "Zack Wheeler",
+  "source": "Zack_Wheeler_Phillies_2022.png",
+  "credit": "Zach McHoul",
+  "license": "CC BY-SA 4.0"
+ }
+}

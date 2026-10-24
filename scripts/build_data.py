@@ -4,7 +4,7 @@ Run from the repo root:  python scripts/build_data.py
 Inputs:
   data/source/*.csv            exported from Baseball_Watch_List.numbers (see scripts/export_sheet.py)
   data/overrides/*.csv         hand fixes (player matches, "from" places)
-  pylahman (pip)               Lahman database, 1871-2025, incl. Negro Leagues
+  data/lahman/*.csv            Lahman database 2025 (1871-2025, incl. Negro Leagues): python scripts/fetch_lahman.py
   reverse_geocoder (pip)       city coordinates
 Output:
   docs/data/atlas.json
@@ -17,10 +17,19 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'data' / 'source'
 OVR = ROOT / 'data' / 'overrides'
 OUT = ROOT / 'docs' / 'data'
-LAH = Path(importlib.util.find_spec('pylahman').submodule_search_locations[0]) / 'data'
+LAH = ROOT / 'data' / 'lahman'
 RGF = Path(importlib.util.find_spec('reverse_geocoder').submodule_search_locations[0]) / 'rg_cities1000.csv'
 
-rd = lambda n: pd.read_parquet(LAH / f'{n}.parquet')
+if not (LAH / 'People.csv').exists(): raise SystemExit('No Lahman data: run python scripts/fetch_lahman.py first')
+
+
+def rd(n):
+    d = pd.read_csv(LAH / f'{n}.csv', encoding='utf-8-sig', low_memory=False).rename(columns={'IPouts': 'IPOuts'})
+    for c in d.columns:  # whole-number columns with blanks: keep them whole (Int64), not 3.0
+        if d[c].dtype == float and d[c].dropna().mod(1).eq(0).all(): d[c] = d[c].astype('Int64')
+    return d
+
+
 P, A, T, H, PK, TF, BAT, PIT = [rd(n) for n in ['People', 'Appearances', 'Teams', 'HomeGames', 'Parks', 'TeamsFranchises', 'Batting', 'Pitching']]
 BAT = BAT.fillna(0); PIT = PIT.fillna(0)
 PK = PK.astype(object).where(PK.notna(), None)

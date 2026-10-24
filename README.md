@@ -20,6 +20,7 @@ Repo **Settings → Pages → Build and deployment**: Source "Deploy from a bran
 
 ```bash
 pip install -r requirements.txt
+python scripts/fetch_lahman.py                                          # Lahman 2025 CSVs from SABR -> data/lahman/
 python scripts/export_sheet.py ~/path/to/Baseball_Watch_List.numbers   # your list -> data/source/*.csv
 Rscript scripts/export_ratings.R                                        # your rating model -> data/source/ratings_*.csv (slow)
 python scripts/build_data.py                                            # -> docs/data/atlas.json
@@ -30,7 +31,7 @@ python scripts/build_notes.py                                           # your B
 
 - **Your list** comes from the IN, Year-by-Year Top 5, Games, Parks R/L and Checklist tabs. Only the IN columns the site uses are exported.
 - **Your rating model** comes from `~/Documents/Baseball Ratings 2023.R` (pass another path to use a different version). `export_ratings.R` runs it unchanged up to the Hall of Fame models and saves every player-season's rating, year rank and tools, plus each player's peak-weighted rating and Hall odds. The site shows them as a career arc, 20-80 tools and the model's rank on player pages, the model's best five on team pages, and its top 10 on year pages. Skip this step and the site builds without them.
-- **Everything else** (careers, birthplaces, teams, parks, stats through 2025) comes from the Lahman database via the `pylahman` package.
+- **Everything else** (careers, birthplaces, teams, parks, stats through 2025) comes from the Lahman database (SABR's 2025 release, fetched by `fetch_lahman.py`).
 - **Hand fixes** live in `data/overrides/`:
   - `player_ids.csv`: force a player match (or `NONE` for players outside the database)
   - `manual_players.csv`: players outside the database (NPB, Cuba, Mexico...), with home clubs

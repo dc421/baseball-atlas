@@ -403,9 +403,9 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
     TR = pd.DataFrame([dict(tid=tid, y=teams[tid]['y'], lg=teams[tid]['lg'], v=o['v'], w=teams[tid]['w'], l=teams[tid]['l'],
                             rs=teams[tid]['rs'], ra=teams[tid]['ra']) for tid, o in tr.items()]).astype({'rs': float, 'ra': float})
     # score, in wins above an average team per 162: 70% talent (WAR sum vs. a cubic curve of typical team WAR over
-    # time; no per-era spread scaling, like the player model's comparison curves), 20% Pythagorean record (exp 1.83),
-    # 10% actual record; then the model's 1800s discount on positives. Records are shrunk toward .500 for short
-    # seasons: x G/(G+70), relative to a 162-game season (so full seasons count at face value)
+    # time), 20% Pythagorean record (exp 1.83), 10% actual record. Records are shrunk toward .500 for short seasons:
+    # x G/(G+70), relative to a 162-game season. Each part is then scaled by a curve of how spread out teams were
+    # (cubic in year on log RMS of the yearly gaps, rescaled to its median), since early leagues were far more lopsided
     x = (TR.y - 1950) / 50
     TR['tal'] = TR.v - np.polyval(np.polyfit(x, TR.v, 3), x)
     TR['wp'] = (TR.w / (TR.w + TR.l) - .5) * 162
@@ -414,8 +414,11 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
     gp = TR.w + TR.l
     shrink = np.minimum(1, (gp / (gp + 70)) / (162 / (162 + 70)))
     TR['py'], TR['wp'] = TR.py * shrink, TR.wp * shrink
+    for c in ['tal', 'py', 'wp']:
+        yr = TR.groupby('y')[c].agg(rms=lambda r: np.sqrt((r ** 2).mean()), n='size').reset_index()
+        spread = np.exp(np.polyval(np.polyfit((yr.y - 1950) / 50, np.log(yr.rms), 3, w=np.sqrt(yr.n)), x))
+        TR[c] = TR[c] * np.median(spread) / spread
     TR['a'] = .70 * TR.tal + .20 * TR.py + .10 * TR.wp
-    TR['a'] = np.where(TR.a > 0, TR.a / (1 + np.exp(-((TR.y - 1870) / 10 - .7))) ** 2, TR.a)
     TR['yr'] = TR.groupby('y').a.rank(ascending=False, method='min').astype(int)
     TR['ar'] = TR.a.rank(ascending=False, method='min').astype(int)
     for r in TR.itertuples(): teams[r.tid]['tr'] = dict(tr[r.tid], a=round(r.a, 1), tal=round(r.tal, 1), py=round(r.py, 1), wp=round(r.wp, 1), yr=int(r.yr), ar=int(r.ar), n=int((TR.y == r.y).sum()))

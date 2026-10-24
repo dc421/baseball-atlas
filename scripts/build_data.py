@@ -391,6 +391,10 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
     tw['tid'] = [tkey.get((t, int(y))) for t, y in zip(tw.teamID, tw.yearID)]
     tw['g'] = np.where(tw.kind == 'P', tw.G_p, tw.G_all)
     tw = tw[tw.tid.notna() & (tw.g > 0)].copy()
+    # the pitcher model can blow up on a one-game cameo (a 2-batter start projects at -262 WAR/G), so keep each
+    # projection inside the range seen among regulars (hitters 10+ G, pitchers 100+ BFP)
+    reg = RS[np.where(RS.kind == 'P', RS.BFP >= 100, RS.G >= 10)].groupby('kind').proj_WAR_G.agg(['min', 'max'])
+    tw['proj_WAR_G'] = tw.proj_WAR_G.clip(tw.kind.map(reg['min']), tw.kind.map(reg['max']))
     tw['war'] = tw.proj_WAR_G * tw.g
     tr = {}
     for tid, g in tw.groupby('tid'):
@@ -402,8 +406,8 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
                        top=[[r.name, r.key if isinstance(r.key, str) else None, round(r.war * k, 1)] for r in top.itertuples()])
     TR = pd.DataFrame([dict(tid=tid, y=teams[tid]['y'], lg=teams[tid]['lg'], v=o['v'], w=teams[tid]['w'], l=teams[tid]['l'],
                             rs=teams[tid]['rs'], ra=teams[tid]['ra']) for tid, o in tr.items()]).astype({'rs': float, 'ra': float})
-    # score, in wins above an average team per 162: 70% talent (WAR sum vs. a cubic curve of typical team WAR over
-    # time), 20% Pythagorean record (exp 1.83), 10% actual record. Records are shrunk toward .500 for short seasons:
+    # score, in wins above an average team per 162: 80% talent (WAR sum vs. a cubic curve of typical team WAR over
+    # time), 15% Pythagorean record (exp 1.83), 5% actual record. Records are shrunk toward .500 for short seasons:
     # x G/(G+70), relative to a 162-game season. Each part is then scaled by a curve of how spread out teams were
     # (cubic in year on log RMS of the yearly gaps, rescaled to its median), since early leagues were far more lopsided
     x = (TR.y - 1950) / 50
@@ -418,7 +422,7 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
         yr = TR.groupby('y')[c].agg(rms=lambda r: np.sqrt((r ** 2).mean()), n='size').reset_index()
         spread = np.exp(np.polyval(np.polyfit((yr.y - 1950) / 50, np.log(yr.rms), 3, w=np.sqrt(yr.n)), x))
         TR[c] = TR[c] * np.median(spread) / spread
-    TR['a'] = .70 * TR.tal + .20 * TR.py + .10 * TR.wp
+    TR['a'] = .80 * TR.tal + .15 * TR.py + .05 * TR.wp
     TR['yr'] = TR.groupby('y').a.rank(ascending=False, method='min').astype(int)
     TR['ar'] = TR.a.rank(ascending=False, method='min').astype(int)
     for r in TR.itertuples(): teams[r.tid]['tr'] = dict(tr[r.tid], a=round(r.a, 1), tal=round(r.tal, 1), py=round(r.py, 1), wp=round(r.wp, 1), yr=int(r.yr), ar=int(r.ar), n=int((TR.y == r.y).sum()))

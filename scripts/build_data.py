@@ -401,14 +401,10 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
         tr[tid] = dict(v=round(g.war.sum() * k, 1), h=round(g[g.kind == 'H'].war.sum() * k, 1), p=round(g[g.kind == 'P'].war.sum() * k, 1),
                        top=[[r.name, r.key if isinstance(r.key, str) else None, round(r.war * k, 1)] for r in top.itertuples()])
     TR = pd.DataFrame([dict(tid=tid, y=teams[tid]['y'], lg=teams[tid]['lg'], v=o['v']) for tid, o in tr.items()])
-    # score = WAR sum vs. a curve of typical team WAR over time, scaled by a curve of how spread out teams
-    # were (cubics in year; spread fit on log RMS of the yearly gaps), then the 1800s discount on positives
+    # score = WAR sum vs. a curve of typical team WAR over time (cubic in year), then the 1800s discount on
+    # positives. No per-era spread scaling: like the player model's comparison curves, gaps are subtracted, not divided
     x = (TR.y - 1950) / 50
     TR['a'] = TR.v - np.polyval(np.polyfit(x, TR.v, 3), x)
-    YR = TR.groupby('y').a.agg(rms=lambda r: np.sqrt((r ** 2).mean()), n='size').reset_index()
-    fit = np.polyfit((YR.y - 1950) / 50, np.log(YR.rms), 3, w=np.sqrt(YR.n))
-    spread = lambda y: np.exp(np.polyval(fit, (y - 1950) / 50))
-    TR['a'] = TR.a * np.median(spread(TR.y)) / spread(TR.y)
     TR['a'] = np.where(TR.a > 0, TR.a / (1 + np.exp(-((TR.y - 1870) / 10 - .7))) ** 2, TR.a)
     TR['yr'] = TR.groupby('y').v.rank(ascending=False, method='min').astype(int)
     TR['ar'] = TR.a.rank(ascending=False, method='min').astype(int)

@@ -23,21 +23,19 @@ const wpct = t => (t.w + t.l) ? t.w / (t.w + t.l) : 0;
    Everything you do is kept in this browser. "Export" gives you a file; commit it as
    docs/data/progress.json and every device that opens the site starts from it. */
 const LS = 'atlas-progress-v1';
-const STORE = { progress: {}, pins: {} };
+const STORE = { progress: {} };
 function loadStore(committed) {
   const merge = src => {
     for (const [k, v] of Object.entries(src.progress || {})) if (!STORE.progress[k] || (v.at || 0) >= (STORE.progress[k].at || 0)) STORE.progress[k] = v;
-    for (const [k, v] of Object.entries(src.pins || {})) if (!STORE.pins[k] || (v.at || 0) >= (STORE.pins[k].at || 0)) STORE.pins[k] = v;
-    for (const k of src.deletedPins || []) delete STORE.pins[k];
   };
   merge(committed || {});
   try { const local = JSON.parse(localStorage.getItem(LS) || 'null'); if (local) merge(local); } catch (e) { /* private mode */ }
 }
-let saveT = null, deletedPins = new Set();
+let saveT = null;
 function persist() {
   clearTimeout(saveT);
   saveT = setTimeout(() => {
-    try { localStorage.setItem(LS, JSON.stringify({ ...STORE, deletedPins: [...deletedPins], savedAt: Date.now() })); }
+    try { localStorage.setItem(LS, JSON.stringify({ ...STORE, savedAt: Date.now() })); }
     catch (e) { setNote('This browser isn’t letting the atlas save. Use Export to keep a copy.'); }
   }, 250);
 }
@@ -55,7 +53,6 @@ function ent(key) {
   if (t === 'p' && D.players[id]) return { type: 'p', id, o: D.players[id] };
   if (t === 't' && D.teams[id]) return { type: 't', id, o: D.teams[id] };
   if (t === 'g' && D.games[id]) return { type: 'g', id, o: D.games[id] };
-  if (t === 's' && STORE.pins[id]) return { type: 's', id, o: STORE.pins[id] };
   return null;
 }
 function fromOf(k) { const p = D.players[k]; const ov = prog('p_' + k)?.from; return ov || (p.from ? { ...p.from, ll: p.ll } : null); }
@@ -111,15 +108,6 @@ function doorsFor(key) {
       { id: 'stats', g: 'nums', label: 'Box score', hint: 'search', url: gg(n + ' box score baseball-reference') },
     ];
   }
-  if (e.type === 's') {
-    const n = `${o.title} ${o.year || ''}`.trim();
-    return [
-      { id: 'video', g: 'see', label: 'Film or audio', hint: 'YouTube', url: yt(n) },
-      { id: 'photos', g: 'see', label: 'Photos', hint: 'images', url: img(n) },
-      { id: 'read', g: 'read', label: 'Read about it', hint: 'search', url: gg(n + ' baseball') },
-      { id: 'news', g: 'read', label: 'Old newspapers', hint: 'Chronicling America', url: loc(o.title) },
-    ];
-  }
   return [];
 }
 function doorState(key) { const base = key.startsWith('p_') ? (D.players[key.slice(2)]?.base || {}) : {}; return { ...base, ...(prog(key)?.doors || {}) }; }
@@ -129,7 +117,23 @@ function lights(key) {
   for (const c of d.clips || []) { if (c.k === 'video') on.see = true; else if (c.k !== 'link') on.read = true; }
   return on;
 }
-const litN = key => { const l = lights(key); return (l.see ? 1 : 0) + (l.read ? 1 : 0) + (l.nums ? 1 : 0); };
+// a page is done when you mark it complete (the checkbox on each tracked page); everything starts incomplete
+const isDone = key => !!prog(key)?.done;
+const litN = key => isDone(key) ? 3 : 0;
+// tracked pages: your players, the best team each season (plus the 1869 Red Stockings), as many of your top games,
+// each of those seasons' year pages, every decade (before 1871 is one) and every place your players are from
+function trackKeys() {
+  const P = Object.keys(D.players).map(k => 'p_' + k);
+  const T = Object.entries(D.teams).filter(([, t]) => t.top).sort((a, b) => a[1].y - b[1].y).map(([k]) => 't_' + k);
+  const G = Object.values(D.games).filter(g => !g.o).sort((a, b) => a.rk - b.rk).slice(0, T.length).map(g => 'g_' + g.rk);
+  const Y = [...new Set(T.map(k => D.teams[k.slice(2)].y))].map(y => 'y_' + y);
+  const Dc = ['d_pre', ...Array.from({ length: 16 }, (_, i) => 'd_' + (1870 + 10 * i))];
+  if (!PL) buildPlaces();
+  const Pl = Object.values(PL).filter(nd => nd.from.length).map(nd => 'l_' + nd.k);
+  return { P, T, G, Y, Dc, Pl, all: new Set([...P, ...T, ...G, ...Y, ...Dc, ...Pl]) };
+}
+const doneHTML = key => trackKeys().all.has(key)
+  ? `<button class="donebtn" data-done="${esc(key)}" aria-pressed="${isDone(key)}"><span class="box" aria-hidden="true"></span>${isDone(key) ? 'Complete' : 'Mark complete'}</button>` : '';
 
 /* ================================================================ places index */
 const placeKey = (pl, lvl) => lvl === 0 ? pl.n : lvl === 1 ? `${pl.n}|${pl.r || '—'}` : `${pl.n}|${pl.r || '—'}|${pl.c || '—'}`;
@@ -175,7 +179,7 @@ function rescale() {
   gLab.selectAll('text').attr('font-size', 11 * s).attr('stroke-width', 3 * s).attr('dx', 9 * s).attr('dy', -9 * s);
 }
 const fillFor = n => n === 0 ? 'var(--ghost)' : `color-mix(in srgb,var(--lit) ${40 + n * 20}%,var(--ghost))`;
-let YEAR = 1897, MAPMODE = 'teams', showPins = true, highlight = null, focusPts = null;
+let YEAR = 1897, MAPMODE = 'teams', highlight = null, focusPts = null;
 
 function logoFor(t) {
   if (!D.logos.length) return null;
@@ -216,11 +220,6 @@ function drawBase() {
       el.attr('opacity', highlight && !sel ? .45 : 1);
       el.append('title').text(`${d.t.y} ${d.t.n}`);
     });
-    if (showPins) for (const [id, p] of Object.entries(STORE.pins)) if (p.ll && Math.abs((p.year || YEAR) - YEAR) <= 10) {
-      const [x, y] = XY(p.ll);
-      gBase.append('circle').datum({ r: 5.5 }).attr('class', 'dot pin').attr('cx', x).attr('cy', y).attr('fill', litN('s_' + id) ? 'var(--lit)' : 'var(--stitch)')
-        .attr('stroke', 'var(--water)').on('click', () => go('s_' + id)).append('title').text(p.title);
-    }
   } else if (MAPMODE === 'players') {
     for (const k of Object.keys(D.players)) {
       const f = fromOf(k); if (!f || !f.ll) continue; const [x, y] = XY(f.ll);
@@ -383,66 +382,46 @@ function rosterHTML(tid) {
    ${r.B.length ? `<h2>Bench</h2><div class="statline">${hit(r.B)}</div>` : ''}`;
 }
 /* ================================================================ tracker
-   Tracked pages: your players, the best team each season by your model (plus the 1869 Red Stockings), your top
-   games (as many as there are team seasons) and your pins. Each has three lights (seen, read, numbers):
-   explored = any lit, complete = all three. Years, decades, franchises and places roll up tracked pages. */
+   Everything counts only once you tick "Mark complete" on its page (see trackKeys for what's tracked). */
 function vTracker() {
-  const P = Object.keys(D.players).map(k => 'p_' + k), S = Object.keys(STORE.pins).map(k => 's_' + k);
-  const T = Object.entries(D.teams).filter(([, t]) => t.top).sort((a, b) => a[1].y - b[1].y).map(([k]) => 't_' + k);
-  const G = Object.values(D.games).sort((a, b) => a.rk - b.rk).slice(0, T.length).map(g => 'g_' + g.rk);
-  const L = {}; for (const k of [...P, ...T, ...G, ...S]) L[k] = litN(k);
-  const own = (label, keys, note) => ({ label, note, n: keys.length, ex: keys.filter(k => L[k] > 0).length, done: keys.filter(k => L[k] === 3).length, keys });
-  // years: the season's best team, your top 5, its tracked games and your pins
-  const yItems = {}, add = (y, k) => (yItems[y] = yItems[y] || []).push(k);
-  for (const k of T) add(D.teams[k.slice(2)].y, k);
-  for (const k of G) add(D.games[k.slice(2)].y, k);
-  for (const k of S) if (STORE.pins[k.slice(2)].year) add(STORE.pins[k.slice(2)].year, k);
-  for (const [y, yd] of Object.entries(D.years)) for (const e of yd.top || []) if (e[5] && e[0] !== 'WPA') add(y, 'p_' + e[5]);
-  const frac = ks => ks.length ? ks.filter(k => L[k] > 0).length / ks.length : 0;
-  const years = Object.keys(yItems).map(Number).sort((a, b) => a - b), yf = Object.fromEntries(years.map(y => [y, frac([...new Set(yItems[y])])]));
-  const roll = (label, groups) => ({ label, n: groups.length, ex: groups.filter(g => g.some(k => L[k] > 0)).length, done: groups.filter(g => g.length && g.every(k => L[k] > 0)).length });
-  const decs = {}; for (const y of years) (decs[decadeOf(y)] = decs[decadeOf(y)] || []).push(...new Set(yItems[y]));  // everything before 1871 is one page
-  if (!PL) buildPlaces();
-  const places = Object.values(PL).filter(nd => nd.from.length);
-  const tracked = new Set(T);
-  const rows = [own('Players', P, 'your list'), own('Team seasons', T, 'the best team each season, by your model'), own('Games', G, `your top ${G.length}`),
-    ...(S.length ? [own('Your pins', S, 'what you’ve added to the map')] : []),
-    { ...roll('Years', years.map(y => yItems[y])), note: 'best team, your top 5, games, pins' },
-    { ...roll('Decades', Object.values(decs)), note: 'before 1871 is one page' },
-    { ...roll('Franchises', Object.values(D.franch).map(f => f.s.map(t => 't_' + t).filter(k => tracked.has(k))).filter(g => g.length)), note: 'their tracked seasons' },
-    { ...roll('Places of origin', places.map(nd => nd.from.map(k => 'p_' + k))), note: 'players from there' }];
+  const K = trackKeys(), done = keys => keys.filter(isDone).length;
+  const types = [['Players', K.P, 'your list'], ['Team seasons', K.T, 'the best team each season, by your model'], ['Games', K.G, `your top ${K.G.length}`],
+    ['Years', K.Y, 'one per tracked season'], ['Decades', K.Dc, 'before 1871 is one page'], ['Places of origin', K.Pl, 'countries, states and cities your players are from']];
   const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
-  const bar = (ex, done, n) => `<div class="tbar" title="${done} complete, ${ex} explored of ${n}"><i class="d" style="width:${100 * done / (n || 1)}%"></i><i class="e" style="width:${100 * (ex - done) / (n || 1)}%"></i></div>`;
-  const lightRow = (label, keys) => { const c = { see: 0, read: 0, nums: 0 }; for (const k of keys) { const l = lights(k); for (const x in c) if (l[x]) c[x]++; }
-    return `<tr><td>${label}</td>${['see', 'read', 'nums'].map(x => `<td><div class="tbar sm" title="${c[x]} of ${keys.length}"><i class="d" style="width:${100 * c[x] / (keys.length || 1)}%"></i></div><span>${c[x]}</span></td>`).join('')}</tr>`; };
-  const step = f => f === 0 ? 0 : f < .34 ? 1 : f < .67 ? 2 : f < 1 ? 3 : 4;
-  const grid = [], y0 = Math.floor(years[0] / 10) * 10;
-  for (let d = y0; d <= years[years.length - 1]; d += 10) grid.push(`<div class="yg-row"><span class="yg-d">${d}s</span>${[...Array(10)].map((_, i) => { const y = d + i;
-    return y in yf ? `<button class="yg s${step(yf[y])}" onclick="go('y_${y}')" title="${y}: ${Math.round(100 * yf[y])}% of ${new Set(yItems[y]).size} explored"><span>${String(y).slice(2)}</span></button>` : '<span class="yg none"></span>'; }).join('')}</div>`);
-  const byPos = POSITIONS.map(pos => own(pos, P.filter(k => D.players[k.slice(2)].pos === pos))).filter(r => r.n);
-  const graded = P.filter(k => Object.keys(prog(k)?.grades || {}).length).length, clipped = [...P, ...T, ...G, ...S].filter(k => (prog(k)?.clips || []).length).length;
-  const next = (keys, rank, label, n = 5) => keys.filter(k => !L[k]).sort((a, b) => rank(a) - rank(b)).slice(0, n);
-  const nP = next(P, k => D.players[k.slice(2)].ovr || 999), nT = next(T, k => D.teams[k.slice(2)].tr?.ar ?? 0), nG = next(G, k => D.games[k.slice(2)].rk);
+  const bar = (d, n) => `<div class="tbar" title="${d} of ${n} complete"><i class="d" style="width:${100 * d / (n || 1)}%"></i></div>`;
+  const row = ([label, keys, note]) => { const d = done(keys); return `<tr><td>${label}${note ? `<small>${note}</small>` : ''}</td><td><b>${d}</b>/${keys.length} <span class="pc">${pct(d, keys.length)}%</span></td><td class="wide">${bar(d, keys.length)}</td></tr>`; };
+  // year grid: each tracked season's pages (year, best team, its tracked games, your top 5 that year)
+  const yItems = {}, add = (y, k) => (yItems[y] = yItems[y] || new Set()).add(k);
+  for (const k of K.Y) add(+k.slice(2), k);
+  for (const k of K.T) add(D.teams[k.slice(2)].y, k);
+  for (const k of K.G) add(D.games[k.slice(2)].y, k);
+  for (const [y, yd] of Object.entries(D.years)) if (yItems[y]) for (const e of yd.top || []) if (e[5] && e[0] !== 'WPA') add(+y, 'p_' + e[5]);
+  const years = Object.keys(yItems).map(Number).sort((a, b) => a - b), yf = y => { const ks = [...yItems[y]]; return ks.filter(isDone).length / ks.length; };
+  const step = f => f === 0 ? 0 : f < .34 ? 1 : f < .67 ? 2 : f < 1 ? 3 : 4, grid = [];
+  for (let d = Math.floor(years[0] / 10) * 10; d <= years[years.length - 1]; d += 10) grid.push(`<div class="yg-row"><span class="yg-d">${d}s</span>${[...Array(10)].map((_, i) => { const y = d + i;
+    return yItems[y] ? `<button class="yg s${step(yf(y))}" onclick="go('y_${y}')" title="${y}: ${[...yItems[y]].filter(isDone).length} of ${yItems[y].size} complete"><span>${String(y).slice(2)}</span></button>` : '<span class="yg none"></span>'; }).join('')}</div>`);
+  const byPos = POSITIONS.map(pos => { const ks = K.P.filter(k => D.players[k.slice(2)].pos === pos); return [pos, ks]; }).filter(x => x[1].length);
+  const next = (keys, rank) => keys.filter(k => !isDone(k)).sort((a, b) => rank(a) - rank(b)).slice(0, 5);
+  const nP = next(K.P, k => D.players[k.slice(2)].ovr || 999), nT = next(K.T, k => D.teams[k.slice(2)].tr?.ar ?? 0), nG = next(K.G, k => D.games[k.slice(2)].rk);
   const nextRow = k => { const e = ent(k), o = e.o;
     const [a, b] = e.type === 'p' ? [rankLabel(o), nameOf(o)] : e.type === 't' ? [o.tr ? `#${o.tr.ar}` : String(o.y), `${o.y} ${o.n}`] : [`#${o.rk}`, `${o.y} ${o.g}${o.d ? ' · ' + o.d : ''}`];
-    return `<button class="row" onclick="go('${k}')"><span class="yr">${esc(a)}</span><span class="rn">${esc(b)}</span><span class="meta">${dotsHTML(k)}</span></button>`; };
+    return `<button class="row" onclick="go('${k}')"><span class="yr">${esc(a)}</span><span class="rn">${esc(b)}</span></button>`; };
+  const all = [...K.all], allDone = done(all);
   return `${banner()}<div class="eyebrow">Your progress</div><h1 class="name">Tracker</h1>
-   <p class="note">Players, team seasons, games and pins are explored with at least one light on (seen, read or numbers) and complete with all three. Years, decades, franchises and places of origin roll those up: explored once anything in them is, complete once everything is.</p>
-   <table class="track"><tr><th></th><th>Explored</th><th>Complete</th><th class="wide"></th></tr>
-   ${rows.map(r => `<tr><td>${r.label}${r.note ? `<small>${r.note}</small>` : ''}</td><td><b>${r.ex}</b>/${r.n} <span class="pc">${pct(r.ex, r.n)}%</span></td><td><b>${r.done}</b> <span class="pc">${pct(r.done, r.n)}%</span></td><td class="wide">${bar(r.ex, r.done, r.n)}</td></tr>`).join('')}</table>
-   <div class="tlegend"><span><i class="d"></i>complete</span><span><i class="e"></i>explored</span><span><i></i>not yet</span></div>
-   <h2>Lights <small>how many have each one on</small></h2>
-   <table class="track lights3"><tr><th></th><th>Seen</th><th>Read</th><th>Numbers</th></tr>${lightRow('Players', P)}${lightRow('Team seasons', T)}${lightRow('Games', G)}${S.length ? lightRow('Your pins', S) : ''}</table>
-   <h2>Year by year <small>best team, your top 5, games and pins explored</small></h2>
+   <p class="note">A page counts once you tick “Mark complete” on it. Everything starts incomplete.</p>
+   <table class="track"><tr><th></th><th>Complete</th><th class="wide"></th></tr>${types.map(row).join('')}</table>
+   <h2>Year by year <small>each season’s year page, best team, games and your top 5</small></h2>
    <div class="ygrid">${grid.join('')}</div>
    <div class="tlegend"><span><i class="yg s0"></i>none</span><span><i class="yg s1"></i>some</span><span><i class="yg s2"></i>a third</span><span><i class="yg s3"></i>two thirds</span><span><i class="yg s4"></i>all</span></div>
    <h2>Players by position</h2>
-   <table class="track">${byPos.map(r => `<tr><td>${r.label}</td><td><b>${r.ex}</b>/${r.n}</td><td><b>${r.done}</b> complete</td><td class="wide">${bar(r.ex, r.done, r.n)}</td></tr>`).join('')}</table>
-   <div class="sub"><span><b>${graded}</b> scouting cards graded</span><span><b>${clipped}</b> pages with clippings</span></div>
-   <h2>Next up <small>the highest-ranked you haven’t opened a door on</small></h2>
+   <table class="track">${byPos.map(([pos, ks]) => row([pos, ks])).join('')}</table>
+   <h2>Next up <small>the highest-ranked not yet complete</small></h2>
    ${nP.length ? `<h3 class="sm">Players, by your list</h3><div class="list">${nP.map(nextRow).join('')}</div>` : ''}
    ${nT.length ? `<h3 class="sm">Team seasons, best first by your model</h3><div class="list">${nT.map(nextRow).join('')}</div>` : ''}
    ${nG.length ? `<h3 class="sm">Games, by your list</h3><div class="list">${nG.map(nextRow).join('')}</div>` : ''}
+   <h2>Overall</h2>
+   <div class="overall"><div class="big"><b>${allDone}</b> of ${all.length} pages complete <span class="pc">${pct(allDone, all.length)}%</span></div>${bar(allDone, all.length)}
+   <div class="sub">${types.map(([l, ks]) => `<span>${l}: <b>${done(ks)}</b>/${ks.length}</span>`).join('')}</div></div>
    ${saveBox()}`;
 }
 const KINDS = [['story', 'Story'], ['quote', 'Quote'], ['scouting', 'Scouting'], ['personal', 'Personal'], ['video', 'Video'], ['link', 'Link']];
@@ -462,7 +441,7 @@ function teamBadge(t) {
 }
 const crumbs = label => `<div class="crumbs">${stack.length ? `<button id="backbtn">← Back</button><span>·</span>` : ''}<span>${esc(label)}</span></div>`;
 const banner = () => `<div class="banner" id="dbnote" ${note ? '' : 'hidden'}>${esc(note)}</div>`;
-function gameRow(g) { return `<button class="row" onclick="go('g_${g.rk}')"><span class="yr">${g.y} ${esc(g.g)}</span><span class="rn">${esc(g.d || 'Untitled game')}${g.gr ? ' <span class="badge gold">great</span>' : ''}<small>#${g.rk} on your list</small></span><span class="meta">${dotsHTML('g_' + g.rk)}</span></button>`; }
+function gameRow(g) { return `<button class="row" onclick="go('g_${g.rk}')"><span class="yr">${g.y} ${esc(g.g)}</span><span class="rn">${esc(g.d || 'Untitled game')}${g.gr ? ' <span class="badge gold">great</span>' : ''}<small>${g.o ? 'from your “Others” row' : `#${g.rk} on your list`}</small></span><span class="meta">${dotsHTML('g_' + g.rk)}</span></button>`; }
 function placeText(f) { return f ? [f.c, f.r && f.r !== '—' && f.n !== 'Puerto Rico' ? f.r : null, f.n !== 'United States' ? f.n : null].filter(Boolean).join(', ') : ''; }
 const placeLink = (f, lvl = 2) => f && f.n ? `<a href="#" onclick="go('l_${enc(placeKey(f, lvl))}');return false">${esc(placeText(f))}</a>` : '';
 
@@ -490,6 +469,7 @@ function vDecade() {
     return `<div class="yrow"><button class="yhead" onclick="go('y_${y}')"><b>${y}</b>${ws ? `<span>${esc(ws[1].n)} win the Series</span>` : `<span>${tms.length} teams</span>`}</button>${quickList(q.filter(x => !/^New leagues: *$/i.test(x)))}</div>`; };
   return `${banner()}<div class="eyebrow">The decade</div>
   <div style="display:flex;align-items:center;gap:10px">${prev ? `<button class="iconbtn" onclick="go('d_${prev}')" aria-label="Previous decade">‹</button>` : ''}<h1 class="name" style="margin:0">${decadeName(d)}</h1>${next ? `<button class="iconbtn" onclick="go('d_${next}')" aria-label="Next decade">›</button>` : ''}</div>
+  ${doneHTML('d_' + d)}
   ${eras.map(e => `<h2>Your era notes <small>${e[0]}–${e[1]}</small></h2><p style="margin:0">${esc(e[2])}</p>${e[3] ? `<p class="note" style="margin-top:4px">Black clubs and independents: ${esc(e[3])}</p>` : ''}`).join('')}
   ${pre ? `<h2>Your history <small>the game before the leagues</small></h2>${writeup(NOTES.pre, 4)}` : ''}
   ${years.length ? `<h2>Year by year <small>rule changes and your notes</small></h2><div class="years">${years.map(yearRow).join('')}</div>` : ''}
@@ -505,11 +485,11 @@ function vYear() {
   const entry = e => e[5] ? `<button class="row" onclick="go('p_${e[5]}')">${avatar(e[5])}<span class="yr">#${e[1]}${e[2] ? ' ' + e[2] : ''}</span><span class="rn">${esc(e[3])}</span><span class="meta">${esc(e[4])} ${dotsHTML('p_' + e[5])}</span></button>`
     : `<div class="row" style="cursor:default"><span class="avatar">·</span><span class="yr">#${e[1]}${e[2] ? ' ' + e[2] : ''}</span><span class="rn">${esc(e[3])}</span><span class="meta">${esc(e[4])}</span></div>`;
   const gms = (yd.games || []).map(r => D.games[r]).sort((a, b) => b.gr - a.gr || a.rk - b.rk);
-  const pins = Object.entries(STORE.pins).filter(([, s]) => s.year === y);
   const yn = NOTES.years[y] || {};
   const champ = ([tid, t]) => `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="rn">${esc(t.n)}<small>${t.ws ? 'won the World Series' : esc(t.lg) + ' pennant'}${t.w != null ? ` · ${t.w}–${t.l}` : ''}</small></span><span class="meta">${dotsHTML('t_' + tid)}</span></button>`;
   return `${banner()}<div class="eyebrow">${y} · <a href="#" onclick="go('d_${decadeOf(y)}');return false">the ${decadeName(decadeOf(y))}</a></div>
-  <div class="sub" style="margin-top:4px"><span><b>${tms.length}</b> teams</span><span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> explored</span>${lgs.length ? `<span>${lgs.map(l => esc(l)).join(' · ')}</span>` : ''}</div>
+  <div class="sub" style="margin-top:4px"><span><b>${tms.length}</b> teams</span><span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> complete</span>${lgs.length ? `<span>${lgs.map(l => esc(l)).join(' · ')}</span>` : ''}</div>
+  ${doneHTML('y_' + y)}
   ${ws.length || pen.length ? `<h2>Champions</h2><div class="list">${[...ws, ...pen].map(champ).join('')}</div>` : ''}
   ${tms.some(([, t]) => t.tr) ? `<h2>Teams by your model <small>talent and results</small></h2><div class="list">${tms.filter(([, t]) => t.tr).sort((a, b) => a[1].tr.yr - b[1].tr.yr).slice(0, 8).map((e, i) => teamRankRow(e, i, false)).join('')}</div>` : ''}
   ${topH.length ? `<h2>Your top 5 <small>position players</small></h2><div class="list">${topH.map(entry).join('')}</div>` : ''}
@@ -523,13 +503,12 @@ function vYear() {
   ${yn.quick && yn.quick.length ? `<h2>Changes and notes</h2>${quickList(yn.quick)}` : ''}
   ${yn.text && yn.text.length ? `<h2>Your write-up</h2>${writeup(yn.text)}` : ''}
   ${era ? `<h2>Your era notes <small>${era[0]}${era[1] !== era[0] ? '–' + era[1] : ''}</small></h2><p style="margin:0">${esc(era[2])}</p>${era[3] ? `<p class="note" style="margin-top:4px">Black clubs and independents: ${esc(era[3])}</p>` : ''}` : ''}
-  ${pins.length ? `<h2>Your pins</h2><div class="list">${pins.map(([id, s]) => `<button class="row" onclick="go('s_${id}')"><span class="yr">${esc(s.kind || 'pin')}</span><span class="rn">${esc(s.title)}</span><span class="meta">${dotsHTML('s_' + id)}</span></button>`).join('')}</div>` : ''}
   ${tms.length ? `<details class="allteams"><summary>All ${tms.length} teams</summary><div class="chips">${tms.sort((a, b) => a[1].lg.localeCompare(b[1].lg) || a[1].rk - b[1].rk).map(([tid, t]) => `<button class="chip ${litN('t_' + tid) ? 'lit' : ''}" onclick="go('t_${tid}')"><span class="k">${esc(t.lg)}</span>${esc(t.n)}</button>`).join('')}</div></details>` : `<p class="empty">No league teams in the database this year. Your pins and era notes are the way in.</p>`}
   ${saveBox()}`;
 }
 function saveBox() {
   const n = Object.keys(STORE.progress).length;
-  return `<div class="savebox"><div>Your check-offs, grades, clippings and pins are saved in this browser (${n} things touched). Export a copy to back up, or commit it as <code>docs/data/progress.json</code> so every device starts from it.</div>
+  return `<div class="savebox"><div>Your check-offs, grades and clippings are saved in this browser (${n} things touched). Export a copy to back up, or commit it as <code>docs/data/progress.json</code> so every device starts from it.</div>
   <div class="r"><button class="btn ghost" id="exportbtn">Export progress</button><label class="btn ghost" style="cursor:pointer">Import…<input type="file" id="importfile" accept="application/json" hidden></label><span id="savemsg"></span></div></div>`;
 }
 
@@ -551,7 +530,7 @@ function vPlayer() {
      <div class="r"><input class="t" id="from-c" placeholder="City" value="${esc(f?.c || '')}"><input class="t" id="from-r" placeholder="State / province" value="${esc(f?.r || '')}"><input class="t" id="from-n" placeholder="Country" value="${esc(f?.n || 'United States')}"></div>
      <div class="r"><button class="btn" type="submit">Save</button>${ov ? '<button class="btn ghost" type="button" id="fromreset">Back to birthplace</button>' : ''}<span class="note">Wherever you think of him as being from. Birthplace is the default.</span></div>
    </form>
-   ${lightsHTML(key)}
+   ${doneHTML(key)}${lightsHTML(key)}
    <h2>Doors</h2>${doorsHTML(key)}
    <h2>The person</h2>
    <dl class="facts">
@@ -599,7 +578,7 @@ function vTeam() {
    <p class="note">Per 162 games: talent ${fmtS(t.tr.tal)} (80%), Pythagorean record ${fmtS(t.tr.py)} (15%), actual record ${fmtS(t.tr.wp)} (5%)${t.w + t.l < 150 ? ', records shrunk toward .500 for the short season' : ''}.</p>
    <p class="note">${t.tr.v} projected WAR per 162: ${t.tr.h} from position players, ${t.tr.p} from pitchers. Most of it from ${t.tr.top.map(e => e[1] ? `<a href="#" onclick="go('p_${e[1]}');return false">${esc(e[0])}</a> (${e[2]})` : `${esc(e[0])} (${e[2]})`).join(', ')}.</p>` : ''}
    ${park || t.park ? `<h2>Ballpark</h2><div class="parkbox"><b>${esc(park ? park.n : t.park)}</b>${park ? ` · ${esc(park.c)} · used ${park.y0}–${park.y1}${park.al ? `<div class="note">Also called ${esc(park.al)}</div>` : ''}${park.note ? `<div class="note">Your note: ${esc(park.note)}</div>` : ''}` : (t.ap ? ' <span class="note">(map pin at the city)</span>' : '')}</div>` : ''}
-   ${lightsHTML(key)}
+   ${doneHTML(key)}${lightsHTML(key)}
    <h2>Doors</h2>${doorsHTML(key)}
    <h2>From your list <small>${ro.length} on this roster${t.ros ? ', most model WAR first' : ''}</small></h2>${ro.length ? `<div class="chips">${ro.map(k => t.ros && k in t.ros ? playerChip(k).replace('</button>', ` <span class="k">${t.ros[k].toFixed(1)} WAR</span></button>`) : playerChip(k)).join('')}</div>` : '<p class="empty">Nobody from your list played here this year.</p>'}
    ${rosterHTML(tid)}
@@ -610,40 +589,14 @@ function vTeam() {
 }
 function vGame() {
   const g = D.games[view.id]; if (!g) return notFound(); const key = 'g_' + g.rk;
-  return `${crumbs('Game')}${banner()}<div class="eyebrow">#${g.rk} on your greatest-games list${g.gr ? ' · marked great' : ''}</div>
+  return `${crumbs('Game')}${banner()}<div class="eyebrow">${g.o ? 'From the “Others” row of your games list' : `#${g.rk} on your greatest-games list`}${g.gr ? ' · marked great' : ''}</div>
    <h1 class="name">${g.y} ${esc(g.g)}</h1><p style="font-size:17px;margin:0">${esc(g.d || 'No description yet.')}</p>
    <div class="sub" style="margin-top:8px">${g.tid ? `<span>${esc(D.teams[g.tid].n)}: <a href="#" onclick="go('t_${g.tid}');return false">${g.y} season</a></span>` : ''}<span><a href="#" onclick="go('y_${g.y}');return false">More from ${g.y}</a></span></div>
-   ${lightsHTML(key)}<h2>Doors</h2>${doorsHTML(key)}
-   <h2>Your numbers</h2><dl class="facts">${g.sc != null ? `<dt>Your score</dt><dd>${g.sc}</dd>` : ''}${g.cw != null ? `<dt>Top cWPA play</dt><dd>${g.cw}</dd>` : ''}${g.wpa != null ? `<dt>Top WPA play</dt><dd>${g.wpa}</dd>` : ''}${g.li != null ? `<dt>Game leverage</dt><dd>${g.li}</dd>` : ''}${g.inn ? `<dt>Innings</dt><dd>${g.inn}</dd>` : ''}</dl>
+   ${doneHTML(key)}${lightsHTML(key)}<h2>Doors</h2>${doorsHTML(key)}
+   ${g.o ? '' : `<h2>Your numbers</h2>`}<dl class="facts">${g.sc != null ? `<dt>Your score</dt><dd>${g.sc}</dd>` : ''}${g.cw != null ? `<dt>Top cWPA play</dt><dd>${g.cw}</dd>` : ''}${g.wpa != null ? `<dt>Top WPA play</dt><dd>${g.wpa}</dd>` : ''}${g.li != null ? `<dt>Game leverage</dt><dd>${g.li}</dd>` : ''}${g.inn ? `<dt>Innings</dt><dd>${g.inn}</dd>` : ''}</dl>
    <h2>Clippings</h2>${clipsHTML(key)}`;
 }
-function vPin() {
-  const s = STORE.pins[view.id]; if (!s) return `${crumbs('Pin')}<p class="empty">This pin isn’t here anymore.</p>`; const key = 's_' + view.id;
-  return `${crumbs('Your pin')}${banner()}<div class="eyebrow">${esc(s.kind || 'Pin')}${s.year ? ` · <a href="#" onclick="go('y_${s.year}');return false">${s.year}</a>` : ''}${s.place ? ' · ' + esc(s.place) : ''}</div>
-   <h1 class="name">${esc(s.title)}</h1>${s.text ? `<p style="margin:0">${esc(s.text)}</p>` : ''}${s.url ? `<p><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a></p>` : ''}
-   ${lightsHTML(key)}<h2>Doors</h2>${doorsHTML(key)}<h2>Clippings</h2>${clipsHTML(key)}<h2>Edit</h2>${pinForm(s)}`;
-}
 let PLACE_OPTS = null;
-function placeOptions() {
-  if (PLACE_OPTS) return PLACE_OPTS; PLACE_OPTS = {};
-  for (const nd of Object.values(PL)) if (nd.lvl === 2 && nd.lls.length) PLACE_OPTS[placeText(nd) || nd.n] = nd.lls[0];
-  return PLACE_OPTS;
-}
-function pinForm(s) {
-  s = s || {};
-  return `<form class="add" id="pinform">
-   <input class="t" id="pin-title" required placeholder="What happened (e.g. Jim Creighton’s last game)" value="${esc(s.title || '')}">
-   <div class="r"><select class="t" id="pin-kind" style="flex:0 0 auto">${['Story', 'Moment', 'Person', 'Reel', 'Place', 'Other'].map(k => `<option ${s.kind === k ? 'selected' : ''}>${k}</option>`).join('')}</select>
-   <input class="t" id="pin-year" type="number" min="1800" max="2030" placeholder="Year" value="${esc(s.year || '')}" style="flex:0 0 110px">
-   <input class="t" id="pin-place" list="placelist" placeholder="Place: a city, or lat, lon" value="${esc(s.place || '')}"></div>
-   <textarea class="t" id="pin-text" placeholder="A line or two, if you want">${esc(s.text || '')}</textarea>
-   <input class="t" id="pin-url" type="url" placeholder="Link (optional)" value="${esc(s.url || '')}">
-   <div class="r"><button class="btn" type="submit">${s.title ? 'Save changes' : 'Add to the map'}</button>${s.title ? `<button class="btn ghost" type="button" id="pindel">Delete pin</button><span id="pindelconfirm" hidden><button class="btn" type="button" id="pindelyes">Yes, delete it</button></span>` : ''}<span class="note" id="pinmsg"></span></div>
-  </form>`;
-}
-const vAddPin = () => `${crumbs('Add a pin')}${banner()}<div class="eyebrow">For the stories that aren’t a player or a team</div><h1 class="name">Add a pin</h1><p class="note">Creighton in Brooklyn, the Emperor’s game in Tokyo, a reel you love. It goes on the map at its place and year, with its own doors and clippings.</p>${pinForm(null)}
-  <h2>Your pins <small>${Object.keys(STORE.pins).length}</small></h2>${Object.keys(STORE.pins).length ? `<div class="list">${Object.entries(STORE.pins).sort((a, b) => (a[1].year || 0) - (b[1].year || 0))
-    .map(([id, s]) => `<button class="row" onclick="go('s_${id}')"><span class="yr">${s.year || ''} ${esc(s.kind || '')}</span><span class="rn">${esc(s.title)}<small>${esc(s.place || '')}</small></span><span class="meta">${dotsHTML('s_' + id)}</span></button>`).join('')}</div>` : '<p class="empty">No pins yet.</p>'}`;
 
 /* ---------------- homes: players, games, teams ---------------- */
 const RK = { players: { f: '', sort: 'rank', pos: 'All' }, games: { f: '', sort: 'rank' }, teams: { f: '', grp: 'all', mode: 'rank', n: 100 } };
@@ -690,7 +643,7 @@ function vList() {
   }).filter(x => (st.grp === 'all' || x.grp === st.grp) && (!f || x.eras.some(e => e.n.toLowerCase().includes(f))));
   const block = ([g, label]) => {
     const xs = frs.filter(x => x.grp === g).sort((a, b) => b.ts.length - a.ts.length); if (!xs.length) return '';
-    return `<h2>${label} <small>${xs.length}</small></h2><div class="list">${xs.map(x => `<div class="row frow">${badgeSm(x.last)}<span class="yr">${x.ts[0].y}–${x.last.y}</span><span class="rn"><a href="#" onclick="go('t_${x.fr.s[x.fr.s.length - 1]}');return false">${esc(x.last.n)}</a><small>${x.eras.length > 1 ? x.eras.map(e => `<a href="#" onclick="go('t_${e.tid}');return false">${esc(e.n)}</a> ${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}`).join(' · ') : `${x.ts.length} season${x.ts.length > 1 ? 's' : ''}`}</small></span><span class="meta" title="seasons explored">${x.fr.s.filter(tid => litN('t_' + tid)).length}/${x.ts.length}</span></div>`).join('')}</div>`;
+    return `<h2>${label} <small>${xs.length}</small></h2><div class="list">${xs.map(x => `<div class="row frow">${badgeSm(x.last)}<span class="yr">${x.ts[0].y}–${x.last.y}</span><span class="rn"><a href="#" onclick="go('t_${x.fr.s[x.fr.s.length - 1]}');return false">${esc(x.last.n)}</a><small>${x.eras.length > 1 ? x.eras.map(e => `<a href="#" onclick="go('t_${e.tid}');return false">${esc(e.n)}</a> ${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}`).join(' · ') : `${x.ts.length} season${x.ts.length > 1 ? 's' : ''}`}</small></span><span class="meta" title="seasons complete">${x.fr.s.filter(tid => litN('t_' + tid)).length}/${x.ts.length}</span></div>`).join('')}</div>`;
   };
   return `${banner()}<div class="eyebrow">${Object.keys(D.franch).length} franchises</div><h1 class="name">Teams</h1>
    <p class="note">Every franchise and the names it played under.</p>
@@ -723,7 +676,7 @@ function vPlace() {
   const nWS = nd.teams.filter(t => D.teams[t].ws).length, nPen = nd.teams.filter(t => D.teams[t].pen).length;
   const prow = (pk, extra) => { const p = D.players[pk]; return `<button class="row" onclick="go('p_${pk}')">${avatar(pk)}<span class="yr">${esc(rankLabel(p))}</span><span class="rn">${esc(nameOf(p))}<small>${extra}</small></span><span class="meta">${dotsHTML('p_' + pk)}</span></button>`; };
   const LIM = 25;
-  return `${banner()}<div class="placecrumbs">${trail.join('')}</div><div class="eyebrow">${['Country', 'State / region', 'City'][nd.lvl]}</div><h1 class="name">${esc(placeLabel(nd))}</h1>
+  return `${banner()}<div class="placecrumbs">${trail.join('')}</div><div class="eyebrow">${['Country', 'State / region', 'City'][nd.lvl]}</div><h1 class="name">${esc(placeLabel(nd))}</h1>${doneHTML('l_' + k)}
    <div class="sub"><span><b>${nd.from.length}</b> of your players from here</span><span><b>${nd.played.size}</b> played here</span><span><b>${nd.teams.length}</b> team seasons</span>${nWS ? `<span><b>${nWS}</b> World Series</span>` : ''}${nPen ? `<span><b>${nPen}</b> pennants</span>` : ''}</div>
    <h2>Best players from here</h2>${from.length ? `<div class="list">${from.slice(0, LIM).map(pk => prow(pk, `peak ${D.players[pk].pk || '?'}${nd.lvl < 2 ? ' · ' + esc(fromOf(pk).c || '') : ''}`)).join('')}</div>${from.length > LIM ? `<p class="note">and ${from.length - LIM} more</p>` : ''}` : '<p class="empty">Nobody on your list is from here.</p>'}
    <h2>Best players to play here</h2>${played.length ? `<div class="list">${played.slice(0, LIM).map(([pk, x]) => prow(pk, `${x.y0}${x.y1 !== x.y0 ? '–' + x.y1 : ''} · ${esc([...x.tm].join(', '))}`)).join('')}</div>${played.length > LIM ? `<p class="note">and ${played.length - LIM} more</p>` : ''}` : '<p class="empty">No one from your list played for a team based here.</p>'}
@@ -735,12 +688,11 @@ const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.<
 /* ================================================================ render */
 function mapFor() {
   const t = view.type; highlight = null; focusPts = null; let fit = null;
-  if (t === 'y' || t === 'a') MAPMODE = 'teams';
+  if (t === 'y') MAPMODE = 'teams';
   if (t === 'y') { const lls = Object.values(D.teams).filter(x => x.y === YEAR && x.ll).map(x => x.ll); if (lls.length) fit = lls; }
   if (t === 'd') { MAPMODE = 'teams'; const d0 = view.id === 'pre' ? 1845 : +view.id; if (YEAR < d0 || YEAR > (view.id === 'pre' ? 1870 : d0 + 9)) { YEAR = view.id === 'pre' ? 1870 : Math.max(d0, 1871); $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; } }
   if (t === 't') { const tm = D.teams[view.id]; if (tm) { MAPMODE = 'teams'; if (YEAR !== tm.y) { YEAR = tm.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; } highlight = 't_' + view.id; if (tm.ll) fit = [tm.ll]; } }
   if (t === 'g') { const g = D.games[view.id]; if (g) { MAPMODE = 'teams'; YEAR = g.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; if (g.tid) { highlight = 't_' + g.tid; const tm = D.teams[g.tid]; if (tm.ll) fit = [tm.ll]; } } }
-  if (t === 's') { const s = STORE.pins[view.id]; MAPMODE = 'teams'; if (s && s.ll) { focusPts = [{ ll: s.ll, label: s.title, key: 's_' + view.id, r: 8 }]; fit = [s.ll]; if (s.year) { YEAR = s.year; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; } } }
   if (t === 'p') { MAPMODE = 'players'; highlight = 'p_' + view.id; const p = D.players[view.id]; if (p) { const f = fromOf(view.id); focusPts = [];
       if (f && f.ll) focusPts.push({ ll: f.ll, label: 'From: ' + (f.c || f.r || f.n), r: 7 });
       for (const s of p.st || []) { const tm = D.teams[s[5]]; if (tm && tm.ll) focusPts.push({ ll: tm.ll, label: `${s[2]} ${s[1]}`, key: 't_' + s[5], r: 5 }); }
@@ -755,8 +707,8 @@ function mapFor() {
 }
 function render(newView = true, opts = {}) {
   const panel = $('#panel'), t = view.type, st = panel.scrollTop, active = document.activeElement && document.activeElement.id;
-  const drafts = {}; for (const id of ['clip-t', 'clip-u', 'pin-title', 'pin-year', 'pin-place', 'pin-text', 'pin-url', 'rkfilter']) { const el = document.getElementById(id); if (el) drafts[id] = el.value; }
-  const V = { d: vDecade, y: vYear, p: vPlayer, t: vTeam, g: vGame, s: vPin, a: vAddPin, r: vList, l: vPlace };
+  const drafts = {}; for (const id of ['clip-t', 'clip-u', 'rkfilter']) { const el = document.getElementById(id); if (el) drafts[id] = el.value; }
+  const V = { d: vDecade, y: vYear, p: vPlayer, t: vTeam, g: vGame, r: vList, l: vPlace };
   const lay = layoutOf(view), home = homeOf(view);
   document.body.classList.remove('lay-map', 'lay-page', 'lay-list'); document.body.classList.add('lay-' + lay);
   if (home) lastHome = home;
@@ -801,13 +753,11 @@ function wire() {
   $('#tmore')?.addEventListener('click', () => { st.n += 200; render(false); });
   $('#rksort')?.addEventListener('change', e => { st.sort = e.target.value; render(false); });
   $('#rkfilter')?.addEventListener('input', e => { st.f = e.target.value; clearTimeout(window.__rf); window.__rf = setTimeout(() => render(false), 150); });
-  // pins
-  $('#pinform')?.addEventListener('submit', e => { e.preventDefault(); savePin(view.type === 's' ? view.id : null); });
-  $('#pindel')?.addEventListener('click', () => { $('#pindelconfirm').hidden = false; });
-  $('#pindelyes')?.addEventListener('click', () => { delete STORE.pins[view.id]; deletedPins.add(view.id); persist(); go('y_' + YEAR); });
+  // mark a tracked page complete (or not)
+  document.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => mutate(b.dataset.done, cur => { if (cur.done) delete cur.done; else cur.done = Date.now(); })));
   // export/import
   $('#exportbtn')?.addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify({ progress: STORE.progress, pins: STORE.pins, deletedPins: [...deletedPins], exportedAt: new Date().toISOString() }, null, 1)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ progress: STORE.progress, exportedAt: new Date().toISOString() }, null, 1)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'progress.json'; document.body.appendChild(a); a.click(); a.remove();
     $('#savemsg').textContent = 'Saved progress.json to your downloads.';
   });
@@ -815,28 +765,11 @@ function wire() {
     try { const j = JSON.parse(await f.text()); loadStore(j); persist(); buildPlaces(); render(true); setTimeout(() => { const m = $('#savemsg'); if (m) m.textContent = 'Imported.'; }, 0); }
     catch (err) { $('#savemsg').textContent = 'That file isn’t an atlas progress export.'; } });
 }
-function parsePlace(s) {
-  s = (s || '').trim(); if (!s) return null;
-  const m = s.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/); if (m) return [+m[1], +m[2]];
-  const opts = placeOptions(); if (opts[s]) return opts[s];
-  const low = s.toLowerCase(), hit = Object.keys(opts).find(k => k.toLowerCase().startsWith(low)) || Object.keys(opts).find(k => k.toLowerCase().includes(low));
-  return hit ? opts[hit] : null;
-}
-function savePin(id) {
-  const title = $('#pin-title').value.trim(); if (!title) return;
-  const place = $('#pin-place').value.trim(), ll = parsePlace(place);
-  if (place && !ll) { $('#pinmsg').textContent = 'Couldn’t place that. Pick a suggestion, or type “lat, lon”.'; return; }
-  const body = { title, kind: $('#pin-kind').value, year: +$('#pin-year').value || null, place, ll, text: $('#pin-text').value.trim(), url: $('#pin-url').value.trim(), at: Date.now() };
-  const nid = id || ('pin' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
-  STORE.pins[nid] = body; deletedPins.delete(nid); persist();
-  go('s_' + nid, !id);
-}
 function spin() {
   const pool = [
     ...Object.keys(D.players).flatMap(k => ['p_' + k, 'p_' + k]),
     ...Object.entries(D.teams).filter(([, t]) => t.pen || t.ws || (t.ro && t.ro.length >= 3)).map(([k]) => 't_' + k),
     ...Object.keys(D.games).filter(k => D.games[k].gr).map(k => 'g_' + k),
-    ...Object.keys(STORE.pins).map(k => 's_' + k),
   ];
   for (let i = 0; i < 300; i++) { const k = pool[Math.floor(Math.random() * pool.length)]; if (!litN(k)) { go(k); return; } }
   go(pool[Math.floor(Math.random() * pool.length)]);
@@ -858,7 +791,6 @@ function doSearch(q) {
   if (ym && ym[2]) for (const [tid, t] of Object.entries(D.teams)) if (t.y === +ym[1] && t.n.toLowerCase().includes(ym[2])) out.push({ t: `${t.y} ${t.n}`, s: LG[t.lg] || t.lg, key: 't_' + tid, sc: 8 });
   for (const it of IDX) { const tl = it.t.toLowerCase(); if (tl.includes(q)) out.push({ ...it, sc: (tl.startsWith(q) ? 2 : 0) + (tl.split(' ').some(w => w.startsWith(q)) ? 1 : 0) + it.w }); }
   for (const fr of Object.values(D.franch)) { const names = new Set(fr.s.map(s => D.teams[s].n)); for (const n of names) if (n.toLowerCase().includes(q)) { const s = fr.s.filter(x => D.teams[x].n === n); out.push({ t: n, s: `${D.teams[s[0]].y}–${D.teams[s[s.length - 1]].y}`, key: 't_' + s[s.length - 1], sc: 2.5 }); } }
-  for (const [id, s] of Object.entries(STORE.pins)) if (s.title.toLowerCase().includes(q)) out.push({ t: s.title, s: 'your pin', key: 's_' + id, sc: 4 });
   out.sort((a, b) => b.sc - a.sc);
   const top = out.slice(0, 12); selI = 0;
   box.innerHTML = top.length ? top.map((r, i) => `<button data-key="${esc(r.key)}" class="${i === 0 ? 'sel' : ''}"><span>${esc(r.t)}</span><small>${esc(r.s)}</small></button>`).join('') : '<div style="padding:10px 12px" class="note">Nothing matches. Try a last name, a team, a city, or a year.</div>';
@@ -876,12 +808,10 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
   NOTES = { ...NOTES, ...(await getJSON('data/notes.json', {})) };
   loadStore(await getJSON('data/progress.json', {}));
   buildPlaces(); buildIndex();
-  const dl = document.createElement('datalist'); dl.id = 'placelist'; dl.innerHTML = Object.keys(placeOptions()).sort().map(p => `<option value="${esc(p)}">`).join(''); document.body.appendChild(dl);
   setupMap();
   addEventListener('resize', () => { clearTimeout(window.__rs); window.__rs = setTimeout(() => placeMap(false), 200); });
   $('#yr').addEventListener('input', e => { stopPlay(); setYear(+e.target.value); });
   $('#play').addEventListener('click', () => { if (playT) { stopPlay(); return; } $('#play').textContent = '❚❚'; if (view.type !== 'y') go('y_' + YEAR); playT = setInterval(() => { if (YEAR >= 2025) { stopPlay(); return; } setYear(YEAR + 1); }, 650); });
-  $('#ly-pins').addEventListener('click', e => { showPins = !showPins; e.currentTarget.setAttribute('aria-pressed', showPins); drawBase(); });
   $('#q').addEventListener('input', e => doSearch(e.target.value));
   $('#q').addEventListener('keydown', e => { const bs = [...$('#results').querySelectorAll('button')]; if (!bs.length) return;
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); selI = (selI + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length; bs.forEach((b, i) => b.classList.toggle('sel', i === selI)); }
@@ -889,7 +819,6 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
   document.addEventListener('click', e => { if (!e.target.closest('.search')) $('#results').hidden = true; });
   $('#home').addEventListener('click', () => goHome('map')); $('#home').addEventListener('keydown', e => { if (e.key === 'Enter') goHome('map'); });
   for (const h of HOMES) $('#home-' + h).addEventListener('click', () => goHome(h));
-  $('#addpin').addEventListener('click', () => go('a_new'));
   $('#ml-teams').addEventListener('click', () => go('y_' + YEAR)); $('#ml-places').addEventListener('click', () => go('l_world'));
   for (const id of ['#mapexpand', '#mapfab']) $(id).addEventListener('click', () => setFull(true));
   $('#mapclose').addEventListener('click', () => setFull(false));

@@ -493,6 +493,14 @@ for (y, tm), g in AP2.groupby(['yearID', 'teamID']):
 (OUT / 'rosters.json').write_text(json.dumps(rosters, separators=(',', ':'), ensure_ascii=False))
 print(f'rosters: {len(rosters)} team seasons; season lines for {sum(1 for o in players.values() if o.get("ss"))} players')
 
+# games from the 'Others' row of your Games tab (data/overrides/manual_games.csv), after the ranked list
+if (OVR / 'manual_games.csv').exists():
+    for i, r in enumerate(pd.read_csv(OVR / 'manual_games.csv').itertuples(), start=len(games) + 1):
+        tid = r.tid if isinstance(r.tid, str) and r.tid in teams else None
+        games[str(i)] = dict(rk=i, y=int(r.y), g=r.g, inn=nz(r.inn), d=r.d, sc=None, cw=None, wpa=None, li=None,
+                             tm=teams[tid]['br'] if tid else None, tid=tid, gr=0, o=1)
+        years.setdefault(int(r.y), {}).setdefault('games', []).append(str(i))
+
 for tid, ks in roster.items():  # your list's players on each team, by their model WAR for this team (as in the lineup)
     cw = {k: round(contrib[(players[k]['id'], tid)], 1) for k in set(ks) if (players[k].get('id'), tid) in contrib}
     teams[tid]['ro'] = sorted(set(ks), key=lambda k: (-cw.get(k, -99), players[k]['ovr'] or 999))

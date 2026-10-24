@@ -277,7 +277,7 @@ details.allteams summary{cursor:pointer;font-family:var(--f-display);font-weight
   nav.tabs button[aria-current="true"]{color:var(--lit);background:none;border:0}
   nav.tabs button.from{text-decoration:none;color:var(--ink)}
   body.lay-map .mapwrap{height:52vh}
-  .mapbar input[type=range],#ly-pins{display:none}
+  .mapbar input[type=range]{display:none}
   .bigyear{font-size:26px}
   body.lay-page .mapfab{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 }
@@ -343,3 +343,13 @@ table.track.lights3 .tbar{display:inline-block;width:calc(100% - 44px);vertical-
 .yg.s4{background:var(--lit);color:var(--bg)}
 .yg:hover{outline:2px solid var(--ink);outline-offset:1px}
 .tlegend i.yg{height:12px;width:12px}
+.donebtn{display:inline-flex;align-items:center;gap:8px;margin:12px 0 2px;padding:6px 14px 6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--raise);cursor:pointer;font-weight:600;font-size:14px;color:var(--ink)}
+.donebtn .box{width:16px;height:16px;border:1.5px solid var(--muted);border-radius:4px;display:inline-grid;place-items:center}
+.donebtn[aria-pressed="true"]{border-color:var(--lit);background:var(--lit-soft)}
+.donebtn[aria-pressed="true"] .box{background:var(--lit);border-color:var(--lit)}
+.donebtn[aria-pressed="true"] .box::after{content:"";width:8px;height:4px;border:solid var(--bg);border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg)}
+.overall{background:var(--raise);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.overall .big{font-size:18px;margin-bottom:10px}
+.overall .big b{font-family:var(--f-display);font-size:30px;font-weight:800}
+.overall .tbar{height:14px;border-radius:7px}
+.overall .sub{margin-top:10px}

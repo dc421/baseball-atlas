@@ -432,7 +432,7 @@ function vYear() {
   return `${banner()}<div class="eyebrow">${y} · <a href="#" onclick="go('d_${decadeOf(y)}');return false">the ${decadeName(decadeOf(y))}</a></div>
   <div class="sub" style="margin-top:4px"><span><b>${tms.length}</b> teams</span><span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> explored</span>${lgs.length ? `<span>${lgs.map(l => esc(l)).join(' · ')}</span>` : ''}</div>
   ${ws.length || pen.length ? `<h2>Champions</h2><div class="list">${[...ws, ...pen].map(champ).join('')}</div>` : ''}
-  ${tms.some(([, t]) => t.tr) ? `<h2>Teams by your model <small>roster talent, vs. a typical team of the era</small></h2><div class="list">${tms.filter(([, t]) => t.tr).sort((a, b) => a[1].tr.yr - b[1].tr.yr).slice(0, 8).map((e, i) => teamRankRow(e, i, false)).join('')}</div>` : ''}
+  ${tms.some(([, t]) => t.tr) ? `<h2>Teams by your model <small>talent and results</small></h2><div class="list">${tms.filter(([, t]) => t.tr).sort((a, b) => a[1].tr.yr - b[1].tr.yr).slice(0, 8).map((e, i) => teamRankRow(e, i, false)).join('')}</div>` : ''}
   ${topH.length ? `<h2>Your top 5 <small>position players</small></h2><div class="list">${topH.map(entry).join('')}</div>` : ''}
   ${topP.length ? `<h2>Your top 5 <small>pitchers</small></h2><div class="list">${topP.map(entry).join('')}${rp ? entry(['', 1, 'RP', rp[3], rp[4], rp[5]]) : ''}</div>` : ''}
   ${yd.mH || yd.mP ? `<details class="allteams"><summary>Your model's top 10 that year</summary>
@@ -507,7 +507,8 @@ function vTeam() {
    <div class="hero">${teamBadge(t)}<div class="who"><div class="eyebrow">${esc(LG[t.lg] || t.lg)}${t.dv ? ' · ' + esc(t.dv) + ' division' : ''}</div>
    <div style="display:flex;align-items:center;gap:8px">${prev ? `<button class="iconbtn" onclick="go('t_${prev}')" aria-label="Previous season">‹</button>` : ''}<h1 class="name" style="margin:0">${t.y} ${esc(t.n)}</h1>${next ? `<button class="iconbtn" onclick="go('t_${next}')" aria-label="Next season">›</button>` : ''}</div></div></div>
    <div class="sub" style="margin-top:8px"><span><b>${t.w ?? '?'}–${t.l ?? '?'}</b></span>${t.rk ? `<span>finished <b>${ordinal(t.rk)}</b></span>` : ''}${t.ws ? '<span class="badge gold">World Series champions</span>' : t.pen ? '<span class="badge gold">Pennant</span>' : ''}${t.pl ? `<span>${placeLink(t.pl)}</span>` : ''}<span><a href="#" onclick="go('y_${t.y}');return false">The ${t.y} season</a></span></div>
-   ${t.tr ? `<h2>By your model <small>talent on the roster</small></h2><div class="sub" style="margin-top:0"><span><b>${fmtS(t.tr.a)}</b> over a typical team of the era</span><span><b>#${t.tr.yr}</b> of ${t.tr.n} in ${t.y}</span><span><b>#${t.tr.ar}</b> all-time</span></div>
+   ${t.tr ? `<h2>By your model <small>talent and results</small></h2><div class="sub" style="margin-top:0"><span><b>${fmtS(t.tr.a)}</b> wins over an average team</span><span><b>#${t.tr.yr}</b> of ${t.tr.n} in ${t.y}</span><span><b>#${t.tr.ar}</b> all-time</span></div>
+   <p class="note">Per 162 games: talent ${fmtS(t.tr.tal)} (60%), Pythagorean record ${fmtS(t.tr.py)} (25%), actual record ${fmtS(t.tr.wp)} (15%).</p>
    <p class="note">${t.tr.v} projected WAR per 162: ${t.tr.h} from position players, ${t.tr.p} from pitchers. Most of it from ${t.tr.top.map(e => e[1] ? `<a href="#" onclick="go('p_${e[1]}');return false">${esc(e[0])}</a> (${e[2]})` : `${esc(e[0])} (${e[2]})`).join(', ')}.</p>` : ''}
    ${park || t.park ? `<h2>Ballpark</h2><div class="parkbox"><b>${esc(park ? park.n : t.park)}</b>${park ? ` · ${esc(park.c)} · used ${park.y0}–${park.y1}${park.al ? `<div class="note">Also called ${esc(park.al)}</div>` : ''}${park.note ? `<div class="note">Your note: ${esc(park.note)}</div>` : ''}` : (t.ap ? ' <span class="note">(map pin at the city)</span>' : '')}</div>` : ''}
    ${lightsHTML(key)}
@@ -588,7 +589,7 @@ function vList() {
   if (ranked) {
     const arr = rated.filter(([, t]) => (st.grp === 'all' || (LGROUP[t.lg] || 'ind') === st.grp) && (!f || (t.y + ' ' + t.n).toLowerCase().includes(f))).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
     return `${banner()}<div class="eyebrow">Your model · ${rated.length} team seasons</div><h1 class="name">Teams</h1>
-     <p class="note">Each player’s projected WAR per game for that season, weighted by his games for the team, summed and put on a 162-game scale. Ranked by how far that is above a typical team of its era (a smooth curve over time), with your model’s 1800s discount.</p>
+     <p class="note">Each player’s projected WAR per game for that season, weighted by his games for the team, summed and put on a 162-game scale. That talent, measured against a typical team of its era (a smooth curve over time), makes up 60% of the score; Pythagorean record is 25% and actual record 15%, all in wins over an average team per 162, with your model’s 1800s discount.</p>
      ${modes}${grpChips}${filter('Filter by year or team name…')}
      <div class="list">${arr.slice(0, st.n).map(teamRankRow).join('') || '<p class="empty">No teams match.</p>'}</div>
      ${arr.length > st.n ? `<button class="btn ghost" id="tmore" style="margin-top:10px">Show more (${arr.length - st.n} left)</button>` : ''}`;

@@ -154,7 +154,7 @@ for r in T.itertuples():
     tid = f'{r.teamID}-{r.yearID}'
     tkey[(r.teamID, r.yearID)] = tid
     lg = r.lgID or ('NA' if r.yearID <= 1875 else None)
-    teams[tid] = dict(y=int(r.yearID), lg=lg, tm=r.teamID, fr=r.franchID, n=r.name, w=nz(r.W), l=nz(r.L), rk=nz(r.Rank),
+    teams[tid] = dict(y=int(r.yearID), lg=lg, tm=r.teamID, fr=r.franchID, n=r.name, w=nz(r.W), l=nz(r.L), rs=nz(r.R), ra=nz(r.RA), rk=nz(r.Rank),
                       pen=1 if r.LgWin == 'Y' else 0, ws=1 if r.WSWin == 'Y' else 0, dv=nz(r.divID), pk=pk, park=nz(r.park),
                       br=nz(r.teamIDBR), ll=ll, pl=place, ap=ap)
 print('team seasons', len(teams), '| without a location:', sorted({t['n'] for t in teams.values() if not t['ll']}))
@@ -400,15 +400,21 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
         top = g.nlargest(3, 'war')
         tr[tid] = dict(v=round(g.war.sum() * k, 1), h=round(g[g.kind == 'H'].war.sum() * k, 1), p=round(g[g.kind == 'P'].war.sum() * k, 1),
                        top=[[r.name, r.key if isinstance(r.key, str) else None, round(r.war * k, 1)] for r in top.itertuples()])
-    TR = pd.DataFrame([dict(tid=tid, y=teams[tid]['y'], lg=teams[tid]['lg'], v=o['v']) for tid, o in tr.items()])
-    # score = WAR sum vs. a curve of typical team WAR over time (cubic in year), then the 1800s discount on
-    # positives. No per-era spread scaling: like the player model's comparison curves, gaps are subtracted, not divided
+    TR = pd.DataFrame([dict(tid=tid, y=teams[tid]['y'], lg=teams[tid]['lg'], v=o['v'], w=teams[tid]['w'], l=teams[tid]['l'],
+                            rs=teams[tid]['rs'], ra=teams[tid]['ra']) for tid, o in tr.items()]).astype({'rs': float, 'ra': float})
+    # score, in wins above an average team per 162: 60% talent (WAR sum vs. a cubic curve of typical team WAR over
+    # time; no per-era spread scaling, like the player model's comparison curves), 25% Pythagorean record (exp 1.83),
+    # 15% actual record; then the model's 1800s discount on positives
     x = (TR.y - 1950) / 50
-    TR['a'] = TR.v - np.polyval(np.polyfit(x, TR.v, 3), x)
+    TR['tal'] = TR.v - np.polyval(np.polyfit(x, TR.v, 3), x)
+    TR['wp'] = (TR.w / (TR.w + TR.l) - .5) * 162
+    TR['py'] = ((TR.rs ** 1.83 / (TR.rs ** 1.83 + TR.ra ** 1.83)) - .5) * 162
+    TR['py'] = TR.py.fillna(TR.wp)  # no runs recorded: lean on the record
+    TR['a'] = .60 * TR.tal + .25 * TR.py + .15 * TR.wp
     TR['a'] = np.where(TR.a > 0, TR.a / (1 + np.exp(-((TR.y - 1870) / 10 - .7))) ** 2, TR.a)
-    TR['yr'] = TR.groupby('y').v.rank(ascending=False, method='min').astype(int)
+    TR['yr'] = TR.groupby('y').a.rank(ascending=False, method='min').astype(int)
     TR['ar'] = TR.a.rank(ascending=False, method='min').astype(int)
-    for r in TR.itertuples(): teams[r.tid]['tr'] = dict(tr[r.tid], a=round(r.a, 1), yr=int(r.yr), ar=int(r.ar), n=int((TR.y == r.y).sum()))
+    for r in TR.itertuples(): teams[r.tid]['tr'] = dict(tr[r.tid], a=round(r.a, 1), tal=round(r.tal, 1), py=round(r.py, 1), wp=round(r.wp, 1), yr=int(r.yr), ar=int(r.ar), n=int((TR.y == r.y).sum()))
     print(f'team ratings: {len(TR)} of {len(teams)} team seasons rated; best: ' +
           ', '.join(f"{teams[r.tid]['y']} {teams[r.tid]['n']} {r.a:+.1f}" for r in TR.nsmallest(5, 'ar').itertuples()))
     print(f'ratings: {len(RS)} seasons, {RS.key.notna().groupby(RS.playerID).any().sum()} of {len(players)} list players matched')

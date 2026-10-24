@@ -304,3 +304,8 @@ details.allteams summary{cursor:pointer;font-family:var(--f-display);font-weight
 h3.sm{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:12px 0 2px}
 .scale button.sugg{border:1.5px dashed var(--lit);color:var(--ink)}
 .grade .m80{font-family:var(--f-mono);font-weight:500;font-size:11px;color:var(--lit);margin-left:2px}
+table.stats.ss td:nth-child(-n+2),table.stats.ss th:nth-child(-n+2){text-align:left}
+table.stats.ss td a,table.stats.roster td a{color:inherit;text-underline-offset:2px}
+table.stats.roster{font-size:13px}
+table.stats.roster .nm,table.stats.roster th:first-child,table.stats.roster td:first-child{text-align:left}
+table.stats.roster td.nm{font-family:var(--f-body);white-space:nowrap}

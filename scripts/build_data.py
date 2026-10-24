@@ -362,18 +362,11 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
         o['mr'] = dict(o.get('mr') or {}, r=round(career[pid], 2), rk=int(crk[pid]), prk=int(crk[pid]), pos='RP', rel=1,
                        pk=int(g.loc[g.rs.idxmax(), 'yearID']))
 
-    # every team season's best players by the model, list or not (Appearances puts them on teams)
+    # which team seasons each player-season belongs to (for the year pages' model lists)
     app_t = {}
     for r in A[['playerID', 'yearID', 'teamID']].itertuples(index=False):
         tid = tkey.get((r.teamID, int(r.yearID)))
         if tid: app_t.setdefault((r.playerID, int(r.yearID)), []).append(tid)
-    best_by_team = {}
-    for r in RS.sort_values('s', ascending=False).itertuples():
-        for tid in app_t.get((r.playerID, int(r.yearID)), []):
-            lst = best_by_team.setdefault(tid, [])
-            if len(lst) < 5 and all(e[0] != r.name for e in lst):
-                lst.append([r.name, r.key if isinstance(r.key, str) else None, float(r.s), r.POS])
-    for tid, lst in best_by_team.items(): teams[tid]['mb'] = lst
 
     # each year's model top 10 hitters and pitchers, plus the top reliever by rate
     for (y, kind), g in RS.groupby(['yearID', 'kind']):
@@ -396,6 +389,8 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
     reg = RS[np.where(RS.kind == 'P', RS.BFP >= 100, RS.G >= 10)].groupby('kind').proj_WAR_G.agg(['min', 'max'])
     tw['proj_WAR_G'] = tw.proj_WAR_G.clip(tw.kind.map(reg['min']), tw.kind.map(reg['max']))
     tw['war'] = tw.proj_WAR_G * tw.g
+    gp_of = {t: (teams[t]['w'] or 0) + (teams[t]['l'] or 0) for t in tw.tid.unique()}
+    contrib = {(p, t): w * 162 / gp_of[t] for p, t, w in zip(tw.playerID, tw.tid, tw.war) if gp_of[t]}  # shown in lineups
     tr = {}
     for tid, g in tw.groupby('tid'):
         t = teams[tid]; gp = (t['w'] or 0) + (t['l'] or 0)
@@ -432,11 +427,70 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
 else:
     print('ratings: data/source/ratings_*.csv not found, run scripts/export_ratings.R to add the model')
 
-for tid, ks in roster.items():
-    y = teams[tid]['y']
-    teams[tid]['ro'] = sorted(set(ks), key=lambda k: (-season_score.get((k, y), -99), players[k]['ovr'] or 999))
-    sc = {k: season_score[(k, y)] for k in teams[tid]['ro'] if (k, y) in season_score}
-    if sc: teams[tid]['ros'] = sc
+# ---------------------------------------------------------------- season stats and team rosters
+# players get year-by-year lines (per team); every team season gets a lineup, rotation, bullpen and bench,
+# written to docs/data/rosters.json, which the site loads the first time a team page opens
+contrib = globals().get('contrib', {})
+key_of = {o['id']: k for k, o in players.items() if o.get('id')}
+f3n = lambda x: f3(x) if x == x else ''
+BC = ['G', 'AB', 'R', 'H', '2B', '3B', 'HR', 'RBI', 'SB', 'BB', 'SO', 'HBP', 'SF']
+B1 = BAT.groupby(['playerID', 'yearID', 'teamID'], as_index=False)[BC].sum().astype({c: float for c in BC})
+B1['PA'] = B1.AB + B1.BB + B1.HBP + B1.SF
+B1['AVG'] = (B1.H / B1.AB).where(B1.AB > 0); B1['OBP'] = ((B1.H + B1.BB + B1.HBP) / B1.PA).where(B1.PA > 0)
+B1['SLG'] = ((B1.H + B1['2B'] + 2 * B1['3B'] + 3 * B1.HR) / B1.AB).where(B1.AB > 0)
+PC = ['W', 'L', 'G', 'GS', 'SV', 'IPOuts', 'H', 'ER', 'BB', 'SO', 'HR']
+P1 = PIT.groupby(['playerID', 'yearID', 'teamID'], as_index=False)[PC].sum().astype({c: float for c in PC})
+P1['ERA'] = (27 * P1.ER / P1.IPOuts).where(P1.IPOuts > 0)
+ipf = lambda o: f"{int(o // 3)}{'.' + str(int(o % 3)) if o % 3 else ''}"
+batl = lambda r: [int(r.G), int(r.PA), int(r.AB), int(r.R), int(r.H), int(r['2B']), int(r['3B']), int(r.HR), int(r.RBI), int(r.SB), int(r.BB), int(r.SO), f3n(r.AVG), f3n(r.OBP), f3n(r.SLG)]
+pitl = lambda r: [int(r.W), int(r.L), int(r.G), int(r.GS), int(r.SV), ipf(r.IPOuts), int(r.H), int(r.BB), int(r.SO), int(r.HR), '%.2f' % r.ERA if r.ERA == r.ERA else '']
+
+# player pages: [year, tid, team label, batting line or None, pitching line or None]
+bk = {(r.playerID, int(r.yearID), r.teamID): batl(r) for _, r in B1[B1.playerID.isin(key_of)].iterrows()}
+pk_ = {(r.playerID, int(r.yearID), r.teamID): pitl(r) for _, r in P1[P1.playerID.isin(key_of)].iterrows()}
+for pid, k in key_of.items():
+    rows = sorted({kk[1:] for kk in list(bk) + list(pk_) if kk[0] == pid})
+    players[k]['ss'] = [[y, tkey.get((tm, y)), (teams.get(tkey.get((tm, y))) or {}).get('br') or tm, bk.get((pid, y, tm)), pk_.get((pid, y, tm))] for y, tm in rows]
+
+# team pages: lineup by position (most games there, each player once), rotation, bullpen, bench
+PN = {p: f"{f or ''} {l or ''}".strip() for p, f, l in zip(P.playerID, P.nameFirst, P.nameLast)}
+POSC = [('C', 'G_c'), ('1B', 'G_1b'), ('2B', 'G_2b'), ('3B', 'G_3b'), ('SS', 'G_ss'), ('LF', 'G_lf'), ('CF', 'G_cf'), ('RF', 'G_rf'), ('DH', 'G_dh')]
+AP2 = A.fillna(0)
+bl = {(r.playerID, int(r.yearID), r.teamID): r for r in B1.itertuples(index=False)}
+pl = {(r.playerID, int(r.yearID), r.teamID): r for r in P1.itertuples(index=False)}
+who = lambda p, tid: [PN.get(p, p), key_of.get(p), round(contrib[(p, tid)], 1) if (p, tid) in contrib else None]
+def hit_row(pos, p, y, tm, g):
+    b = bl.get((p, y, tm))
+    return [pos, *who(p, tkey.get((tm, y))), int(g), int(b.HR) if b else 0, f3n(b.AVG) if b else '', f3n(b.OBP) if b else '', f3n(b.SLG) if b else '']
+def pit_row(p, y, tm):
+    q = pl[(p, y, tm)]
+    return [*who(p, tkey.get((tm, y))), int(q.G), int(q.GS), int(q.W), int(q.L), int(q.SV), ipf(q.IPOuts), '%.2f' % q.ERA if q.ERA == q.ERA else '']
+rosters = {}
+for (y, tm), g in AP2.groupby(['yearID', 'teamID']):
+    y = int(y); tid = tkey.get((tm, y))
+    if not tid: continue
+    cand = sorted(((r[c], r.playerID, pos) for _, r in g.iterrows() for pos, c in POSC if r[c] > 0), reverse=True)
+    used, lineup = set(), {}
+    for gm, p, pos in cand:
+        if pos in lineup or p in used or (pos == 'DH' and gm < 15): continue
+        lineup[pos] = (p, gm); used.add(p)
+    L = [hit_row(pos, lineup[pos][0], y, tm, lineup[pos][1]) for pos, _ in POSC if pos in lineup]
+    bench = g[~g.playerID.isin(used) & (g.G_batting > g.G_p)].assign(pa=lambda d: [bl[(p, y, tm)].PA if (p, y, tm) in bl else 0 for p in d.playerID])
+    Bn = [hit_row(next((pos for pos, c in POSC if r[c] == max(r[c2] for _, c2 in POSC) and r[c] > 0), 'PH'), r.playerID, y, tm, r.G_all)
+          for _, r in bench.nlargest(5, 'pa').iterrows() if r.pa > 0]
+    ps = [p for p in g.playerID if (p, y, tm) in pl]
+    rot = sorted(ps, key=lambda p: (-pl[(p, y, tm)].GS, -pl[(p, y, tm)].IPOuts))[:5]
+    rot = [p for p in rot if pl[(p, y, tm)].GS > 0]
+    pen = sorted([p for p in ps if p not in rot and pl[(p, y, tm)].G > pl[(p, y, tm)].GS],
+                 key=lambda p: (-pl[(p, y, tm)].SV, -(pl[(p, y, tm)].G - pl[(p, y, tm)].GS)))[:5]
+    rosters[tid] = dict(L=L, B=Bn, R=[pit_row(p, y, tm) for p in rot], P=[pit_row(p, y, tm) for p in pen])
+(OUT / 'rosters.json').write_text(json.dumps(rosters, separators=(',', ':'), ensure_ascii=False))
+print(f'rosters: {len(rosters)} team seasons; season lines for {sum(1 for o in players.values() if o.get("ss"))} players')
+
+for tid, ks in roster.items():  # your list's players on each team, by their model WAR for this team (as in the lineup)
+    cw = {k: round(contrib[(players[k]['id'], tid)], 1) for k in set(ks) if (players[k].get('id'), tid) in contrib}
+    teams[tid]['ro'] = sorted(set(ks), key=lambda k: (-cw.get(k, -99), players[k]['ovr'] or 999))
+    if cw: teams[tid]['ros'] = cw
 
 # ---------------------------------------------------------------- logos manifest
 logos = sorted(p.name for p in (ROOT / 'docs' / 'logos').glob('*') if p.suffix.lower() in ('.png', '.svg', '.jpg', '.jpeg', '.webp', '.none'))

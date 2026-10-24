@@ -8,6 +8,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const enc = encodeURIComponent;
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
 
+let ROSTERS = null, rosterLoad = null;  // data/rosters.json, fetched when a team page first opens
 let D, WORLD, STATES, PHOTOS = {}, NOTES = { pre: [], years: {}, decades: {}, players: {} };
 const LG = { NA: 'National Association', NL: 'National League', AL: 'American League', AA: 'American Association', UA: 'Union Association', PL: "Players' League", FL: 'Federal League', NNL: 'Negro National League', NN2: 'Negro National League (II)', ECL: 'Eastern Colored League', ANL: 'American Negro League', EWL: 'East-West League', NSL: 'Negro Southern League', NAL: 'Negro American League', EAS: 'Eastern independent clubs', WES: 'Western independent clubs', IND: 'Independent clubs', NAC: 'Negro American (Cuban) clubs', INT: 'Interracial independents' };
 const POSP = new Set(['SP', 'RP']);
@@ -366,6 +367,21 @@ function teamRankRow([tid, t], i, all = true) {
   const r = t.tr;
   return `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="yr">#${all ? r.ar : r.yr}</span><span class="rn">${t.y} ${esc(t.n)}<small>${t.w}–${t.l}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ''} · ${r.v} projected WAR${all ? ` · #${r.yr} of ${r.n} in ${t.y}` : ''}</small></span><span class="meta">${fmtS(r.a)}</span></button>`;
 }
+function rosterHTML(tid) {
+  if (!ROSTERS) {
+    rosterLoad = rosterLoad || getJSON('data/rosters.json', {}).then(r => { ROSTERS = r; if (view.type === 't') render(false); });
+    return '<h2>Lineup</h2><p class="note">Loading the roster…</p>';
+  }
+  const r = ROSTERS[tid]; if (!r) return '';
+  const nm = e => e[1] ? `<a href="#" onclick="go('p_${e[1]}');return false">${esc(e[0])}</a>` : esc(e[0]);
+  const war = v => v == null ? '' : v.toFixed(1);
+  const hit = rows => `<table class="stats roster"><tr><th>Pos</th><th class="nm">Player</th><th>G</th><th>HR</th><th>AVG</th><th>OBP</th><th>SLG</th><th title="Projected WAR for this team, per 162, from your model">WAR</th></tr>${rows.map(e => `<tr><td>${e[0]}</td><td class="nm">${nm(e.slice(1))}</td><td>${e[4]}</td><td>${e[5]}</td><td>${e[6]}</td><td>${e[7]}</td><td>${e[8]}</td><td>${war(e[3])}</td></tr>`).join('')}</table>`;
+  const pit = (rows, rot) => `<table class="stats roster"><tr><th class="nm">Player</th><th>G</th><th>${rot ? 'GS' : 'SV'}</th><th>W–L</th><th>IP</th><th>ERA</th><th title="Projected WAR for this team, per 162, from your model">WAR</th></tr>${rows.map(e => `<tr><td class="nm">${nm(e)}</td><td>${e[3]}</td><td>${rot ? e[4] : e[7]}</td><td>${e[5]}–${e[6]}</td><td>${e[8]}</td><td>${e[9]}</td><td>${war(e[2])}</td></tr>`).join('')}</table>`;
+  return `<h2>Lineup <small>most games at each position; WAR is your model’s, per 162</small></h2><div class="statline">${hit(r.L)}</div>
+   ${r.R.length ? `<h2>Rotation</h2><div class="statline">${pit(r.R, true)}</div>` : ''}
+   ${r.P.length ? `<h2>Bullpen</h2><div class="statline">${pit(r.P, false)}</div>` : ''}
+   ${r.B.length ? `<h2>Bench</h2><div class="statline">${hit(r.B)}</div>` : ''}`;
+}
 const KINDS = [['story', 'Story'], ['quote', 'Quote'], ['scouting', 'Scouting'], ['personal', 'Personal'], ['video', 'Video'], ['link', 'Link']];
 function clipsHTML(key) {
   const cl = prog(key)?.clips || [];
@@ -486,9 +502,18 @@ function vPlayer() {
    ${ranks.length ? `<h2>In your top 5</h2><div class="chips">${ranks.map(r => `<button class="chip ${r[2] === 1 ? 'lit' : ''}" onclick="go('y_${r[0]}')"><span class="k">${r[0]}</span>#${r[2]} ${r[1] === 'P' ? 'pitcher' : r[1] === 'RP' ? 'reliever' : 'player'}</button>`).join('')}</div>` : ''}
    ${modelHTML(p)}
    ${showBat || showPit ? `<h2>Career numbers</h2><div class="statline">${showBat ? cols(bat, ['G', 'AB', 'H', 'HR', 'R', 'RBI', 'SB', 'BB', 'AVG', 'OBP', 'SLG']) : ''}${showPit ? `<div style="height:8px"></div>` + cols(pit, ['W', 'L', 'ERA', 'G', 'GS', 'SV', 'IP', 'SO', 'BB']) : ''}</div>` : ''}
+   ${seasonStats(p, showBat, showPit)}
    ${playerNotes(k)}
    <h2>Scouting card <small>your grades, one click each${p.tools ? '; outlined ones are your model’s until you choose' : ''}</small></h2>${gradesHTML(key, pitcher, p.tools)}
    <h2>Clippings <small>stories, quotes, personal details</small></h2>${clipsHTML(key)}`;
+}
+const BATH = ['G', 'PA', 'AB', 'R', 'H', '2B', '3B', 'HR', 'RBI', 'SB', 'BB', 'SO', 'AVG', 'OBP', 'SLG'];
+const PITH = ['W', 'L', 'G', 'GS', 'SV', 'IP', 'H', 'BB', 'SO', 'HR', 'ERA'];
+function seasonStats(p, showBat, showPit) {
+  const ss = p.ss || []; if (!ss.length || !(showBat || showPit)) return '';
+  const tbl = (i, hs) => { const rows = ss.filter(r => r[i]); if (!rows.length) return '';
+    return `<table class="stats ss"><tr><th>Year</th><th>Team</th>${hs.map(h => `<th>${h}</th>`).join('')}</tr>${rows.map(r => `<tr><td><a href="#" onclick="go('y_${r[0]}');return false">${r[0]}</a></td><td>${r[1] ? `<a href="#" onclick="go('t_${r[1]}');return false">${esc(r[2])}</a>` : esc(r[2])}</td>${r[i].map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</table>`; };
+  return `<h2>Year by year</h2><div class="statline">${showBat ? tbl(3, BATH) : ''}${showBat && showPit ? '<div style="height:12px"></div>' : ''}${showPit ? tbl(4, PITH) : ''}</div>`;
 }
 function playerNotes(k) {
   const ps = NOTES.players[k]; if (!ps || !ps.length) return '';
@@ -513,8 +538,8 @@ function vTeam() {
    ${park || t.park ? `<h2>Ballpark</h2><div class="parkbox"><b>${esc(park ? park.n : t.park)}</b>${park ? ` · ${esc(park.c)} · used ${park.y0}–${park.y1}${park.al ? `<div class="note">Also called ${esc(park.al)}</div>` : ''}${park.note ? `<div class="note">Your note: ${esc(park.note)}</div>` : ''}` : (t.ap ? ' <span class="note">(map pin at the city)</span>' : '')}</div>` : ''}
    ${lightsHTML(key)}
    <h2>Doors</h2>${doorsHTML(key)}
-   <h2>From your list <small>${ro.length} on this roster${t.ros ? ', best season first' : ''}</small></h2>${ro.length ? `<div class="chips">${ro.map(k => t.ros && k in t.ros ? playerChip(k).replace('</button>', ` <span class="k">${fmtS(t.ros[k])}</span></button>`) : playerChip(k)).join('')}</div>` : '<p class="empty">Nobody from your list played here this year.</p>'}
-   ${t.mb && t.mb.length ? `<h2>Best on the roster <small>by your model, this season</small></h2>${modelList(t.mb.map(e => [...e, null]))}` : ''}
+   <h2>From your list <small>${ro.length} on this roster${t.ros ? ', most model WAR first' : ''}</small></h2>${ro.length ? `<div class="chips">${ro.map(k => t.ros && k in t.ros ? playerChip(k).replace('</button>', ` <span class="k">${t.ros[k].toFixed(1)} WAR</span></button>`) : playerChip(k)).join('')}</div>` : '<p class="empty">Nobody from your list played here this year.</p>'}
+   ${rosterHTML(tid)}
    ${gms.length ? `<h2>Great games</h2><div class="list">${gms.map(gameRow).join('')}</div>` : ''}
    <h2>The franchise <small>${esc(fr ? fr.n : t.n)}</small></h2>
    <div class="list">${eras.map(e => `<button class="row" onclick="go('t_${e.tid}')"><span class="yr">${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}</span><span class="rn">${esc(e.n)}${e.c ? `<small>${esc(e.c)}</small>` : ''}</span></button>`).join('')}</div>

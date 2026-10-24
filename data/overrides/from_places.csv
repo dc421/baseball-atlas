@@ -1,0 +1,7 @@
+key,city,region,country,lat,lon,note
+martipe02,Manoguayabo,Santo Domingo,Dominican Republic,18.483,-70.017,birthplace not in geocoder
+jenkife01,Chatham,Ontario,Canada,42.404,-82.191,birthplace not in geocoder
+carewro01,Gatún,Colón,Panama,9.271,-79.920,born in the Canal Zone
+jonesan01,Willemstad,,Curaçao,12.108,-68.934,birthplace not in geocoder
+higuete01,Los Mochis,Sinaloa,Mexico,25.790,-108.986,birthplace not in geocoder
+valenfe01,Navojoa,Sonora,Mexico,27.074,-109.444,birthplace not in geocoder

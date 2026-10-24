@@ -293,8 +293,126 @@ for r in gm.itertuples(index=False):
                           tm=code or None, tid=tid, gr=1 if str(r[24]).strip() == 'great' else 0)
     years.setdefault(y, {}).setdefault('games', []).append(str(rk))
 
+# ---------------------------------------------------------------- your rating model (scripts/export_ratings.R)
+# Season and career scores are WAR/G above the era's comparison line, x1000 for display.
+# Your thresholds: all-timer > 6.9, safely in > 3, borderline in > 0, borderline out > -3.
+season_score = {}  # (key, year) -> score, for sorting rosters
+if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exists():
+    RS = pd.read_csv(SRC / 'ratings_seasons.csv')
+    RP = pd.read_csv(SRC / 'ratings_players.csv')
+    RS = RS[np.isfinite(RS.score)].copy()
+    RS['s'] = (RS.score * 1000).round(2)
+    # list players: by Lahman id, else by name for the ones outside the database
+    pid2key = {o['id']: k for k, o in players.items() if o.get('id')}
+    nm = RS.groupby('playerID').name.first().dropna()
+    by_nm = nm.groupby(nm.map(norm)).apply(lambda s: s.index[0] if len(s) == 1 else None).dropna()
+    for k, o in players.items():
+        if not o.get('id') and norm(o['f'] + o['l']) in by_nm.index: pid2key[by_nm[norm(o['f'] + o['l'])]] = k
+    RS['key'] = RS.playerID.map(pid2key)
+
+    # tools on a 20-80 scale: z-score among regular seasons, then the player's top 4 rated seasons
+    tools = {'H': ['hit_tool', 'power', 'speed', 'fielding'], 'P': ['K_plus', 'BB_plus', 'dur']}
+    RS['dur'] = RS.BFP  # durability: batters faced per season, graded within SP or RP below
+    for kind, cols in tools.items():
+        reg = RS[(RS.kind == kind) & ((RS.PA >= 300) if kind == 'H' else (RS.BFP >= 300))]
+        for c in cols:
+            if c == 'dur':
+                grp = RS.POS.where(RS.POS == 'RP', 'SP')
+                m, sd = reg.groupby(grp[reg.index]).dur.agg(['mean', 'std']).reindex(grp).values.T
+                RS['dur_g'] = (50 + 10 * (RS.dur - m) / sd).clip(20, 80).where(RS.kind == 'P')
+                continue
+            z = (RS[c] - reg[c].mean()) / reg[c].std()
+            RS[c + '_g'] = (50 + 10 * (-z if c == 'BB_plus' else z)).clip(20, 80)
+    mine = RS[RS.key.notna()]
+    for k, g in mine.groupby('key'):
+        o = players[k]
+        o['arc'] = [[int(r.yearID), float(r.s), int(r.year_rank), r.kind] for r in g.sort_values('yearID').itertuples()]
+        for r in g.itertuples(): season_score[(k, int(r.yearID))] = max(season_score.get((k, int(r.yearID)), -99), r.s)
+        kind = 'P' if o['pos'] in ('SP', 'RP') and (g.kind == 'P').any() else 'H'
+        best = g[g.kind == kind].nlargest(4, 's')
+        w = (best.PA if kind == 'H' else best.BFP).fillna(1).clip(lower=1)
+        ok = {c: best[c + '_g'].notna() for c in tools[kind]}
+        o['tools'] = {c: int(round(np.average(best[c + '_g'][ok[c]], weights=w[ok[c]]) / 5) * 5) for c in tools[kind] if ok[c].any()}
+    for r in RP.itertuples():
+        k = pid2key.get(r.playerID)
+        if not k: continue
+        players[k]['mr'] = dict(r=round(r.rating * 1000, 2), rk=int(r.rk_ovr), prk=int(r.pos_rk), pos=r.POS, pk=int(r.peak_year),
+                                war=nz(r.WAR), hof=1 if str(r.hof).upper() == 'TRUE' else 0, odds=round(r.should_hof_pred, 3))
+    # relievers are rated by rate, as in your script's RP list: proj_WAR_BFP_net, best four seasons weighted 2/1.5/1/.5
+    rel = RS[(RS.kind == 'P') & (RS.POS == 'RP') & RS.rp_score.notna()].copy()
+    rel['rs'] = (rel.rp_score * 1000).round(2)
+    rel['rrk'] = rel.groupby('yearID').rs.rank(ascending=False, method='min').astype(int)
+    wts = np.array([2, 1.5, 1, .5])
+    career = rel.groupby('playerID').rs.apply(lambda x: float(np.dot(np.pad(np.sort(x.values)[::-1][:4], (0, max(0, 4 - len(x))), constant_values=-10), wts) / 5))
+    crk = career.rank(ascending=False, method='min').astype(int)
+    for k, o in players.items():
+        g = rel[rel.key == k]
+        if o['pos'] != 'RP' or g.empty: continue
+        pid = g.playerID.iloc[0]
+        o['arc'] = [[int(r.yearID), float(r.rs), int(r.rrk), 'R'] for r in g.sort_values('yearID').itertuples()]
+        o['mr'] = dict(o.get('mr') or {}, r=round(career[pid], 2), rk=int(crk[pid]), prk=int(crk[pid]), pos='RP', rel=1,
+                       pk=int(g.loc[g.rs.idxmax(), 'yearID']))
+
+    # every team season's best players by the model, list or not (Appearances puts them on teams)
+    app_t = {}
+    for r in A[['playerID', 'yearID', 'teamID']].itertuples(index=False):
+        tid = tkey.get((r.teamID, int(r.yearID)))
+        if tid: app_t.setdefault((r.playerID, int(r.yearID)), []).append(tid)
+    best_by_team = {}
+    for r in RS.sort_values('s', ascending=False).itertuples():
+        for tid in app_t.get((r.playerID, int(r.yearID)), []):
+            lst = best_by_team.setdefault(tid, [])
+            if len(lst) < 5 and all(e[0] != r.name for e in lst):
+                lst.append([r.name, r.key if isinstance(r.key, str) else None, float(r.s), r.POS])
+    for tid, lst in best_by_team.items(): teams[tid]['mb'] = lst
+
+    # each year's model top 10 hitters and pitchers, plus the top reliever by rate
+    for (y, kind), g in RS.groupby(['yearID', 'kind']):
+        g = g.nsmallest(10, 'year_rank')
+        years.setdefault(int(y), {})['m' + kind] = [[r.name, r.key if isinstance(r.key, str) else None, float(r.s), r.POS,
+                                                     (app_t.get((r.playerID, int(y))) or [None])[0]] for r in g.itertuples()]
+    for y, g in RS[(RS.kind == 'P') & (RS.POS == 'RP')].groupby('yearID'):
+        r = g.nlargest(1, 'rp_score').iloc[0]
+        years[int(y)]['mRP'] = [r['name'], r.key if isinstance(r.key, str) else None, round(r.rp_score * 1000, 2), 'RP',
+                                (app_t.get((r.playerID, int(y))) or [None])[0]]
+    # team ratings: each player's projected WAR/G, weighted by games for that team, summed, per 162,
+    # then against the average team in the same league that year (which is what the all-time rank uses)
+    AP = A[['playerID', 'yearID', 'teamID', 'G_all', 'G_p']].fillna(0)
+    tw = RS[['playerID', 'yearID', 'kind', 'name', 'key', 'POS', 'proj_WAR_G']].merge(AP, on=['playerID', 'yearID'])
+    tw['tid'] = [tkey.get((t, int(y))) for t, y in zip(tw.teamID, tw.yearID)]
+    tw['g'] = np.where(tw.kind == 'P', tw.G_p, tw.G_all)
+    tw = tw[tw.tid.notna() & (tw.g > 0)].copy()
+    tw['war'] = tw.proj_WAR_G * tw.g
+    tr = {}
+    for tid, g in tw.groupby('tid'):
+        t = teams[tid]; gp = (t['w'] or 0) + (t['l'] or 0)
+        if not gp or g[g.kind == 'H'].g.sum() < 4 * gp: continue  # less than half the lineup matched: leave unrated
+        k = 162 / gp
+        top = g.nlargest(3, 'war')
+        tr[tid] = dict(v=round(g.war.sum() * k, 1), h=round(g[g.kind == 'H'].war.sum() * k, 1), p=round(g[g.kind == 'P'].war.sum() * k, 1),
+                       top=[[r.name, r.key if isinstance(r.key, str) else None, round(r.war * k, 1)] for r in top.itertuples()])
+    TR = pd.DataFrame([dict(tid=tid, y=teams[tid]['y'], lg=teams[tid]['lg'], v=o['v']) for tid, o in tr.items()])
+    # short schedules and lopsided early leagues spread teams far apart, so put every league-year on the
+    # typical spread, then apply the model's 1800s discount to positive gaps, as player_ratings does
+    lgy = TR.groupby(['y', 'lg']).v
+    TR['a'], TR['sd'], TR['nt'] = TR.v - lgy.transform('mean'), lgy.transform('std'), lgy.transform('size')
+    ref = TR[TR.nt >= 6].groupby(['y', 'lg']).sd.first().median()
+    TR['a'] = np.where(TR.nt >= 4, TR.a * ref / TR.sd, TR.a)
+    TR['a'] = np.where(TR.a > 0, TR.a / (1 + np.exp(-((TR.y - 1870) / 10 - .7))) ** 2, TR.a)
+    TR['yr'] = TR.groupby('y').v.rank(ascending=False, method='min').astype(int)
+    TR['ar'] = TR.a.rank(ascending=False, method='min').astype(int)
+    for r in TR.itertuples(): teams[r.tid]['tr'] = dict(tr[r.tid], a=round(r.a, 1), yr=int(r.yr), ar=int(r.ar), n=int((TR.y == r.y).sum()))
+    print(f'team ratings: {len(TR)} of {len(teams)} team seasons rated; best: ' +
+          ', '.join(f"{teams[r.tid]['y']} {teams[r.tid]['n']} {r.a:+.1f}" for r in TR.nsmallest(5, 'ar').itertuples()))
+    print(f'ratings: {len(RS)} seasons, {RS.key.notna().groupby(RS.playerID).any().sum()} of {len(players)} list players matched')
+else:
+    print('ratings: data/source/ratings_*.csv not found, run scripts/export_ratings.R to add the model')
+
 for tid, ks in roster.items():
-    teams[tid]['ro'] = sorted(set(ks), key=lambda k: players[k]['ovr'] or 999)
+    y = teams[tid]['y']
+    teams[tid]['ro'] = sorted(set(ks), key=lambda k: (-season_score.get((k, y), -99), players[k]['ovr'] or 999))
+    sc = {k: season_score[(k, y)] for k in teams[tid]['ro'] if (k, y) in season_score}
+    if sc: teams[tid]['ros'] = sc
 
 # ---------------------------------------------------------------- logos manifest
 logos = sorted(p.name for p in (ROOT / 'docs' / 'logos').glob('*') if p.suffix.lower() in ('.png', '.svg', '.jpg', '.jpeg', '.webp', '.none'))

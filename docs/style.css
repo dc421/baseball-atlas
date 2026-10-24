@@ -286,3 +286,21 @@ details.allteams summary{cursor:pointer;font-family:var(--f-display);font-weight
   .maplayers .chip{font-size:12px;padding:2px 9px}
   .maphint{display:none}
 }
+/* your rating model */
+.arc{margin:6px 0 0}
+.arc .plot{position:relative;padding-right:76px}
+.arc svg{width:100%;height:150px;display:block;overflow:visible}
+.arc .bar rect:not(.hit){fill:var(--ghost)}
+.arc .bar.up rect:not(.hit){fill:var(--lit)}
+.arc .bar.mine rect:not(.hit){stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.arc .bar .hit{fill:transparent}
+.arc .bar{cursor:pointer}
+.arc .bar:hover rect:not(.hit){opacity:.75}
+.arc line.zero{stroke:var(--muted);stroke-width:1;vector-effect:non-scaling-stroke}
+.arc line.ref{stroke:var(--line);stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
+.arc .lab{position:absolute;right:0;transform:translateY(-110%);font-family:var(--f-mono);font-size:10px;color:var(--muted);pointer-events:none}
+.arc figcaption{padding-right:76px;display:flex;justify-content:space-between;gap:8px;font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-top:2px}
+.arc figcaption span:nth-child(2){text-align:center}
+h3.sm{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:12px 0 2px}
+.scale button.sugg{border:1.5px dashed var(--lit);color:var(--ink)}
+.grade .m80{font-family:var(--f-mono);font-weight:500;font-size:11px;color:var(--lit);margin-left:2px}

@@ -12,18 +12,22 @@
 <div class="app">
 <header class="top">
   <div class="mark" id="home" role="link" tabindex="0">Living Atlas <span>of</span> Baseball</div>
-  <nav class="tabs" aria-label="Views">
-    <button id="tab-y">Teams</button>
-    <button id="tab-r">Rankings</button>
-    <button id="tab-l">Places</button>
-    <button id="tab-a">Add a pin</button>
+  <nav class="tabs" aria-label="Homes">
+    <button id="home-map">Map</button>
+    <button id="home-teams">Teams</button>
+    <button id="home-players">Players</button>
+    <button id="home-games">Games</button>
   </nav>
   <button class="spinbtn" id="spin" title="Take me somewhere I haven't been">Spin</button>
+  <button class="pinbtn" id="addpin" title="Add a pin, or see your pins">+ Pin</button>
   <div class="search"><input id="q" type="search" placeholder="Find a player, team, place, game…" autocomplete="off" aria-label="Search the atlas"><div class="results" id="results" hidden></div></div>
 </header>
 <main class="split">
   <div class="mapwrap">
     <svg id="map" role="img" aria-label="Map"></svg>
+    <div class="maplayers"><button class="chip" id="ml-teams">Teams by year</button><button class="chip" id="ml-places">Hometowns</button></div>
+    <button class="mapexpand" id="mapexpand" aria-label="Open the big map"><span>Open map ⤢</span></button>
+    <button class="mapclose" id="mapclose">Close map ✕</button>
     <div class="maphint" id="maphint"></div>
     <div class="legend"><span><i style="background:var(--ghost)"></i>not yet explored</span><span><i style="background:var(--lit)"></i>lit up</span></div>
     <div class="mapbar" id="mapbar">
@@ -34,6 +38,7 @@
     </div>
   </div>
   <aside class="panel" id="panel" aria-live="polite"><p class="note">Loading the atlas…</p></aside>
+  <button class="mapfab" id="mapfab">Map</button>
 </main>
 </div>
 <script src="vendor/d3.min.js"></script>

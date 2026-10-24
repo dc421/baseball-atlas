@@ -8,7 +8,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const enc = encodeURIComponent;
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
 
-let D, WORLD, STATES, PHOTOS = {};
+let D, WORLD, STATES, PHOTOS = {}, NOTES = { pre: [], years: {}, decades: {}, players: {} };
 const LG = { NA: 'National Association', NL: 'National League', AL: 'American League', AA: 'American Association', UA: 'Union Association', PL: "Players' League", FL: 'Federal League', NNL: 'Negro National League', NN2: 'Negro National League (II)', ECL: 'Eastern Colored League', ANL: 'American Negro League', EWL: 'East-West League', NSL: 'Negro Southern League', NAL: 'Negro American League', EAS: 'Eastern independent clubs', WES: 'Western independent clubs', IND: 'Independent clubs', NAC: 'Negro American (Cuban) clubs', INT: 'Interracial independents' };
 const POSP = new Set(['SP', 'RP']);
 const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'SP', 'RP'];
@@ -255,7 +255,7 @@ function drawFocus() {
 function fitTo(lls, maxK = 30) {
   if (!lls.length) return;
   const xs = lls.map(XY); let [x0, x1] = d3.extent(xs, d => d[0]), [y0, y1] = d3.extent(xs, d => d[1]);
-  const pad = Math.max(40, Math.min(W, H) * .12), bar = MAPMODE === 'teams' ? 70 : 0;
+  const pad = Math.max(24, Math.min(W, H) * .12), bar = $('#mapbar').hidden ? 0 : 70;
   const k = Math.min(maxK, Math.min((W - 2 * pad) / Math.max(x1 - x0, 20), (H - 2 * pad - bar) / Math.max(y1 - y0, 20)));
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
   svg.transition().duration(reduce ? 0 : 600).call(zoom.transform, d3.zoomIdentity.translate(W / 2 - k * (x0 + x1) / 2, (H - bar) / 2 - k * (y0 + y1) / 2).scale(k));
@@ -267,18 +267,37 @@ function setYear(y) {
   if (view.type === 'y') { view = { type: 'y', id: String(YEAR) }; setHash(); render(true, { keepMap: true }); } else drawBase();
 }
 
-/* ================================================================ routing */
+/* ================================================================ routing
+   Four homes (map, teams, players, games) each remember where you left them; every other view is a page. */
 let view = { type: 'y', id: '1897' }; const stack = [];
+const HOMES = ['map', 'teams', 'players', 'games'];
+const homeOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' ? v.id : null;
+const layoutOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' ? 'list' : 'page';
+let lastHome = 'map', lastMap = { type: 'y', id: '1897' }, mapT = null, FULL = false, sizedFor = '';
+const homeScroll = {};
 const setHash = () => { try { history.replaceState(null, '', '#' + view.type + '-' + view.id); } catch (e) { } };
+const scroller = () => innerWidth <= 820 ? document.scrollingElement : $('#panel');
+function leave() {  // remember the home we're leaving
+  const h = homeOf(view); if (!h) return;
+  if (h === 'map') { lastMap = view; mapT = d3.zoomTransform(svg.node()); } else homeScroll[h] = scroller().scrollTop;
+}
 function go(key, push = true) {
-  stopPlay();
+  stopPlay(); leave(); setFull(false, false);
   if (push) { stack.push(view); if (stack.length > 40) stack.shift(); }
   view = { type: key[0], id: key.slice(2) };
   setHash(); render(true);
-  $('#panel').scrollTop = 0;
-  if (innerWidth <= 820) window.scrollTo({ top: $('#panel').offsetTop - 60, behavior: 'smooth' });
+  scroller().scrollTop = 0;
 }
-function back() { const v = stack.pop(); if (v) { view = v; setHash(); render(true); } }
+function goHome(h) {
+  if (h === 'map') { go(lastMap.type + '_' + lastMap.id); return render(true, { restore: true }); }
+  go('r_' + h);
+  if (homeScroll[h]) scroller().scrollTop = homeScroll[h];
+}
+function back() { const v = stack.pop(); if (v) { leave(); setFull(false, false); view = v; setHash(); render(true); } }
+function setFull(on, redraw = true) {
+  if (FULL === on) return; FULL = on; document.body.classList.toggle('mapfull', on);
+  if (redraw) placeMap(false);
+}
 window.go = go;
 
 /* ================================================================ shared bits */
@@ -319,6 +338,34 @@ function placeText(f) { return f ? [f.c, f.r && f.r !== '—' && f.n !== 'Puerto
 const placeLink = (f, lvl = 2) => f && f.n ? `<a href="#" onclick="go('l_${enc(placeKey(f, lvl))}');return false">${esc(placeText(f))}</a>` : '';
 
 /* ================================================================ views */
+/* ---------------- your notes (docs/data/notes.json, from scripts/build_notes.py) ---------------- */
+const decadeOf = y => y < 1871 ? 'pre' : String(Math.floor(y / 10) * 10);
+const decadeName = d => d === 'pre' ? 'Before 1871' : d + 's';
+function md(s) {  // your doc's text: escape it, then turn [text](url) and bare links into links
+  let h = esc(s).replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, (m, t, u) => `<a href="${u}" target="_blank" rel="noopener">${t}</a>`);
+  return h.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, (m, pre, u) => `${pre}<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40)}…</a>`);
+}
+function writeup(paras, open = 2) {  // first paragraphs shown, the rest behind "Keep reading"
+  if (!paras || !paras.length) return '';
+  const p = x => `<p>${md(x)}</p>`;
+  return `<div class="writeup">${paras.slice(0, open).map(p).join('')}${paras.length > open ? `<details><summary>Keep reading <small>${paras.length - open} more paragraphs</small></summary>${paras.slice(open).map(p).join('')}</details>` : ''}</div>`;
+}
+const quickList = xs => xs && xs.length ? `<ul class="quick">${xs.map(x => `<li>${md(x)}</li>`).join('')}</ul>` : '';
+function vDecade() {
+  const d = view.id === 'pre' ? 'pre' : String(Math.floor(+view.id / 10) * 10), pre = d === 'pre';
+  const y0 = pre ? 1845 : +d, y1 = pre ? 1870 : Math.min(+d + 9, 2026), dn = NOTES.decades[d] || {};
+  const eras = D.eras.filter(e => e[0] <= y1 && e[1] >= y0);
+  const prev = pre ? null : +d === 1870 ? 'pre' : String(+d - 10), next = pre ? '1870' : +d < 2020 ? String(+d + 10) : null;
+  const years = []; for (let y = Math.max(y0, 1871); y <= y1 && !pre; y++) years.push(y);
+  const yearRow = y => { const tms = Object.entries(D.teams).filter(([, t]) => t.y === y), ws = tms.find(([, t]) => t.ws), q = (NOTES.years[y] || {}).quick || [];
+    return `<div class="yrow"><button class="yhead" onclick="go('y_${y}')"><b>${y}</b>${ws ? `<span>${esc(ws[1].n)} win the Series</span>` : `<span>${tms.length} teams</span>`}</button>${quickList(q.filter(x => !/^New leagues: *$/i.test(x)))}</div>`; };
+  return `${banner()}<div class="eyebrow">The decade</div>
+  <div style="display:flex;align-items:center;gap:10px">${prev ? `<button class="iconbtn" onclick="go('d_${prev}')" aria-label="Previous decade">‹</button>` : ''}<h1 class="name" style="margin:0">${decadeName(d)}</h1>${next ? `<button class="iconbtn" onclick="go('d_${next}')" aria-label="Next decade">›</button>` : ''}</div>
+  ${eras.map(e => `<h2>Your era notes <small>${e[0]}–${e[1]}</small></h2><p style="margin:0">${esc(e[2])}</p>${e[3] ? `<p class="note" style="margin-top:4px">Black clubs and independents: ${esc(e[3])}</p>` : ''}`).join('')}
+  ${pre ? `<h2>Your history <small>the game before the leagues</small></h2>${writeup(NOTES.pre, 4)}` : ''}
+  ${years.length ? `<h2>Year by year <small>rule changes and your notes</small></h2><div class="years">${years.map(yearRow).join('')}</div>` : ''}
+  ${dn.text && dn.text.length ? `<h2>Your write-up</h2>${writeup(dn.text)}` : ''}`;
+}
 function vYear() {
   const y = +view.id; if (YEAR !== y) { YEAR = y; $('#yr').value = y; $('#bigyear').textContent = y; }
   const yd = D.years[y] || {}, era = D.eras.find(e => y >= e[0] && y <= e[1]);
@@ -330,10 +377,13 @@ function vYear() {
     : `<div class="row" style="cursor:default"><span class="avatar">·</span><span class="yr">#${e[1]}${e[2] ? ' ' + e[2] : ''}</span><span class="rn">${esc(e[3])}</span><span class="meta">${esc(e[4])}</span></div>`;
   const gms = (yd.games || []).map(r => D.games[r]).sort((a, b) => b.gr - a.gr || a.rk - b.rk);
   const pins = Object.entries(STORE.pins).filter(([, s]) => s.year === y);
-  return `${banner()}<div class="eyebrow">The season</div>
+  const yn = NOTES.years[y] || {};
+  return `${banner()}<div class="eyebrow">The season · <a href="#" onclick="go('d_${decadeOf(y)}');return false">${decadeName(decadeOf(y))}</a></div>
   <div style="display:flex;align-items:center;gap:10px"><button class="iconbtn" onclick="go('y_${y - 1}')" aria-label="Previous year">‹</button><h1 class="name" style="margin:0">${y}</h1><button class="iconbtn" onclick="go('y_${y + 1}')" aria-label="Next year">›</button></div>
   <div class="sub" style="margin-top:6px"><span><b>${tms.length}</b> teams</span><span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> explored</span>${lgs.length ? `<span>${lgs.map(l => esc(LG[l] || l)).join(' · ')}</span>` : ''}</div>
   ${era ? `<h2>Your era notes <small>${era[0]}${era[1] !== era[0] ? '–' + era[1] : ''}</small></h2><p style="margin:0">${esc(era[2])}</p>${era[3] ? `<p class="note" style="margin-top:4px">Black clubs and independents: ${esc(era[3])}</p>` : ''}` : ''}
+  ${yn.quick && yn.quick.length ? `<h2>Changes and notes</h2>${quickList(yn.quick)}` : ''}
+  ${yn.text && yn.text.length ? `<h2>Your write-up</h2>${writeup(yn.text)}` : ''}
   ${ws.length || pen.length ? `<h2>Champions</h2><div class="chips">${ws.map(([tid, t]) => `<button class="chip lit" onclick="go('t_${tid}')"><span class="k">WS</span>${esc(t.n)}</button>`).join('')}${pen.map(([tid, t]) => `<button class="chip" onclick="go('t_${tid}')"><span class="k">${esc(t.lg)}</span>${esc(t.n)}</button>`).join('')}</div>` : ''}
   ${topH.length ? `<h2>Your top 5 <small>position players</small></h2><div class="list">${topH.map(entry).join('')}</div>` : ''}
   ${topP.length ? `<h2>Your top 5 <small>pitchers</small></h2><div class="list">${topP.map(entry).join('')}${rp ? entry(['', 1, 'RP', rp[3], rp[4], rp[5]]) : ''}</div>` : ''}
@@ -380,8 +430,16 @@ function vPlayer() {
    ${p.clubs && p.clubs.length ? `<h2>Clubs <small>outside the database</small></h2><div class="list">${p.clubs.map(c => `<div class="row" style="cursor:default"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></div>`).join('')}</div>` : ''}
    ${ranks.length ? `<h2>In your top 5</h2><div class="chips">${ranks.map(r => `<button class="chip ${r[2] === 1 ? 'lit' : ''}" onclick="go('y_${r[0]}')"><span class="k">${r[0]}</span>#${r[2]} ${r[1] === 'P' ? 'pitcher' : r[1] === 'RP' ? 'reliever' : 'player'}</button>`).join('')}</div>` : ''}
    ${showBat || showPit ? `<h2>Career numbers</h2><div class="statline">${showBat ? cols(bat, ['G', 'AB', 'H', 'HR', 'R', 'RBI', 'SB', 'BB', 'AVG', 'OBP', 'SLG']) : ''}${showPit ? `<div style="height:8px"></div>` + cols(pit, ['W', 'L', 'ERA', 'G', 'GS', 'SV', 'IP', 'SO', 'BB']) : ''}</div>` : ''}
+   ${playerNotes(k)}
    <h2>Scouting card <small>your grades, one click each</small></h2>${gradesHTML(key, pitcher)}
    <h2>Clippings <small>stories, quotes, personal details</small></h2>${clipsHTML(key)}`;
+}
+function playerNotes(k) {
+  const ps = NOTES.players[k]; if (!ps || !ps.length) return '';
+  const season = /^\d{4} \(/, seasons = ps.filter(x => season.test(x)), text = ps.filter(x => !season.test(x));
+  return `${text.length ? `<h2>Your write-up</h2>${writeup(text, 3)}` : ''}
+   ${seasons.length ? `<h2>Season by season <small>your read</small></h2><div class="list">${seasons.map(x => { const m = x.match(/^(\d{4}) \(([^)]*)\):?\s*(.*)$/) || [, x.slice(0, 4), '', x];
+     return `<div class="row" style="cursor:default"><span class="yr">${m[1]}</span><span class="rn">${md(m[3] || '')}<small>${esc(m[2])}</small></span></div>`; }).join('')}</div>` : ''}`;
 }
 function vTeam() {
   const tid = view.id, t = D.teams[tid]; if (!t) return notFound();
@@ -435,32 +493,53 @@ function pinForm(s) {
    <div class="r"><button class="btn" type="submit">${s.title ? 'Save changes' : 'Add to the map'}</button>${s.title ? `<button class="btn ghost" type="button" id="pindel">Delete pin</button><span id="pindelconfirm" hidden><button class="btn" type="button" id="pindelyes">Yes, delete it</button></span>` : ''}<span class="note" id="pinmsg"></span></div>
   </form>`;
 }
-const vAddPin = () => `${crumbs('Add a pin')}${banner()}<div class="eyebrow">For the stories that aren’t a player or a team</div><h1 class="name">Add a pin</h1><p class="note">Creighton in Brooklyn, the Emperor’s game in Tokyo, a reel you love. It goes on the map at its place and year, with its own doors and clippings.</p>${pinForm(null)}`;
+const vAddPin = () => `${crumbs('Add a pin')}${banner()}<div class="eyebrow">For the stories that aren’t a player or a team</div><h1 class="name">Add a pin</h1><p class="note">Creighton in Brooklyn, the Emperor’s game in Tokyo, a reel you love. It goes on the map at its place and year, with its own doors and clippings.</p>${pinForm(null)}
+  <h2>Your pins <small>${Object.keys(STORE.pins).length}</small></h2>${Object.keys(STORE.pins).length ? `<div class="list">${Object.entries(STORE.pins).sort((a, b) => (a[1].year || 0) - (b[1].year || 0))
+    .map(([id, s]) => `<button class="row" onclick="go('s_${id}')"><span class="yr">${s.year || ''} ${esc(s.kind || '')}</span><span class="rn">${esc(s.title)}<small>${esc(s.place || '')}</small></span><span class="meta">${dotsHTML('s_' + id)}</span></button>`).join('')}</div>` : '<p class="empty">No pins yet.</p>'}`;
 
-/* ---------------- rankings ---------------- */
-let rkTab = 'p', rkPos = 'All', rkFilter = '', rkSort = 'rank';
-function vRankings() {
-  const tabs = `<div class="tabsx"><button class="chip" aria-pressed="${rkTab === 'p'}" data-rk="p">Players</button><button class="chip" aria-pressed="${rkTab === 'g'}" data-rk="g">Games</button><button class="chip" aria-pressed="${rkTab === 's'}" data-rk="s">Your pins</button></div>`;
-  const f = rkFilter.toLowerCase(); let rows = '', controls = '';
-  if (rkTab === 'p') {
-    controls = `<div class="chips" style="margin-bottom:8px">${['All', ...POSITIONS].map(p => `<button class="chip" aria-pressed="${rkPos === p}" data-pos="${p}">${p}</button>`).join('')}</div>`;
-    let arr = Object.entries(D.players).filter(([, p]) => (rkPos === 'All' || p.pos === rkPos) && (!f || nameOf(p).toLowerCase().includes(f)));
-    const sorters = { rank: (a, b) => (rkPos === 'All' ? (a[1].ovr || 999) - (b[1].ovr || 999) : (typeof a[1].prk === 'number' ? a[1].prk : 999) - (typeof b[1].prk === 'number' ? b[1].prk : 999)), peak: (a, b) => (a[1].pk || 0) - (b[1].pk || 0), lit: (a, b) => litN('p_' + a[0]) - litN('p_' + b[0]) || (a[1].ovr || 999) - (b[1].ovr || 999) };
-    arr.sort(sorters[rkSort] || sorters.rank);
-    rows = arr.map(([k, p]) => { const fr = fromOf(k); const rk = rkPos === 'All' ? rankLabel(p) : (typeof p.prk === 'number' ? '#' + p.prk : p.prk || '') + ' ' + p.pos;
+/* ---------------- homes: players, games, teams ---------------- */
+const RK = { players: { f: '', sort: 'rank', pos: 'All' }, games: { f: '', sort: 'rank' }, teams: { f: '', grp: 'all' } };
+const LGROUP = { AL: 'mlb', NL: 'mlb', NA: 'early', AA: 'early', UA: 'early', PL: 'early', FL: 'early',
+  NNL: 'negro', NN2: 'negro', ECL: 'negro', ANL: 'negro', EWL: 'negro', NSL: 'negro', NAL: 'negro' };
+const GROUPS = [['mlb', 'American & National League'], ['early', '19th-century majors & Federal League'], ['negro', 'Negro Leagues'], ['ind', 'Independent clubs']];
+function vList() {
+  const h = view.id === 'teams' || view.id === 'games' ? view.id : 'players', st = RK[h], f = st.f.toLowerCase();
+  const filter = (ph, extra = '') => `<div class="r" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><input class="t" id="rkfilter" placeholder="${ph}" value="${esc(st.f)}">${extra}</div>`;
+  const sortSel = yearLabel => `<select class="t" id="rksort" style="flex:0 0 auto"><option value="rank" ${st.sort === 'rank' ? 'selected' : ''}>Your order</option><option value="peak" ${st.sort === 'peak' ? 'selected' : ''}>${yearLabel}</option><option value="lit" ${st.sort === 'lit' ? 'selected' : ''}>Darkest first</option></select>`;
+  if (h === 'players') {
+    const arr = Object.entries(D.players).filter(([, p]) => (st.pos === 'All' || p.pos === st.pos) && (!f || nameOf(p).toLowerCase().includes(f)));
+    const byRank = (a, b) => st.pos === 'All' ? (a[1].ovr || 999) - (b[1].ovr || 999) : (typeof a[1].prk === 'number' ? a[1].prk : 999) - (typeof b[1].prk === 'number' ? b[1].prk : 999);
+    arr.sort({ rank: byRank, peak: (a, b) => (a[1].pk || 0) - (b[1].pk || 0), lit: (a, b) => litN('p_' + a[0]) - litN('p_' + b[0]) || byRank(a, b) }[st.sort] || byRank);
+    const rows = arr.map(([k, p]) => { const fr = fromOf(k); const rk = st.pos === 'All' ? rankLabel(p) : (typeof p.prk === 'number' ? '#' + p.prk : p.prk || '') + ' ' + p.pos;
       return `<button class="row" onclick="go('p_${k}')">${avatar(k)}<span class="yr">${esc(rk)}</span><span class="rn">${esc(nameOf(p))}<small>peak ${p.pk || '?'}${fr ? ' · ' + esc(placeText(fr)) : ''}</small></span><span class="meta">${dotsHTML('p_' + k)}</span></button>`; }).join('');
-  } else if (rkTab === 'g') {
-    let arr = Object.values(D.games).filter(g => !f || (g.y + ' ' + g.g + ' ' + g.d).toLowerCase().includes(f));
-    arr.sort((a, b) => rkSort === 'lit' ? litN('g_' + a.rk) - litN('g_' + b.rk) : rkSort === 'peak' ? a.y - b.y : a.rk - b.rk);
-    rows = arr.map(gameRow).join('');
-  } else {
-    rows = Object.entries(STORE.pins).filter(([, s]) => !f || s.title.toLowerCase().includes(f)).sort((a, b) => (a[1].year || 0) - (b[1].year || 0))
-      .map(([id, s]) => `<button class="row" onclick="go('s_${id}')"><span class="yr">${s.year || ''} ${esc(s.kind || '')}</span><span class="rn">${esc(s.title)}<small>${esc(s.place || '')}</small></span><span class="meta">${dotsHTML('s_' + id)}</span></button>`).join('') || '<p class="empty">No pins yet.</p>';
+    return `${banner()}<div class="eyebrow">Your list · ${Object.keys(D.players).length} players</div><h1 class="name">Players</h1>
+     <div class="chips" style="margin-bottom:8px">${['All', ...POSITIONS].map(p => `<button class="chip" aria-pressed="${st.pos === p}" data-pos="${p}">${p}</button>`).join('')}</div>
+     ${filter('Filter by name…', sortSel('Peak year'))}<div class="list">${rows || '<p class="empty">No one matches.</p>'}</div>`;
   }
-  return `${banner()}<div class="eyebrow">Your lists</div><h1 class="name">Rankings</h1>${tabs}${controls}
-   <div class="r" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><input class="t" id="rkfilter" placeholder="Filter…" value="${esc(rkFilter)}">
-   <select class="t" id="rksort" style="flex:0 0 auto"><option value="rank" ${rkSort === 'rank' ? 'selected' : ''}>Your order</option><option value="peak" ${rkSort === 'peak' ? 'selected' : ''}>${rkTab === 'p' ? 'Peak year' : 'Year'}</option><option value="lit" ${rkSort === 'lit' ? 'selected' : ''}>Darkest first</option></select></div>
-   <div class="list">${rows}</div>`;
+  if (h === 'games') {
+    const arr = Object.values(D.games).filter(g => !f || (g.y + ' ' + g.g + ' ' + g.d).toLowerCase().includes(f));
+    arr.sort((a, b) => st.sort === 'lit' ? litN('g_' + a.rk) - litN('g_' + b.rk) || a.rk - b.rk : st.sort === 'peak' ? a.y - b.y : a.rk - b.rk);
+    return `${banner()}<div class="eyebrow">Your list · ${Object.keys(D.games).length} games</div><h1 class="name">Games</h1>
+     ${filter('Filter by year, series, description…', sortSel('Year'))}<div class="list">${arr.map(gameRow).join('') || '<p class="empty">No games match.</p>'}</div>`;
+  }
+  // teams: franchises with their name eras, until there's a team-season ranking to show here
+  const frs = Object.entries(D.franch).map(([fid, fr]) => {
+    const ts = fr.s.map(x => D.teams[x]), last = ts[ts.length - 1], eras = [];
+    for (const [i, t] of ts.entries()) { const e = eras[eras.length - 1]; if (e && e.n === t.n) e.y1 = t.y; else eras.push({ n: t.n, y0: t.y, y1: t.y, tid: fr.s[i] }); }
+    return { fid, fr, ts, last, eras, grp: LGROUP[last.lg] || 'ind' };
+  }).filter(x => (st.grp === 'all' || x.grp === st.grp) && (!f || x.eras.some(e => e.n.toLowerCase().includes(f))));
+  const block = ([g, label]) => {
+    const xs = frs.filter(x => x.grp === g).sort((a, b) => b.ts.length - a.ts.length); if (!xs.length) return '';
+    return `<h2>${label} <small>${xs.length}</small></h2><div class="list">${xs.map(x => `<div class="row frow">${badgeSm(x.last)}<span class="yr">${x.ts[0].y}–${x.last.y}</span><span class="rn"><a href="#" onclick="go('t_${x.fr.s[x.fr.s.length - 1]}');return false">${esc(x.last.n)}</a><small>${x.eras.length > 1 ? x.eras.map(e => `<a href="#" onclick="go('t_${e.tid}');return false">${esc(e.n)}</a> ${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}`).join(' · ') : `${x.ts.length} season${x.ts.length > 1 ? 's' : ''}`}</small></span><span class="meta" title="seasons explored">${x.fr.s.filter(tid => litN('t_' + tid)).length}/${x.ts.length}</span></div>`).join('')}</div>`;
+  };
+  return `${banner()}<div class="eyebrow">${Object.keys(D.franch).length} franchises</div><h1 class="name">Teams</h1>
+   <p class="note">Every franchise and the names it played under. Your team-season rankings will go here once you add them.</p>
+   <div class="chips" style="margin:8px 0">${[['all', 'All'], ...GROUPS].map(([g, l]) => `<button class="chip" aria-pressed="${st.grp === g}" data-grp="${g}">${g === 'all' ? 'All' : l}</button>`).join('')}</div>
+   ${filter('Filter by team name…')}${GROUPS.map(block).join('') || '<p class="empty">No teams match.</p>'}`;
+}
+function badgeSm(t) {
+  const logo = logoFor(t), [bg, fg] = teamColors(t);
+  return logo ? `<span class="avatar tb"><img src="logos/${esc(logo)}" alt=""></span>` : `<span class="avatar tb" style="background:${bg};color:${fg}">${esc(t.br || t.tm)}</span>`;
 }
 
 /* ---------------- places ---------------- */
@@ -497,10 +576,10 @@ const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.<
 function mapFor() {
   const t = view.type; highlight = null; focusPts = null; let fit = null;
   if (t === 'y' || t === 'a') MAPMODE = 'teams';
+  if (t === 'd') { MAPMODE = 'teams'; const d0 = view.id === 'pre' ? 1845 : +view.id; if (YEAR < d0 || YEAR > (view.id === 'pre' ? 1870 : d0 + 9)) { YEAR = view.id === 'pre' ? 1870 : Math.max(d0, 1871); $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; } }
   if (t === 't') { const tm = D.teams[view.id]; if (tm) { MAPMODE = 'teams'; if (YEAR !== tm.y) { YEAR = tm.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; } highlight = 't_' + view.id; if (tm.ll) fit = [tm.ll]; } }
   if (t === 'g') { const g = D.games[view.id]; if (g) { MAPMODE = 'teams'; YEAR = g.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; if (g.tid) { highlight = 't_' + g.tid; const tm = D.teams[g.tid]; if (tm.ll) fit = [tm.ll]; } } }
   if (t === 's') { const s = STORE.pins[view.id]; MAPMODE = 'teams'; if (s && s.ll) { focusPts = [{ ll: s.ll, label: s.title, key: 's_' + view.id, r: 8 }]; fit = [s.ll]; if (s.year) { YEAR = s.year; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; } } }
-  if (t === 'r') MAPMODE = rkTab === 'g' ? 'teams' : 'players';
   if (t === 'p') { MAPMODE = 'players'; highlight = 'p_' + view.id; const p = D.players[view.id]; if (p) { const f = fromOf(view.id); focusPts = [];
       if (f && f.ll) focusPts.push({ ll: f.ll, label: 'From: ' + (f.c || f.r || f.n), r: 7 });
       for (const s of p.st || []) { const tm = D.teams[s[5]]; if (tm && tm.ll) focusPts.push({ ll: tm.ll, label: `${s[2]} ${s[1]}`, key: 't_' + s[5], r: 5 }); }
@@ -508,20 +587,33 @@ function mapFor() {
       fit = focusPts.map(x => x.ll); } }
   if (t === 'l') { MAPMODE = 'places'; const k = view.id === 'world' ? null : decodeURIComponent(view.id); placeSel = k;
     if (k && PL[k]) { const lls = Object.values(PL).filter(n => n.lvl === 2 && (n.k === k || n.k.startsWith(k + '|')) && n.lls.length).map(n => n.lls[0]); fit = lls.length ? lls : null; } }
-  $('#mapbar').hidden = MAPMODE !== 'teams';
+  $('#mapbar').hidden = MAPMODE !== 'teams' || (layoutOf(view) !== 'map' && !FULL);
+  $('#ml-teams').setAttribute('aria-pressed', t === 'y'); $('#ml-places').setAttribute('aria-pressed', t === 'l');
   $('#maphint').textContent = { teams: highlight ? `Every team on the field in ${YEAR}` : `Every team on the field in ${YEAR}. Click a badge.`, players: 'Where your players are from', places: 'Cities sized by how many of your players come from them' }[MAPMODE];
   return fit;
 }
 function render(newView = true, opts = {}) {
   const panel = $('#panel'), t = view.type, st = panel.scrollTop, active = document.activeElement && document.activeElement.id;
   const drafts = {}; for (const id of ['clip-t', 'clip-u', 'pin-title', 'pin-year', 'pin-place', 'pin-text', 'pin-url', 'rkfilter']) { const el = document.getElementById(id); if (el) drafts[id] = el.value; }
-  const V = { y: vYear, p: vPlayer, t: vTeam, g: vGame, s: vPin, a: vAddPin, r: vRankings, l: vPlace };
+  const V = { d: vDecade, y: vYear, p: vPlayer, t: vTeam, g: vGame, s: vPin, a: vAddPin, r: vList, l: vPlace };
+  const lay = layoutOf(view), home = homeOf(view);
+  document.body.classList.remove('lay-map', 'lay-page', 'lay-list'); document.body.classList.add('lay-' + lay);
+  if (home) lastHome = home;
+  for (const h of HOMES) { const b = $('#home-' + h); b.setAttribute('aria-current', h === home); b.classList.toggle('from', !home && h === lastHome); }
   panel.innerHTML = (V[t] || vYear)();
-  if (!newView) { panel.scrollTop = st; for (const [id, v] of Object.entries(drafts)) { const el = document.getElementById(id); if (el && !el.value) el.value = v; } if (active) document.getElementById(active)?.focus(); }
-  const tab = { y: 'y', t: 'y', g: 'y', s: 'y', a: 'a', r: 'r', p: 'r', l: 'l' }[t];
-  for (const x of ['y', 'r', 'l', 'a']) $('#tab-' + x).setAttribute('aria-current', x === tab);
+  if (!newView) { scroller().scrollTop = st; for (const [id, v] of Object.entries(drafts)) { const el = document.getElementById(id); if (el && !el.value) el.value = v; } if (active) document.getElementById(active)?.focus(); }
   wire();
-  if (newView) { const fit = mapFor(); refreshMap(); if (!opts.keepMap) { if (fit && fit.length) fitTo(fit, view.type === 't' || view.type === 'g' ? 5 : 30); else fitNorthAmerica(); } }
+  if (newView && !opts.keepMap) placeMap(opts.restore);
+  else if (newView) { mapFor(); refreshMap(); }
+}
+// Size the map for the current layout (full map, corner inset, or none), draw it, and frame what this view is about.
+function placeMap(restore) {
+  if (layoutOf(view) === 'list' && !FULL) return;
+  const want = layoutOf(view) + (FULL ? '+full' : '') + innerWidth;
+  if (want !== sizedFor) { sizedFor = want; sizeMap(); }
+  const fit = mapFor(); refreshMap();
+  if (restore && mapT && homeOf(view) === 'map') svg.call(zoom.transform, mapT);
+  else if (fit && fit.length) fitTo(fit, view.type === 't' || view.type === 'g' ? 5 : 30); else fitNorthAmerica();
 }
 function curKey() { return view.type + '_' + view.id; }
 function wire() {
@@ -540,11 +632,12 @@ function wire() {
     const known = Object.values(PL).find(nd => nd.lvl === 2 && nd.n.toLowerCase() === n.toLowerCase() && (nd.c || '').toLowerCase() === c.toLowerCase() && (!r || (nd.r || '').toLowerCase() === r.toLowerCase()) && nd.lls.length);
     mutate(key, cur => { cur.from = { c: c || null, r: r || null, n, ll: known ? known.lls[0] : null }; }); buildPlaces(); PLACE_OPTS = null; render(true); });
   $('#fromreset')?.addEventListener('click', () => { mutate(key, cur => { delete cur.from; }); buildPlaces(); PLACE_OPTS = null; render(true); });
-  // rankings
-  document.querySelectorAll('[data-rk]').forEach(b => b.addEventListener('click', () => { rkTab = b.dataset.rk; rkSort = 'rank'; render(true); }));
-  document.querySelectorAll('[data-pos]').forEach(b => b.addEventListener('click', () => { rkPos = b.dataset.pos; render(false); }));
-  $('#rksort')?.addEventListener('change', e => { rkSort = e.target.value; render(false); });
-  $('#rkfilter')?.addEventListener('input', e => { rkFilter = e.target.value; clearTimeout(window.__rf); window.__rf = setTimeout(() => render(false), 150); });
+  // home lists
+  const st = view.type === 'r' ? RK[view.id] : null;
+  document.querySelectorAll('[data-pos]').forEach(b => b.addEventListener('click', () => { st.pos = b.dataset.pos; render(false); }));
+  document.querySelectorAll('[data-grp]').forEach(b => b.addEventListener('click', () => { st.grp = b.dataset.grp; render(false); }));
+  $('#rksort')?.addEventListener('change', e => { st.sort = e.target.value; render(false); });
+  $('#rkfilter')?.addEventListener('input', e => { st.f = e.target.value; clearTimeout(window.__rf); window.__rf = setTimeout(() => render(false), 150); });
   // pins
   $('#pinform')?.addEventListener('submit', e => { e.preventDefault(); savePin(view.type === 's' ? view.id : null); });
   $('#pindel')?.addEventListener('click', () => { $('#pindelconfirm').hidden = false; });
@@ -598,6 +691,7 @@ function doSearch(q) {
   const box = $('#results'); q = q.trim().toLowerCase(); if (q.length < 2) { box.hidden = true; return; }
   const out = [], ym = q.match(/^(1[89]\d\d|20[0-2]\d)\b\s*(.*)$/);
   if (ym && !ym[2]) out.push({ t: 'The ' + ym[1] + ' season', s: 'year', key: 'y_' + ym[1], sc: 9 });
+  const dm = q.match(/^(1[89]\d|20[0-2])0s$/); if (dm) out.push({ t: 'The ' + q, s: 'decade', key: 'd_' + dm[1] + '0', sc: 10 });
   if (ym && ym[2]) for (const [tid, t] of Object.entries(D.teams)) if (t.y === +ym[1] && t.n.toLowerCase().includes(ym[2])) out.push({ t: `${t.y} ${t.n}`, s: LG[t.lg] || t.lg, key: 't_' + tid, sc: 8 });
   for (const it of IDX) { const tl = it.t.toLowerCase(); if (tl.includes(q)) out.push({ ...it, sc: (tl.startsWith(q) ? 2 : 0) + (tl.split(' ').some(w => w.startsWith(q)) ? 1 : 0) + it.w }); }
   for (const fr of Object.values(D.franch)) { const names = new Set(fr.s.map(s => D.teams[s].n)); for (const n of names) if (n.toLowerCase().includes(q)) { const s = fr.s.filter(x => D.teams[x].n === n); out.push({ t: n, s: `${D.teams[s[0]].y}–${D.teams[s[s.length - 1]].y}`, key: 't_' + s[s.length - 1], sc: 2.5 }); } }
@@ -616,11 +710,12 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
 /* ================================================================ boot */
 (async function boot() {
   [D, WORLD, STATES, PHOTOS] = await Promise.all([getJSON('data/atlas.json'), getJSON('data/world.json'), getJSON('data/states.json'), getJSON('data/photos.json', {})]);
+  NOTES = { ...NOTES, ...(await getJSON('data/notes.json', {})) };
   loadStore(await getJSON('data/progress.json', {}));
   buildPlaces(); buildIndex();
   const dl = document.createElement('datalist'); dl.id = 'placelist'; dl.innerHTML = Object.keys(placeOptions()).sort().map(p => `<option value="${esc(p)}">`).join(''); document.body.appendChild(dl);
   setupMap();
-  addEventListener('resize', () => { clearTimeout(window.__rs); window.__rs = setTimeout(() => { sizeMap(); refreshMap(); }, 200); });
+  addEventListener('resize', () => { clearTimeout(window.__rs); window.__rs = setTimeout(() => placeMap(false), 200); });
   $('#yr').addEventListener('input', e => { stopPlay(); setYear(+e.target.value); });
   $('#play').addEventListener('click', () => { if (playT) { stopPlay(); return; } $('#play').textContent = '❚❚'; if (view.type !== 'y') go('y_' + YEAR); playT = setInterval(() => { if (YEAR >= 2025) { stopPlay(); return; } setYear(YEAR + 1); }, 650); });
   $('#ly-pins').addEventListener('click', e => { showPins = !showPins; e.currentTarget.setAttribute('aria-pressed', showPins); drawBase(); });
@@ -629,12 +724,17 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); selI = (selI + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length; bs.forEach((b, i) => b.classList.toggle('sel', i === selI)); }
     if (e.key === 'Enter') { e.preventDefault(); bs[selI].click(); } if (e.key === 'Escape') $('#results').hidden = true; });
   document.addEventListener('click', e => { if (!e.target.closest('.search')) $('#results').hidden = true; });
-  $('#home').addEventListener('click', () => go('y_' + YEAR)); $('#home').addEventListener('keydown', e => { if (e.key === 'Enter') go('y_' + YEAR); });
-  $('#tab-y').addEventListener('click', () => go('y_' + YEAR)); $('#tab-r').addEventListener('click', () => go('r_list'));
-  $('#tab-l').addEventListener('click', () => go('l_world')); $('#tab-a').addEventListener('click', () => go('a_new'));
+  $('#home').addEventListener('click', () => goHome('map')); $('#home').addEventListener('keydown', e => { if (e.key === 'Enter') goHome('map'); });
+  for (const h of HOMES) $('#home-' + h).addEventListener('click', () => goHome(h));
+  $('#addpin').addEventListener('click', () => go('a_new'));
+  $('#ml-teams').addEventListener('click', () => go('y_' + YEAR)); $('#ml-places').addEventListener('click', () => go('l_world'));
+  for (const id of ['#mapexpand', '#mapfab']) $(id).addEventListener('click', () => setFull(true));
+  $('#mapclose').addEventListener('click', () => setFull(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && FULL) setFull(false); });
   $('#spin').addEventListener('click', spin);
-  const m = (location.hash || '').slice(1).match(/^([ptgsyarl])-(.+)$/);
-  if (m) { view = { type: m[1], id: m[2] }; if (m[1] === 'y') YEAR = +m[2]; }
+  const m = (location.hash || '').slice(1).match(/^([ptgsyarld])-(.+)$/);
+  if (m) { view = { type: m[1], id: m[1] === 'r' && !HOMES.includes(m[2]) ? 'players' : m[2] }; if (m[1] === 'y') YEAR = +m[2]; }
+  if (homeOf(view) === 'map') lastMap = view;
   $('#yr').value = YEAR; $('#bigyear').textContent = YEAR;
   render(true);
 })();

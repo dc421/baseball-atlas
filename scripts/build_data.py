@@ -385,7 +385,7 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
         years[int(y)]['mRP'] = [r['name'], r.key if isinstance(r.key, str) else None, round(r.rp_score * 1000, 2), 'RP',
                                 (app_t.get((r.playerID, int(y))) or [None])[0]]
     # team ratings: each player's projected WAR/G, weighted by games for that team, summed, per 162,
-    # then against the average team in the same league that year (which is what the all-time rank uses)
+    # then against smooth curves over time (the projections already handle era and wartime talent)
     AP = A[['playerID', 'yearID', 'teamID', 'G_all', 'G_p']].fillna(0)
     tw = RS[['playerID', 'yearID', 'kind', 'name', 'key', 'POS', 'proj_WAR_G']].merge(AP, on=['playerID', 'yearID'])
     tw['tid'] = [tkey.get((t, int(y))) for t, y in zip(tw.teamID, tw.yearID)]
@@ -395,18 +395,20 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
     tr = {}
     for tid, g in tw.groupby('tid'):
         t = teams[tid]; gp = (t['w'] or 0) + (t['l'] or 0)
-        if not gp or g[g.kind == 'H'].g.sum() < 4 * gp: continue  # less than half the lineup matched: leave unrated
+        if gp < 20 or g[g.kind == 'H'].g.sum() < 4 * gp: continue  # a handful of games, or under half the lineup matched: unrated
         k = 162 / gp
         top = g.nlargest(3, 'war')
         tr[tid] = dict(v=round(g.war.sum() * k, 1), h=round(g[g.kind == 'H'].war.sum() * k, 1), p=round(g[g.kind == 'P'].war.sum() * k, 1),
                        top=[[r.name, r.key if isinstance(r.key, str) else None, round(r.war * k, 1)] for r in top.itertuples()])
     TR = pd.DataFrame([dict(tid=tid, y=teams[tid]['y'], lg=teams[tid]['lg'], v=o['v']) for tid, o in tr.items()])
-    # short schedules and lopsided early leagues spread teams far apart, so put every league-year on the
-    # typical spread, then apply the model's 1800s discount to positive gaps, as player_ratings does
-    lgy = TR.groupby(['y', 'lg']).v
-    TR['a'], TR['sd'], TR['nt'] = TR.v - lgy.transform('mean'), lgy.transform('std'), lgy.transform('size')
-    ref = TR[TR.nt >= 6].groupby(['y', 'lg']).sd.first().median()
-    TR['a'] = np.where(TR.nt >= 4, TR.a * ref / TR.sd, TR.a)
+    # score = WAR sum vs. a curve of typical team WAR over time, scaled by a curve of how spread out teams
+    # were (cubics in year; spread fit on log RMS of the yearly gaps), then the 1800s discount on positives
+    x = (TR.y - 1950) / 50
+    TR['a'] = TR.v - np.polyval(np.polyfit(x, TR.v, 3), x)
+    YR = TR.groupby('y').a.agg(rms=lambda r: np.sqrt((r ** 2).mean()), n='size').reset_index()
+    fit = np.polyfit((YR.y - 1950) / 50, np.log(YR.rms), 3, w=np.sqrt(YR.n))
+    spread = lambda y: np.exp(np.polyval(fit, (y - 1950) / 50))
+    TR['a'] = TR.a * np.median(spread(TR.y)) / spread(TR.y)
     TR['a'] = np.where(TR.a > 0, TR.a / (1 + np.exp(-((TR.y - 1870) / 10 - .7))) ** 2, TR.a)
     TR['yr'] = TR.groupby('y').v.rank(ascending=False, method='min').astype(int)
     TR['ar'] = TR.a.rank(ascending=False, method='min').astype(int)

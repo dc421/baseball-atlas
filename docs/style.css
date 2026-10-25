@@ -118,6 +118,7 @@ a.chip,button.chip{text-decoration:none;color:inherit}
 .clip .kind{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .clip .x{position:absolute;right:6px;top:4px;border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px}
 .clip a{word-break:break-all;color:var(--muted)}
+.clip.story .src{word-break:normal;white-space:nowrap;font-size:12px}
 form.add{display:grid;gap:6px;margin-top:8px}
 form.add .r{display:flex;gap:6px;flex-wrap:wrap}
 input.t,select.t,textarea.t{border:1px solid var(--line);background:var(--raise);border-radius:8px;padding:7px 10px;min-width:0;flex:1}
@@ -376,3 +377,24 @@ table.stats.linescore .rhe{padding-left:12px;border-left:1px solid var(--line)}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:6px 0 10px}
 .pgrid a{display:block;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:var(--line)}
 .pgrid img{width:100%;height:100%;object-fit:cover;display:block}
+/* franchise pages: ballparks (photo + dimensions), front office */
+.parks{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px}
+.park{background:var(--raise);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px}
+.pimgs{display:grid;grid-template-columns:3fr 2fr;gap:1px;background:var(--line);height:210px}
+.pimgs.one{grid-template-columns:1fr}
+.pimgs a,.pimgs svg{display:block;height:100%;width:100%;min-width:0;overflow:hidden}
+.pph img{width:100%;height:100%;object-fit:cover;display:block}
+.pdim{background:#fff}
+.pdim img{width:100%;height:100%;object-fit:contain;display:block;padding:6px}
+svg.field{background:var(--raise);padding:6px}
+svg.field .g{fill:color-mix(in srgb,#3d7a46 55%,var(--raise));stroke:var(--chalk);stroke-width:2}
+svg.field .dirt{fill:color-mix(in srgb,#b07a45 55%,var(--raise))}
+svg.field .ln{stroke:var(--raise);stroke-width:3;fill:none}
+svg.field text{font:600 36px var(--f-mono);fill:var(--ink)}
+.pinfo{padding:9px 12px}
+.pinfo .note span{white-space:nowrap}
+.execs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:4px 28px}
+.exg{font-size:12px;color:var(--muted);margin:8px 0 2px;font-style:italic}
+.exr{display:flex;gap:10px;padding:3px 0;border-bottom:1px solid var(--line);font-size:14px}
+.exr .yr{flex:0 0 92px;color:var(--muted);font-family:var(--f-mono);font-size:12px;padding-top:2px}
+.exr a{color:inherit;text-underline-offset:2px}

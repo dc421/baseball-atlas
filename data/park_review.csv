@@ -1,0 +1,298 @@
+key,park,city,years,wikipedia_article,photo,diagram,distances
+ALT01,Columbia Park,Altoona,1884-1884,Columbia Park (Altoona),Columbiapark.jpg,,
+ANA01,Angel Stadium of Anaheim,Anaheim,1966-2025,Angel Stadium,Angelstadiummarch2019.jpg,AngelStadiumDimensions.svg,Left field 347 Left-center 390 Center field 396 Right-center 370 Right field 350
+ARL01,Arlington Stadium,Arlington,1972-1993,Arlington Stadium,Arlington_Stadium_1988.jpg,,Left field 330 Left-center 380 Center field 400 Right-center 380 Right field 330
+ARL02,Globe Life Park in Arlington,Arlington,1994-2019,Choctaw Stadium,Richard_Greene_Linear_Park_June_2020_13_(Globe_Life_Park_in_Arlington).jpg,GlobeLifeParkDimensions.svg,
+ARL03,Globe Life Field,Arlington,2020-2025,Globe Life Field,GlobeLifeField2021.jpg,,Left field 329 Left center 372 Center field 407 Right center 374 Right field 326
+ATL01,Atlanta-Fulton County Stadium,Atlanta,1966-1996,Atlanta–Fulton County Stadium,Atlanta–Fulton_County_Stadium_Postcard_(1960s-70s)_(Stadium_crop).jpg,,Left field 330 Left-center 375 Center field 402 Right-center 385 Right field 330
+ATL02,Turner Field,Atlanta,1997-2016,Turner Field,Turner_Field_2013.jpg,TurnerFieldDimensions.svg,Left field 335 Left-center 380 Center field 400 Right-center 390 Right field 330
+ATL03,Truist Park,Atlanta,2017-2025,Truist Park,Truist_Park_2025.jpg,SuntrustParkDimensions.svg,Left field 335 Left-center 385 Center field 400 Right-center 375 Right field 325
+BAL02,Newington Park,Baltimore,1872-1882,Newington Park,,,
+BAL03,Oriole Park I,Baltimore,1883-1888,Oriole Park,Baltimore_Oriole_Stadium_1938_1b.JPG,American_League_Park_Baltimore_1902_Sanborn_map.jpg,Left 290
+BAL04,Belair Lot,Baltimore,1884-1884,Belair Lot,Belair_Lot_Baltimore_1884.jpg,,
+BAL06,Oriole Park II,Baltimore,1889-1891,Oriole Park,Baltimore_Oriole_Stadium_1938_1b.JPG,American_League_Park_Baltimore_1902_Sanborn_map.jpg,Left 290
+BAL07,Oriole Park III,Baltimore,1891-1899,Oriole Park,Baltimore_Oriole_Stadium_1938_1b.JPG,American_League_Park_Baltimore_1902_Sanborn_map.jpg,Left 290
+BAL09,Oriole Park IV,Baltimore,1901-1902,Oriole Park,Baltimore_Oriole_Stadium_1938_1b.JPG,American_League_Park_Baltimore_1902_Sanborn_map.jpg,Left 290
+BAL10,Terrapin Park,Baltimore,1914-1915,Oriole Park (V),Baltimore_Oriole_Stadium_1938_1b.JPG,Terrapin_Park_and_Oriole_Park_1915_Sanborn_map.jpg,
+BAL11,Memorial Stadium,Baltimore,1954-1991,Baltimore Memorial Stadium,Memorial_Stadium_(Baltimore).jpg,,Left field 309 Left-center 446 Center field 445 Right-center 446 Right field 309
+BAL12,Oriole Park at Camden Yards,Baltimore,1992-2025,Oriole Park at Camden Yards,OrioleParkatCamdenYardsSummer2025.jpg,CamdenYardsDimensions.svg,Left field line 333 Straight away left 373 Left center 376 Deep left center 410 Center field 400 Right center 373 Right field line 318
+BIR01,Rickwood Field,Birmingham,1923-2024,Rickwood Field,Rickwood_Field.jpg,Rickwood_site_plan.png,Left field 325 Left center 399 Center field 400 Right center 370 Right field 332
+BOS01,South End Grounds I,Boston,1871-1887,South End Grounds,Southendgrounds.jpg,South_End_Grounds_Boston_1887_Sanborn_map.jpg,Left field 250 Left-center 445 Deep left-center 450 Center field 440 Right-center 440 Right field 255
+BOS02,Dartmouth Grounds,Boston,1884-1884,,,,
+BOS03,South End Grounds II,Boston,1888-1894,South End Grounds,Southendgrounds.jpg,South_End_Grounds_Boston_1887_Sanborn_map.jpg,Left field 250 Left-center 445 Deep left-center 450 Center field 440 Right-center 440 Right field 255
+BOS04,Congress Street Grounds,Boston,1890-1894,Congress Street Grounds,Congress_Street_Grounds_1890.jpg,,Left field 250
+BOS05,South End Grounds III,Boston,1894-1914,South End Grounds,Southendgrounds.jpg,South_End_Grounds_Boston_1887_Sanborn_map.jpg,Left field 250 Left-center 445 Deep left-center 450 Center field 440 Right-center 440 Right field 255
+BOS06,Huntington Avenue Baseball Grounds,Boston,1901-1911,Huntington Avenue Grounds,WorldSeries1903-640.jpg,Huntington_Ave_Grounds_plan_1901_04_01.jpg,Left field 350 Left-center 440 Center field 530 Right field 280
+BOS07,Fenway Park,Boston,1912-2025,Fenway Park,131023-F-PR861-033_Hanscom_participates_in_World_Series_pregame_events.jpg,FenwayParkDimensions.svg,Left field 310 Deep left-center 379 Center field 389 Deep right-center 420 Right center 380 Right field 302
+BOS08,Braves Field,Boston,1915-1952,Braves Field,Boston_braves_field_night_postcard.jpg,BravesFieldDimensions.svg,
+BUF01,Riverside Grounds,Buffalo,1879-1883,,,,
+BUF02,Olympic Park I,Buffalo,1884-1885,Olympic Park (Buffalo),,Olympic_Park_II_Buffalo_1899_Sanborn_map.jpg,
+BUF03,Olympic Park II,Buffalo,1890-1890,Olympic Park (Buffalo),,Olympic_Park_II_Buffalo_1899_Sanborn_map.jpg,
+BUF04,Federal League Park,Buffalo,1914-1915,International Fair Association Grounds,"Main_building_of_the_Buffalo_International_Fair_Association,_1888.png",,Left 354
+BUF05,Sahlen Field,Buffalo,2020-2021,Sahlen Field,Sahlen_Field_aerial_view_in_2023_-_Quintin_Soloviev_(cropped).jpg,Sahlen_Field_Dimensions.svg,Left field 325 Left-center field 371 Center field 404 Right-center field 367 Right field 325
+CHI01,Lake Front Park I,Chicago,1871-1871,Union Base-Ball Grounds,Lake_Shore_Park_1883.JPG,,
+CHI02,23rd Street Park,Chicago,1872-1877,23rd Street Grounds,,,
+CHI03,Lake Front Park II,Chicago,1878-1884,Union Base-Ball Grounds,Lake_Shore_Park_1883.JPG,,
+CHI05,South Side Park I,Chicago,1884-1884,South Side Park,South_Side_Park_1907.JPG,South_Side_Park_III_Chicago_1912_Sanborn_map.jpg,
+CHI06,West Side Park,Chicago,1885-1891,West Side Park,"West_Side_Park_postcard,_1909.jpg",West_Side_Park_I_diagram_1885_Apr_26.jpg,
+CHI07,South Side Park II,Chicago,1890-1893,South Side Park,South_Side_Park_1907.JPG,South_Side_Park_III_Chicago_1912_Sanborn_map.jpg,
+CHI08,West Side Grounds,Chicago,1893-1915,West Side Park,"West_Side_Park_postcard,_1909.jpg",West_Side_Park_I_diagram_1885_Apr_26.jpg,
+CHI09,South Side Park III,Chicago,1901-1940,South Side Park,South_Side_Park_1907.JPG,South_Side_Park_III_Chicago_1912_Sanborn_map.jpg,
+CHI10,Comiskey Park I,Chicago,1910-1990,Comiskey Park,Old_comiskey_park.jpg,ComiskeyParkDimensions.svg,
+CHI11,Wrigley Field,Chicago,1914-2025,Wrigley Field,Wrigley_Field_in_line_with_sign.jpg,WrigleyFieldDimensions.svg,Left field 355 Left-center 368 Center field 400 Right-center 368 Right field 353
+CHI12,Rate Field,Chicago,1991-2025,Rate Field,"Chicago,_Illinois,_U.S._(2023)_-_062.jpg",GuaranteedRateFieldDimensions.svg,Left field 330 Left-center 375 Center field 400 Right-center 375 Right field 335
+CIN01,Lincoln Park Grounds,Cincinnati,1869-1871,Lincoln Park Grounds,,,
+CIN02,Avenue Grounds,Cincinnati,1876-1879,Avenue Grounds,Avenue_Grounds_Cincinnati_1875_Sep_9.jpg,,
+CIN03,Bank Street Grounds,Cincinnati,1880-1884,Bank Street Grounds,Bank_Street_Grounds_Cincinnati_1886_Sep_14_Order_of_Cincinnatus.jpg,Bank_Street_Grounds_diagram.png,
+CIN04,League Park I,Cincinnati,1884-1893,League Park (Cincinnati),CincyBallparkca1884.JPG,CincyDiagram.JPG,Left field 253
+CIN05,League Park II,Cincinnati,1894-1901,League Park (Cincinnati),CincyBallparkca1884.JPG,CincyDiagram.JPG,Left field 253
+CIN06,Palace of the Fans,Cincinnati,1902-1911,Palace of the Fans,PalceotFans2.JPG,,Left field 360 Left-center 418 Center field 400 Right-center 375 Right field 450
+CIN07,Crosley Field,Cincinnati,1912-1970,Crosley Field,Crosley_Field_1969.jpg,,Left field 328 Left-center 380 Center field 387 Right-center 383 Right field 366
+CIN08,Cinergy Field,Cincinnati,1970-2002,Riverfront Stadium,"Riverfront_Stadium_in_Cincinnati,_Ohio.jpg",RiverfrontStadiumBaseballFieldDimensions.svg,Left field 325 Left-center field 370 Center field 393 Right-center field 373 Right field 325
+CIN09,Great American Ballpark,Cincinnati,2003-2025,Great American Ball Park,10Cincinnati_2015_(2).jpg,GreatAmericanBalparkDimensions.svg,Left field 328 Left-center 379 Center field 404 Right-center 370 Right field 325
+CLE01,National Association Grounds,Cleveland,1871-1872,National Association Grounds,,,
+CLE02,League Park I,Cleveland,1879-1884,National League Park,National_League_Park_(Plain_Dealer_illustration).png,,
+CLE03,League Park II,Cleveland,1887-1948,League Park,Leagueaerial.jpg,,Left field 375 Left-center 415 Deep center 460 Center field 420 Right-center 340 Right field 290
+CLE04,Brotherhood Park,Cleveland,1890-1890,Brotherhood Park,,,
+CLE05,League Park III,Cleveland,1891-1909,League Park,Leagueaerial.jpg,,Left field 375 Left-center 415 Deep center 460 Center field 420 Right-center 340 Right field 290
+CLE06,League Park IV,Cleveland,1910-1946,League Park,Leagueaerial.jpg,,Left field 375 Left-center 415 Deep center 460 Center field 420 Right-center 340 Right field 290
+CLE07,Cleveland Stadium,Cleveland,1932-1993,Cleveland Stadium,Cleveland_Municipal_Stadium_(NBY_6450).jpg,ClevelandMunicipalStadiumBaseballFieldDimensions.svg,Left field 322 Left-center 385 Center field 400 Right-center 385 Right field 322
+CLE08,Progressive Field,Cleveland,1994-2025,Progressive Field,Cleveland_Guardians_vs._New_York_Yankees_on_Oct_17_2024_(54102149292).jpg,ProgressiveFieldDimensions.svg,Left field 325 Left-center 370 Center field 400 Deep center field 410 Right-center 375 Right field 325
+COL01,Recreation Park I,Columbus,1883-1884,Recreation Park (Columbus),,,
+COL02,Recreation Park II,Columbus,1889-1891,Recreation Park (Columbus),,,
+COL04,Neil Park II,Columbus,1905-1933,,,,
+DEN01,Mile High Stadium,Denver,1993-1994,Mile High Stadium,Denver_Mile_High_Stadium_postcard_(c._1970s-1980s).jpg,,Left field 333 Left-center 366 Center field 423 Right-center 400 Right field 370
+DEN02,Coors Field,Denver,1995-2025,Coors Field,Coors_Field_July_2015.jpg,CoorsFieldDimensions.svg,Left field 347 Left-center 390 Center field 415 Right-center 375 Right field 350
+DET01,Recreation Park,Detroit,1881-1890,Recreation Park (Detroit),Det_Rec_Park.JPG,Recreation_Park_Detroit_1884_Sanborn_map.jpg,
+DET02,Bennett Park,Detroit,1901-1911,Bennett Park (Detroit),BennetPark.jpg,,
+DET04,Tiger Stadium,Detroit,1912-1999,Tiger Stadium (Detroit),"Inside_Tiger_Stadium,_Detroit.jpg",,
+DET05,Comerica Park,Detroit,2000-2025,Comerica Park,"Detroit_Tigers_opening_game_at_Comerica_Park,_2007.jpg",ComericaParkDimensions.svg,Left field 342 Left-center 370 Center field 412 Right-center 365 Right field 330
+DUN01,TD Ballpark,Dunedin,2021-2021,TD Ballpark,TD_Ballpark_in_2021.jpg,,Left field 333 Left-center 380 Center field 400 Right-center 363 Right field 336
+FOR01,Kekionga Ball Grounds,Fort Wayne,1871-1871,Kekionga Ball Grounds,,,
+HAR01,Harrison Field,Harrison,1915-1915,,,,
+HOU01,Colt Stadium,Houston,1962-1964,Colt Stadium,Colt_Stadium_1962.jpg,,Left field 360 Left-center 395 Center-left 427 Center field 420 Center-right 427 Right center 395 Right field 360
+HOU02,Astrodome,Houston,1965-1999,Astrodome,Reliant_Astrodome_in_January_2014.jpg,AstrodomeDimensions.svg,Left field 325 Left center 375 Center field 400 Right center 375 Right field 325
+HOU03,Daikin Park,Houston,2000-2025,Daikin Park,"Houston,_Texas_(2024)_-_09.jpg",MinuteMaidParkDimensions.svg,Left field 315 Left-center 366 Center field 409 Right-center 370 Right field 326
+HRT01,Hartford Ball Club Grounds,Hartford,1874-1876,Hartford Ball Club Grounds,,,
+HRT02,Hartford Trotting Park,Hartford,1872-1872,,,,
+IND01,South Street Park,Indianapolis,1878-1878,South Street Park,,,
+IND02,Seventh Street Park I,Indianapolis,1884-1885,Tinker Park,,,
+IND04,Seventh Street Park II,Indianapolis,1887-1887,Tinker Park,,,
+IND05,Seventh Street Park III,Indianapolis,1888-1889,Tinker Park,,,
+IND07,Federal League Park,Indianapolis,1914-1916,Federal League Park,Federal_League_Park_Indianapolis_1914_Apr_4.jpg,,
+KAN01,Athletic Park,Kansas City,1884-1884,Athletic Park (Kansas City),,,
+KAN02,Association Park,Kansas City,1886-1888,Association Park,Kansas_City_MO_Association_Park_demolition_1925_07_07.jpg,Kansas_City_MO_Association_Park_football_diagram_1909_11_25.jpg,
+KAN03,Exposition Park,Kansas City,1888-1892,Exposition Park (Kansas City),,Exposition_Park_Kansas_City_1896_Sanborn_maps.jpg,
+KAN04,Gordon and Koppel Field,Kansas City,1914-1915,Gordon and Koppel Field,Gordon_Koppel_Field.png,KC_Gordon_Koppel_diagram_1910_11_16.jpg,
+KAN05,Municipal Stadium,Kansas City,1924-1972,"Municipal Stadium (Kansas City, Missouri)",Kansas_City_Municipal_Stadium_1955.jpg,,Left field 369 L. center 408 Center f 421 R. center 382 Right field 338
+KAN06,Kauffman Stadium,Kansas City,1973-2025,Kauffman Stadium,Kauffman2017.jpg,KauffmanStadiumDimensions.svg,
+KEO01,Perry Park,Keokuk,1875-1875,Perry Park (Iowa),,,
+LOS01,Los Angeles Memorial Coliseum,Los Angeles,1958-1961,Los Angeles Memorial Coliseum,Los_Angeles_Memorial_Coliseum.png,MemorialColiseumDimensions.svg,
+LOS02,Wrigley Field,Los Angeles,1961-1961,Wrigley Field (Los Angeles),"Wrigley_Field,_Los_Angeles,_1925.jpg",,Left field 340 L.c. field 345 Center field 412 R.c. field 345 Right field 339
+LOS03,Dodger Stadium,Los Angeles,1962-2025,Dodger Stadium,"Dodger_Stadium_and_Chavez_Ravine_far_view,_Chicago_Cubs_at_Los_Angeles_Dodgers,_(April_12,_2025).jpg",DodgerStadiumDimensions.svg,Left field 330 Medium left-center 360 True left-center 375 Center field 395 True center field 400 True right-center 375 Medium right-center 360 Right field 330
+LOU01,Louisville Baseball Park,Louisville,1876-1877,Louisville Baseball Park,,,
+LOU02,Eclipse Park I,Louisville,1882-1893,Eclipse Park,,Eclipse_Park_I_Louisville_1892_Sanborn_map.jpg,
+LOU03,Eclipse Park II,Louisville,1893-1899,Eclipse Park,,Eclipse_Park_I_Louisville_1892_Sanborn_map.jpg,
+MIA01,Hard Rock Stadium,Miami,1993-2011,Hard Rock Stadium,Hard_Rock_Stadium_for_Super_Bowl_LIV_(49606710103).jpg,,
+MIA02,loanDepot park,Miami,2012-2025,LoanDepot Park,LOAN_DEPOT_PARK.jpg,MarlinsParkDimensions.svg,Left field line 344 Left-center power alley 386 Center field 400 Right-center power alley 387 Right field line 335
+MID01,Mansfield Club Grounds,Middletown,1872-1872,Mansfield Club Grounds,,,
+MIL01,Eclipse Park,Milwaukee,1878-1878,Eclipse Park (Milwaukee),,,
+MIL02,Wright Street Grounds,Milwaukee,1884-1885,Wright Street Grounds,,,
+MIL03,Athletic Park,Milwaukee,1891-1923,Borchert Field,BorchertField_1911.jpg,1894_Sanborn_Map_of_Borchert_Field.jpg,
+MIL04,Lloyd Street Grounds,Milwaukee,1901-1901,Lloyd Street Grounds,Lloyd_Street_Grounds.jpg,,
+MIL05,County Stadium,Milwaukee,1953-2000,Milwaukee County Stadium,Milwaukee_County_Stadium_satellite_view.png,,Left line 315 Left field 362 Deep l.c 392 Center f 402 Deep r.c 392 Right field 362 Right line 315
+MIL06,American Family Field,Milwaukee,2001-2025,American Family Field,"Miller_Park_in_Milwaukee,_Wisconsin.jpg",MillerParkDimensions.svg,Left field 342 Left-center 371 Center field 400 Right-center 374 Right field 337
+MIN02,Metropolitan Stadium,Bloomington,1961-1981,Metropolitan Stadium,Metropolitan_Stadium_1962.jpeg,,Left field 343 Left-center 365 Center field 402 Right-center 370 Right field 330
+MIN03,Hubert H. Humphrey Metrodome,Minneapolis,1982-2009,Hubert H. Humphrey Metrodome,051207-MPLS-006Metrodome-crop.jpg,MetrodomeDimensions.svg,Left field 343 Left-center 385 Center field 408 Right-center 367 Right field 327 Dome apex 186
+MIN04,Target Field,Minneapolis,2010-2025,Target Field,"Target_Field,_Minneapolis,_Minnesota_(43167053335).jpg",TargetFieldDimensions.svg,Left field 339 Left-center 377 Center field left corner 411 Center field right corner 403 Right-center 367 Right field 328
+MON01,Stade Parc Jarry,Montreal,1969-1976,Jarry Park Stadium,Coupe_Rogers_2015_@_Montréal_!_(19971844064).jpg,,Left field 340 Left-centre 368 Centre field 420 Right-centre 368 Right field 340
+MON02,Stade Olympique,Montreal,1977-2004,Olympic Stadium (Montreal),Olympic_Stadium_Montreal_(23761669).jpeg,OlympicStadiumDimensions.svg,
+NEW01,Howard Avenue Grounds,New Haven,1875-1877,Howard Avenue Grounds,,,
+NYC01,Union Grounds,Brooklyn,1871-1878,Union Grounds,Union_grounds_1865.jpg,,
+NYC02,Capitoline Grounds,Brooklyn,1872-1872,Capitoline Grounds,Capitoline_Grounds.jpg,,
+NYC03,Polo Grounds I (Southeast Diamond),New York,1883-1888,Polo Grounds,"No_Known_Restrictions_Polo_Grounds_during_World_Series_Game,_1913_from_the_Bain_Collection_(LOC)_(434431507).jpg",PoloGroundsDimensions.svg,Left field 279 Left-center 450 Center field 483 Right-center 449 Right field 258
+NYC04,Polo Grounds II (Southwest Diamond),New York,1883-1883,Polo Grounds,"No_Known_Restrictions_Polo_Grounds_during_World_Series_Game,_1913_from_the_Bain_Collection_(LOC)_(434431507).jpg",PoloGroundsDimensions.svg,Left field 279 Left-center 450 Center field 483 Right-center 449 Right field 258
+NYC05,Washington Park I,Brooklyn,1884-1889,Washington Park (baseball),"Washington-Park-Entrance,-1911.jpg",Washington_Park_I_and_II_Brooklyn_Sanborn_maps.jpg,
+NYC06,Metropolitan Park,New York,1884-1884,Metropolitan Park (Queens),Citi_Field_baseball_stadium_-_July_2024.jpg,,
+NYC08,Washington Park II,Brooklyn,1889-1890,Washington Park (baseball),"Washington-Park-Entrance,-1911.jpg",Washington_Park_I_and_II_Brooklyn_Sanborn_maps.jpg,
+NYC09,Polo Grounds III,New York,1889-1890,Polo Grounds,"No_Known_Restrictions_Polo_Grounds_during_World_Series_Game,_1913_from_the_Bain_Collection_(LOC)_(434431507).jpg",PoloGroundsDimensions.svg,Left field 279 Left-center 450 Center field 483 Right-center 449 Right field 258
+NYC10,Polo Grounds IV,New York,1890-1948,Polo Grounds,"No_Known_Restrictions_Polo_Grounds_during_World_Series_Game,_1913_from_the_Bain_Collection_(LOC)_(434431507).jpg",PoloGroundsDimensions.svg,Left field 279 Left-center 450 Center field 483 Right-center 449 Right field 258
+NYC11,Eastern Park,Brooklyn,1890-1897,Eastern Park,EasternPark.JPG,,
+NYC12,Washington Park III,Brooklyn,1898-1912,,,,
+NYC13,Hilltop Park,New York,1903-1912,Hilltop Park,Hilltoppark1903.jpg,,Left field 365 Left-center 378 Center field 420 Right-center 424 Right field 385
+NYC14,Polo Grounds V,New York,1911-1963,Polo Grounds,"No_Known_Restrictions_Polo_Grounds_during_World_Series_Game,_1913_from_the_Bain_Collection_(LOC)_(434431507).jpg",PoloGroundsDimensions.svg,Left field 279 Left-center 450 Center field 483 Right-center 449 Right field 258
+NYC15,Ebbets Field,Brooklyn,1913-1957,Ebbets Field,Ebbets1913OpeningDay.jpg,,Left field 348 Left-center 351 Center field 399 Right-center 344 Right field 297
+NYC16,Yankee Stadium I,New York,1923-2008,Yankee Stadium (1923),Yankee_Stadium_aerial_from_Blackhawk.jpg,YankeeStadium_I_Dimensions.svg,Left field 318 Left-center 399 Center field 408 Right-center 385 Right field 314
+NYC17,Shea Stadium,New York,1964-2008,Shea Stadium,Shea_10-12-07.jpg,SheaStadiumBaseballFieldDimensions.svg,
+NYC18,Ridgewood Park II,Queens,1887-1890,Ridgewood Park (baseball ground),RidgewoodParkGrandstand1922.jpg,,
+NYC19,Washington Park IV,Brooklyn,1914-1915,,,,
+NYC20,Citi Field,New York,2009-2025,Citi Field,Citi_Field_baseball_stadium_-_July_2024.jpg,CitiFieldDimensions.svg,Left field line 335 Left center 358 Deep left center 385 Center field 408 Deep right center 398 Right center 375 Right field line 330
+NYC21,Yankee Stadium II,New York,2009-2025,Yankee Stadium,Yankee_Stadium_overhead_2010.jpg,YankeeStadiumDimensions.svg,Left field 318 Left center 399 Center field 408 Right center 385 Right field 314
+OAK01,Oakland-Alameda County Coliseum,Oakland,1968-2024,Oakland Coliseum,Oakland_Coliseum_from_above_2024.png,OaklandColiseumDimensions.svg,Left field 330 Left center 388 Center field 400 Right center 388 Right field 330
+PEN01,East End Park,Cincinnati,1891-1891,East End Park (Cincinnati),PendletonPark1.JPG,,
+PHI01,Jefferson Street Grounds,Philadelphia,1871-1890,Jefferson Street Grounds,1887_Burk&McFetridge_Philadelphiaofto-day.jpg,,
+PHI02,Centennial Park,Philadelphia,1875-1875,Centennial Grounds,"Centennial_Grounds._Government_building,_by_Cremer,_James,_1821-1893.jpg",,
+PHI03,Oakdale Park,Philadelphia,1882-1882,Oakdale Park,,,
+PHI04,Recreation Park,Philadelphia,1883-1886,Recreation Park (Philadelphia),Recreation_Park_1883-86_(cropped).jpg,,Left 300 Center 331 Right 247
+PHI05,Keystone Park,Philadelphia,1884-1884,Keystone Park,Libertybell_alone_small.jpg,,
+PHI06,Huntingdon Grounds I,Philadelphia,1887-1894,Baker Bowl,"Baker_Bowl_and_Huntingdon_Street_station,_1928.jpg",BakerBowlDimensions.svg,Left field 341 Center field 408 Right-center 300 Right field 280
+PHI07,Forepaugh Park,Philadelphia,1890-1891,Forepaugh Park,"Forepaugh_Park,_1894.jpg",,Left field 345 Center field 450 Right field 380
+PHI09,Baker Bowl,Philadelphia,1895-1938,Baker Bowl,"Baker_Bowl_and_Huntingdon_Street_station,_1928.jpg",BakerBowlDimensions.svg,Left field 341 Center field 408 Right-center 300 Right field 280
+PHI10,Columbia Park,Philadelphia,1901-1908,Columbia Park,Columbia_Park_Philadelphia.jpg,,Left field 340 Left center 392 Deep left center 440 Center field 396 Right center 323 Right field 280
+PHI11,Shibe Park,Philadelphia,1909-1970,Shibe Park,ShibePark1973HABS1of9.jpg,ShibeParkDimensions.svg,Left field 334 Deep left center 387 Center field 410 Deep right center 390 Right field 329
+PHI12,Veterans Stadium,Philadelphia,1971-2003,Veterans Stadium,Veterans_stade.png,VeteransStadiumBaseballFieldDimensions.svg,Left field 330 Left center field 371 Center field 408 Right center field 371 Right field 330
+PHI13,Citizens Bank Park,Philadelphia,2004-2025,Citizens Bank Park,Citizens_Bank_Park_2021.jpg,CitizensBankParkDimensions.svg,Ft 381
+PHI14,Huntingdon Grounds II,Philadelphia,1894-1894,Baker Bowl,"Baker_Bowl_and_Huntingdon_Street_station,_1928.jpg",BakerBowlDimensions.svg,Left field 341 Center field 408 Right-center 300 Right field 280
+PHO01,Chase Field,Phoenix,1998-2025,Chase Field,Reserve_A-10_Warthogs_Flyover_2023_World_Series_(8099146).jpg,ChaseFieldDimensions.svg,Left field 330 Left-center 374 Center field 407 Right-center 374 Right field 334
+PIT02,Exposition Park I,Pittsburgh,1882-1883,Exposition Park (Pittsburgh),Exposition_Park_Pittsburgh_1903.jpg,,Left and right field 400 Center field 450
+PIT03,Exposition Park II,Pittsburgh,1883-1884,Exposition Park (Pittsburgh),Exposition_Park_Pittsburgh_1903.jpg,,Left and right field 400 Center field 450
+PIT04,Recreation Park,Pittsburgh,1884-1890,Recreation Park (Pittsburgh),AAA_Park_1892.jpg,,
+PIT05,Exposition Park III,Pittsburgh,1890-1915,Exposition Park (Pittsburgh),Exposition_Park_Pittsburgh_1903.jpg,,Left and right field 400 Center field 450
+PIT06,Forbes Field,Pittsburgh,1909-1970,Forbes Field,Forbes_Field_exterior.jpg,ForbesFieldDimensions.svg,Left field 365 Left center 406 Center field 457 Right center 408 Right field 375
+PIT07,Three Rivers Stadium,Pittsburgh,1970-2000,Three Rivers Stadium,Three_Rivers_Stadium.jpg,ThreeRiversStadiumDimensions.svg,Left field 335 Left-center 375 Center field 400 Right-center 375 Right field 335
+PIT08,PNC Park,Pittsburgh,2001-2025,PNC Park,Pittsburgh_Pirates_park_(Unsplash).jpg,PNCParkDimensions.svg,Left field 325 Left-center 383 Deep left-center field 410 Center field 399 Right-center 375 Right field 320
+PRO02,Messer Street Grounds,Providence,1878-1885,Messer Street Grounds,"Messer_Street_Grounds,_1879.jpg",,Left field 281 Left-center 356 Center field 318 Right-center 356 Right field 431
+RCK01,Agricultural Society Fair Grounds,Rockford,1871-1871,Agricultural Society Fair Grounds,,,
+RIC02,Allens Pasture,Richmond,1884-1884,,,,
+ROC01,Culver Field I,Rochester,1890-1890,Culver Field,RochesterRedWingsVsBuffaloBisonsAugust2017Game.jpg,,
+SAC01,Sutter Health Field,West Sacramento,2025-2025,Sutter Health Park,Sutter_Health_Park_aerial_view_2023_(Quintin_Soloviev).jpg,SutterHealthParkFieldDimensions.svg,
+SAI01,St. George Cricket Grounds,New York,1886-1889,St. George Cricket Grounds,StGeorgeCricketGrounds1.JPG,,
+SAN01,Qualcomm Stadium,San Diego,1969-2003,San Diego Stadium,Qualcomm_Stadium.jpg,SanDiegoStadiumDimensions.svg,
+SAN02,Petco Park,San Diego,2004-2025,Petco Park,Petco_Park_Padres_Game.jpg,PetcoParkDimensions.svg,Left field line 336 Left field 343 Left field alley 386 Center field 396 Right field alley 391 Right field 382 Right field line 331
+SEA01,Sick's Stadium,Seattle,1969-1969,Sick's Stadium,"Sick's_Stadium,_1965.jpg",,Left field 305 Center field 402
+SEA02,Kingdome,Seattle,1977-1999,Kingdome,Kingdome_across_parking_lot_in_1996.jpg,KingdomeDimensions.svg,
+SEA03,T-Mobile Park,Seattle,1999-2025,T-Mobile Park,SafecoFieldTop.jpg,TMobileParkDimensions.svg,Left field 331 Left-center 378 Center field 401 Right-center 381 Right field 326
+SFO01,Seals Stadium,San Francisco,1958-1959,Seals Stadium,"Corbett_&_Fields,_1933.jpg",,Left field 365 Left-center 375 Center field 400 Right-center 397 Right field 385
+SFO02,Candlestick Park,San Francisco,1960-1999,Candlestick Park,The_view_from_our_section.jpg,CandlestickParkDimensions.svg,
+SFO03,AT&T Park,San Francisco,2000-2025,Oracle Park,Oracle_Park_2021.jpg,OracleParkDimensions.svg,Left field line 339 Left field 354 Left-center field 399 Center field 391 Right-center field 415 Right field 365 Right field line 309
+SJU01,Estadio Hiram Bithorn,San Juan,2001-2018,Hiram Bithorn Stadium,Hiram_Bithorn_Stadium_2.JPG,,Left field 325 Left-center 375 Center field 404 Right-center 375 Right field 325
+STL01,Red Stocking Baseball Park,St. Louis,1875-1875,Red Stocking Baseball Park,Red_Stockings_Park_(4820162380).jpg,,
+STL02,Grand Avenue Ball Grounds,St. Louis,1875-1912,Sportsman's Park,Sportsman's_Park_St_Louis_1875.jpg,Sportsmans_Park_St_Louis_1909_Sanborn_map.jpg,Left field 351 Left-center 379 Right-center 354 Right field 310
+STL03,Sportsman's Park I,St. Louis,1882-1892,Sportsman's Park,Sportsman's_Park_St_Louis_1875.jpg,Sportsmans_Park_St_Louis_1909_Sanborn_map.jpg,Left field 351 Left-center 379 Right-center 354 Right field 310
+STL04,Union Grounds,St. Louis,1884-1886,Union Grounds (St. Louis),,,
+STL05,Robison Field,St. Louis,1893-1920,Robison Field,Crowd_gathered_around_St._Louis_Cardinals_baseball_players_during_the_pre-game_warm-ups_at_Robison_Field.jpg,Robison_Field_St_Louis_1909_Sanborn_map.jpg,Left field 470 Left-center 520 Center field 500 Right-center 330 Right field 290 Backstop 120
+STL06,Sportsman's Park II,St. Louis,1902-1908,Sportsman's Park,Sportsman's_Park_St_Louis_1875.jpg,Sportsmans_Park_St_Louis_1909_Sanborn_map.jpg,Left field 351 Left-center 379 Right-center 354 Right field 310
+STL07,Sportsman's Park III,St. Louis,1909-1966,Sportsman's Park,Sportsman's_Park_St_Louis_1875.jpg,Sportsmans_Park_St_Louis_1909_Sanborn_map.jpg,Left field 351 Left-center 379 Right-center 354 Right field 310
+STL08,Handlan's Park,St. Louis,1914-1915,Handlan's Park,Handlan_park_baseball.jpg,Handlan's_Park_plan_published_in_1914.jpg,Left 325 Center 375 Right 300
+STL09,Busch Stadium II,St. Louis,1966-2005,Busch Memorial Stadium,BuschMemorialStadium.jpg,BuschStadiumIIBaseballFieldDimensions.svg,Left field 330 Left-center 372 Center field 402 Right-center 372 Right field 330
+STL10,Busch Stadium III,St. Louis,2006-2025,Busch Stadium,Busch_Stadium_2022.jpg,BuschStadium_III_Dimensions.svg,Left field 336 Left center field 375 Center field 400 Right center field 375 Right field 335
+STP01,Tropicana Field,St. Petersburg,1998-2024,Tropicana Field,PXL_20220528_205520913.jpg,TropicanaFieldDimensions.svg,Left field 315 Left-center 370 Center field 404 Right-center 370 Right field 322
+SYR01,Star Park I,Syracuse,1879-1879,Newell Park,,,
+SYR02,Star Park II,Syracuse,1890-1890,Star Park,Star-Park-Syracuse-1885.jpg,,
+TAM02,George M. Steinbrenner Field,Tampa,2025-2025,George M. Steinbrenner Field,"MacDill_Aircrew,_service_members_kick_off_opening_day_ceremony_for_TB_Rays_(250328-F-YW699-1029).jpg",GeorgeMSteinbrennerFieldDimensions.svg,Left field 318 Left-center 399 Center field 408 Right-center 385 Right field 314
+TOL01,League Park,Toledo,1884-1884,League Park (Toledo),,,
+TOL03,Speranza Park,Toledo,1890-1890,Speranza Park,,,
+TOR01,Exhibition Stadium,Toronto,1977-1989,Exhibition Stadium,"Exhibition_Stadium_before_the_Toronto_Blue_Jays_faced_the_Chicago_White_Sox_on_May_27,_1988_1.jpg",ExhibitionStadiumDimensions.svg,Left field 330 Left-centre 375 Centre field 400 Right-centre 375 Right field 330
+TOR02,Rogers Centre,Toronto,1989-2025,Rogers Centre,"Rogers_Centre_(500_Level)_-_Toronto,_ON.jpg",RogersCentreDimensions.svg,Left field line 328 Left-centre 368 Left-centre power alley 381 Centre field 400 Right-centre power alley 372 Right-centre 359 Right field line 328
+TRO01,Haymakers' Grounds,Troy,1871-1881,Haymakers' Grounds,,,
+TRO02,Putnam Grounds,Troy,1879-1879,Haymakers' Grounds,,,
+WAS01,Olympic Grounds,Washington,1871-1875,Olympics Grounds,,,
+WAS02,National Grounds,Washington,1872-1872,Swampoodle Grounds,"Swampoodle_Grounds,_Washington_Nationals_baseball_team_of_the_National_League_circa_1886-1889.jpg",,
+WAS03,Capitol Grounds,Washington,1884-1884,Capitol Grounds,Capitol_Park_I_advertisement_1884_04_19_.jpg,,
+WAS04,Athletic Park,Washington,1884-1884,Washington Park (baseball),"Washington-Park-Entrance,-1911.jpg",Washington_Park_I_and_II_Brooklyn_Sanborn_maps.jpg,
+WAS05,Swampoodle Grounds,Washington,1886-1889,Swampoodle Grounds,"Swampoodle_Grounds,_Washington_Nationals_baseball_team_of_the_National_League_circa_1886-1889.jpg",,
+WAS06,Boundary Field,Washington,1891-1910,Boundary Field,American_League_Park_Washington_1905.jpg,,
+WAS07,American League Park I,Washington,1901-1903,American League Park,,American_League_Park_Washington_DC_1903_Sanborn_map.jpg,
+WAS09,Griffith Stadium,Washington,1911-1961,Griffith Stadium,TaftAtBallGame1912.jpg,,Left field 388 L. center 360 Center f 421 R. center 373 Right field 320
+WAS10,RFK Stadium,Washington,1962-2007,Robert F. Kennedy Memorial Stadium,RFK_Stadium_(2015).jpg,RFKMemorialStadiumBaseballFieldDimensions.svg,Left field 335 Left-center 380 Center field 410 Right-center 380 Right field 335
+WAS11,Nationals Park,Washington,2008-2025,Nationals Park,Nationals_Park_8.16.19_-_7.jpg,NationalsParkDimensions.svg,Left field 337 Left-center 377 Center field 402 Right-center 370 Right field 335
+WAT01,Troy Ball Club Grounds,Watervliet,1882-1882,Troy Ball Club Grounds,,,
+WAV01,Waverly Fairgrounds,Waverly,1873-1873,Waverly Fairgrounds,Waverly_Racing_Oval.jpg,,
+WIL01,Union Street Park,Wilmington,1884-1884,,,,
+WOR01,Agricultural County Fair Grounds I,Worcester,1880-1882,Worcester Agricultural Fairgrounds,Worcester_Agricultural_Fairgrounds.jpg,,
+x44thParksidePhiladelphia,44th & Parkside,Philadelphia,1936-1947,44th and Parkside Ballpark,AthleticFieldBelmontParkside.jpg,,Left 330 Center 410 Right 310
+xAngelStadiumAnaheim,Angel Stadium,Anaheim,2005-2011,Angel Stadium,Angelstadiummarch2019.jpg,AngelStadiumDimensions.svg,Left field 347 Left-center 390 Center field 396 Right-center 370 Right field 350
+xAssociationParkIIKansasCity,Association Park II,Kansas City,1920-1923,Association Park,Kansas_City_MO_Association_Park_demolition_1925_07_07.jpg,Kansas_City_MO_Association_Park_football_diagram_1909_11_25.jpg,
+xAuburnParkChicago,Auburn Park,Chicago,1905-1907,,,,
+xBacharachParkAtlanticCity,Bacharach Park,Atlantic City,1918-1929,Bacharach Park,,,Left 358 Left center 432 Center 489 Right center 365 Right 270
+xBugleFieldBaltimore,Bugle Field,Baltimore,1933-1948,Bugle Field,,,
+xCasinoParkMonroe,Casino Park,Monroe,1932-1932,,,,
+xCatholicProtectoryOvalNewYork,Catholic Protectory Oval,New York,1920-1930,,,,
+xCentralParkPittsburgh,Central Park,Pittsburgh,1922-1922,Central Park (Pittsburgh),,,
+xChristianBrothersCollegeDiamondStLouis,Christian Brothers College Diamond,St. Louis,1916-1916,,,,
+xColcordParkOklahomaCity,Colcord Park,Oklahoma City,1910-1910,,,,
+xCollegeHillParkMontgomery,College Hill Park,Montgomery,1932-1932,,,,
+xColumbiaParkChicago,Columbia Park,Chicago,1899-1901,,,,
+xCrumpParkLittleRock,Crump Park,Little Rock,1932-1932,,,,
+xDavidsStadiumNewYork,Davids Stadium,New York,1927-1927,,,,
+xDavidsStadiumNewark,Davids Stadium,Newark,1926-1926,,,,
+xDexterParkBrooklyn,Dexter Park,Brooklyn,1918-1927,Dexter Park (Queens),Babe_Ruth_Lou_Gehrig_Rodeo.png,,
+xDexterParkNewYork,Dexter Park,New York,1922-1929,Dexter Park (Queens),Babe_Ruth_Lou_Gehrig_Rodeo.png,,
+xDowntownParkStPaul,Downtown Park,St. Paul,1909-1909,,,,
+xDurkeeFieldJacksonville,Durkee Field,Jacksonville,1938-1938,J. P. Small Memorial Stadium,J._P._Small_Memorial_Stadium.jpg,,Left field 337 Center field 375 Right field 285
+xDyckmanOvalNewYork,Dyckman Oval,New York,1932-1937,Dyckman Oval,,,
+xFairGroundsAlgona,Fair Grounds,Algona,1903-1903,,,,
+xForbesFieldHomestead,Forbes Field,Homestead,1928-1939,,,,
+xGeneralElectricFieldNewark,General Electric Field,Newark,1932-1934,,,,
+xGiantsParkIIStLouis,Giants Park II,St. Louis,1920-1921,,,,
+xGreenleeFieldHomestead,Greenlee Field,Homestead,1932-1938,Greenlee Field,,,
+xGreenleeFieldPittsburgh,Greenlee Field,Pittsburgh,1932-1938,Greenlee Field,,,
+xGriffithStadiumHomestead,Griffith Stadium,Homestead,1940-1948,Griffith Stadium,TaftAtBallGame1912.jpg,,Left field 388 L. center 360 Center f 421 R. center 373 Right field 320
+xHamtramckStadiumDetroit,Hamtramck Stadium,Detroit,1930-1937,Hamtramck Stadium,HamtramckStadium1.jpg,,
+xHardwareFieldCleveland,Hardware Field,Cleveland,1931-1931,,,,
+xHarlanFieldWilmington,Harlan Field,Wilmington,1925-1925,,,,
+xHilldaleParkDarby,Hilldale Park,Darby,1918-1932,,,,
+xHilldaleParkPhiladelphia,Hilldale Park,Philadelphia,1933-1933,,,,
+xHinchliffeStadiumNewYork,Hinchliffe Stadium,New York,1933-1938,Hinchliffe Stadium,"Hinchliffe_Stadium_(Paterson,_NJ).jpg",,
+xHooperFieldCleveland,Hooper Field,Cleveland,1924-1927,,,,
+xInletParkAtlanticCity,Inlet Park,Atlantic City,1919-1919,Bacharach Park,,,Left 358 Left center 432 Center 489 Right center 365 Right 270
+xInletParkIIAtlanticCity,Inlet Park II,Atlantic City,1920-1921,,,,
+xIslandParkHarrisburg,Island Park,Harrisburg,1924-1943,,,,
+xIslandParkNewYork,Island Park,New York,1891-1891,,,,
+xIslandParkSchenectady,Island Park,Schenectady,1913-1913,,,,
+xKueblerParkStLouis,Kuebler Park,St. Louis,1915-1915,,,,
+xLeagueParkIIAkron,League Park II,Akron,1933-1933,League Park (Akron),,,
+xLenoxOvalNewYork,Lenox Oval,New York,1914-1916,,,,
+xLewisParkMemphis,Lewis Park,Memphis,1923-1932,Martin Stadium (Memphis),,,
+xLoganSquareParkChicago,Logan Square Park,Chicago,1908-1909,,,,
+xLongIslandGroundsTrenton,Long Island Grounds,Trenton,1891-1891,,,,
+xLunaParkCleveland,Luna Park,Cleveland,1928-1932,"Luna Park, Cleveland",Luna-park-cleveland-entrance.jpg,,
+xMackParkDetroit,Mack Park,Detroit,1919-1929,Mack Park,,,
+xMartinParkMemphis,Martin Park,Memphis,1937-1948,Martin Stadium (Memphis),,,
+xMarylandParkBaltimore,Maryland Park,Baltimore,1922-1932,,,,
+xMetropolitanParkStLouis,Metropolitan Park,St. Louis,1937-1937,,,,
+xMeyerroseParkBrooklyn,Meyerrose Park,Brooklyn,1908-1911,Ridgewood Park (baseball ground),RidgewoodParkGrandstand1922.jpg,,
+xMunicipalStadiumNewYork,Municipal Stadium,New York,1936-1936,,,,
+xNeilParkColumbus,Neil Park,Columbus,1921-1935,"Neil Park (Columbus, Ohio)","Neil_Park,_Columbus,_Ohio_-_DPLA_-_24d602f3be82ccb640137c02502ef307_(page_1).jpg",,
+xNewYorkOvalNewYork,New York Oval,New York,1922-1922,,,,
+xNormalParkChicago,Normal Park,Chicago,1910-1910,Normal Park,250920-Driscoll-Runs-Against-Harvey.jpg,,
+xNorthwesternParkIndianapolis,Northwestern Park,Indianapolis,1914-1915,,,,
+xOllemarStadiumNewark,Ollemar Stadium,Newark,1935-1935,,,,
+xOlympicFieldNewYork,Olympic Field,New York,1911-1919,,,,
+xOrioleParkBaltimore,Oriole Park,Baltimore,1939-1941,Oriole Park,Baltimore_Oriole_Stadium_1938_1b.JPG,American_League_Park_Baltimore_1902_Sanborn_map.jpg,Left 290
+xPRRYMCAFieldPhiladelphia,PRR-YMCA Field,Philadelphia,1935-1935,,,,
+xPanhandleParkColumbus,Panhandle Park,Columbus,1932-1932,,,,
+xParksideAthleticFieldPhiladelphia,Parkside Athletic Field,Philadelphia,1939-1943,44th and Parkside Ballpark,AthleticFieldBelmontParkside.jpg,,Left 330 Center 410 Right 310
+xParkwayFieldLouisville,Parkway Field,Louisville,1931-1932,Parkway Field,Parkway_Field_1923_Aug_15.jpg,,
+xPassonFieldPhiladelphia,Passon Field,Philadelphia,1934-1934,,,,
+xPelicanStadiumStLouis,Pelican Stadium,St. Louis,1941-1941,,,,
+xPencoydFieldPhiladelphia,Pencoyd Field,Philadelphia,1928-1928,,,,
+xPerryStadiumChicago,Perry Stadium,Chicago,1933-1933,,,,
+xPerryStadiumIndianapolis,Perry Stadium,Indianapolis,1932-1938,Bush Stadium,Bush_Stadium_Indianapolis.JPG,,Left field 335 Left center field 350 Deep left center 405 Center field inner fence 395 Deep right center 405 Right center field 350 Right field 335
+xPlutoParkFrenchLick,Pluto Park,French Lick,1913-1913,,,,
+xPonceDeLeonParkAtlanta,Ponce De Leon Park,Atlanta,1938-1938,Ponce de Leon Park,"Spiller_Field,_Atlanta,_1924.jpg",Ponce_de_Leon_Park_Atlanta_1911_Sanborn_map.jpg,
+xPoncedeLeonParkAtlanta,Ponce de Leon Park,Atlanta,1932-1932,Ponce de Leon Park,"Spiller_Field,_Atlanta,_1924.jpg",Ponce_de_Leon_Park_Atlanta_1911_Sanborn_map.jpg,
+xPoncedeLeonParkIndianapolis,Ponce de Leon Park,Indianapolis,1939-1939,,,,
+xRedCapStadiumJacksonville,Red Cap Stadium,Jacksonville,1941-1942,,,,
+xRedSoxParkChicago,Red Sox Park,Chicago,1910-1910,,,,
+xRedWingStadiumNewYork,Red Wing Stadium,New York,1948-1948,Silver Stadium,RochesterRedWingsVsBuffaloBisonsAugust2017Game.jpg,,Left field 320 Center field 420 Right field 315
+xRidgewoodGroundsBrooklyn,Ridgewood Grounds,Brooklyn,1912-1917,Ridgewood Park (baseball ground),RidgewoodParkGrandstand1922.jpg,,
+xRiversideParkKansasCity,Riverside Park,Kansas City,1909-1910,,,,
+xRuppertStadiumNewark,Ruppert Stadium,Newark,1936-1948,Ruppert Stadium (New Jersey),"Madison_Square_Garden,_2005.jpg",,Left field 305 Left center 365 Center field 410 Right center 365 Right field 305
+xRusswoodParkMemphis,Russwood Park,Memphis,1946-1946,Russwood Park,,,
+xSaratogaParkBrooklyn,Saratoga Park,Brooklyn,1906-1906,Saratoga Park,"Saratoga_Park,_Brooklyn,_New_York,_US.jpg",,
+xShelleyParkKansasCity,Shelley Park,Kansas City,1910-1912,,,,
+xSouthEndGroundsStLouis,South End Grounds,St. Louis,1939-1940,,,,
+xSouthSideParkChicago,South Side Park,Chicago,1929-1932,South Side Park,South_Side_Park_1907.JPG,South_Side_Park_III_Chicago_1912_Sanborn_map.jpg,
+xSprudelParkWestBadenSprings,Sprudel Park,West Baden Springs,1910-1913,,,,
+xStarsParkStLouis,Stars Park,St. Louis,1922-1931,Stars Park,Stars'_Park_(4819537937).jpg,,
+xSwayneFieldToledo,Swayne Field,Toledo,1923-1940,Swayne Field,"12,000_People_at_Swayne_Field_Opening_Day,_Toledo,_O._-_DPLA_-_9be1f71ed2d654caecb5e29e9e369d42_(page_1).jpg",,
+xTateFieldCleveland,Tate Field,Cleveland,1922-1922,,,,
+xUnionParkChicago,Union Park,Chicago,1897-1900,Union Park (Chicago),Chicago_Union_Park.jpg,,
+xVictoryFieldICincinnati,Victory Field I,Cincinnati,1946-1947,,,,
+xVictoryFieldIIndianapolis,Victory Field I,Indianapolis,1948-1948,Victory Field,"Victory_Field_panorama,_2019.jpg",,Left field 320 Left-center field 418 Center field 402 Right-center field 362 Right field 320
+xWashingtonParkIIIndianapolis,Washington Park II,Indianapolis,1917-1931,Washington Park (Indianapolis),"1904_Indianapolis,_Indiana_photographs_-_DPLA_-_b744c3ac0fe67b5e9bb59e06dd412500_(page_55)_(cropped)_2.jpg",Washington_Park_II_Indianapolis_1915_Sanborn_maps.jpg,
+xWestSeventhStreetParkStPaul,West Seventh Street Park,St. Paul,1884-1884,West Seventh Street Park,St_Paul_baseball_grounds_1886_04_08.jpg,,
+xWestSideParkNewYork,West Side Park,New York,1925-1925,,,,
+xWestwoodFieldDayton,Westwood Field,Dayton,1920-1926,,,,
+xWilsonParkNashville,Wilson Park,Nashville,1930-1934,Tom Wilson Park,,,

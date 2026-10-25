@@ -4,3 +4,4 @@ __pycache__/
 data/source/*.numbers
 data/lahman/
 data/retrosheet/
+data/stories_src/

@@ -3,3 +3,4 @@ pyarrow>=14
 reverse_geocoder>=1.5
 numbers-parser>=4.10
 requests>=2.31
+pillow>=10

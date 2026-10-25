@@ -190,6 +190,38 @@ for row in pn.values[1:]:
         if any(str(x) for x in hl): note += f" L home {hl[0]}, L road {hl[1]}, R home {hl[2]}, R road {hl[3]}"
         parks[best]['note'] = (parks[best].get('note', '') + ' ' + note).strip()
 
+# each franchise's home parks, as runs of seasons: a park counts in a season when it held a quarter of the home games
+# (keeps out one-off neutral sites). Seasons with no HomeGames rows (Negro Leagues...) use the park named in Teams,
+# matched to a database park in the same city when there is one ('x...' keys otherwise; scripts/fetch_parks.py finds photos)
+fr_of = {(r.yearID, r.teamIDretro or r.teamID): r.franchID for r in T.itertuples()}
+home, have_hg = {}, set()
+for r, tot in zip(H.itertuples(), H.groupby(['yearkey', 'teamkey']).games.transform('sum')):
+    fr = fr_of.get((r.yearkey, r.teamkey))
+    if fr is None: continue
+    have_hg.add((fr, int(r.yearkey)))
+    if r.parkkey in parks and r.games >= 0.25 * tot: home.setdefault(fr, {}).setdefault(r.parkkey, set()).add(int(r.yearkey))
+by_name = {}
+for pk, p in parks.items():
+    for nm in [p['n']] + (p['al'] or '').split(';'):
+        if nm.strip(): by_name.setdefault((norm(nm), norm(p['c'])), pk)
+for t in teams.values():
+    if (t['fr'], t['y']) in have_hg or not t['park']: continue
+    city = (t['pl'] or {}).get('c') or ''
+    pk = by_name.get((norm(t['park']), norm(city))) or 'x' + re.sub(r'[^A-Za-z0-9]', '', unicodedata.normalize('NFKD', t['park'] + city).encode('ascii', 'ignore').decode())
+    if pk not in parks: parks[pk] = dict(n=t['park'], al=None, c=city, st=(t['pl'] or {}).get('r'), y0=t['y'], y1=t['y'])
+    p = parks[pk]; p['y0'], p['y1'] = min(p['y0'], t['y']), max(p['y1'], t['y'])
+    home.setdefault(t['fr'], {}).setdefault(pk, set()).add(t['y'])
+for fr, ps in home.items():
+    if fr not in franch: continue
+    runs = []
+    for pk, ys in ps.items():
+        sp = []
+        for y in sorted(ys):
+            if sp and y == sp[-1][1] + 1: sp[-1][1] = y
+            else: sp.append([y, y])
+        runs.append([pk, sp])
+    franch[fr]['pk'] = sorted(runs, key=lambda x: x[1][0])
+
 # ---------------------------------------------------------------- players
 Pi = P.set_index('playerID')
 A2 = A.merge(T[['yearID', 'teamID', 'franchID', 'name']], on=['yearID', 'teamID'], how='left')
@@ -450,6 +482,12 @@ if (SRC / 'player_media.json').exists():
         if m.get('ph'): md['ph'] = [[x['u'], x['credit'], x['license'], x['page'], x.get('cap', '')] for x in m['ph']]
         if md: players[k]['md'] = md
 
+# stories from the career and about the person, each linked to its source (data/source/player_stories.json, written
+# from the SABR biographies and Wikipedia articles that scripts/fetch_player_sources.py gathers)
+if (SRC / 'player_stories.json').exists():
+    for k, st in json.load(open(SRC / 'player_stories.json')).items():
+        if k in players and (st.get('c') or st.get('p')): players[k]['sto'] = {x: st[x] for x in ('c', 'p') if st.get(x)}
+
 # ---------------------------------------------------------------- season stats and team rosters
 # players get year-by-year lines (per team); every team season gets a lineup, rotation, bullpen and bench,
 # written to docs/data/rosters.json, which the site loads the first time a team page opens
@@ -643,16 +681,17 @@ def reg_rows(y):
 def series_rows(files, y, pred):
     rows = [(f, r) for f in files for r in POST[f] if r[0][:4] == str(y) and pred(r)]
     return sorted(rows, key=lambda x: (x[1][0], x[1][1]))
+retro_who = {r.retroID: [key_of.get(r.playerID), nz(r.bbrefID)] for r in P.itertuples() if r.retroID}  # a lineup's Retrosheet id -> [your list's player key, bbref id]
 who_ = lambda n: '' if n.strip() in ('', '(none)') else n  # Retrosheet writes '(none)' for no save
 def box(r):  # one game log row -> what the page shows
     vt, ht = retro2tid.get((r[3], int(r[0][:4]))), retro2tid.get((r[6], int(r[0][:4])))
     side = lambda tid, code, line, h, e, lu: dict(n=nick(tid) if tid else code, tid=tid, inn=innings(line), r=None, h=int(h or 0), e=int(e or 0),
-                                                   lu=[[lu[i + 1], POSN.get(lu[i + 2], lu[i + 2])] for i in range(0, 27, 3) if lu[i + 1]])
+                                                   lu=[[lu[i + 1], POSN.get(lu[i + 2], lu[i + 2]), *retro_who.get(lu[i], [None, None])] for i in range(0, 27, 3) if lu[i + 1]])
     v = side(vt, r[3], r[19], r[22], r[47], r[105:132]); h = side(ht, r[6], r[20], r[50], r[75], r[132:159])
     v['r'], h['r'] = int(r[9]), int(r[10])
     pk = PKd.get(r[16]); date = r[0]
     return dict(date=f"{MONTHS[int(date[4:6]) - 1]} {int(date[6:])}, {date[:4]}", park=pk.parkname if pk else r[16], att=int(r[17]) if r[17].isdigit() and int(r[17]) else None,
-                time=int(r[18]) if r[18].isdigit() and int(r[18]) else None, v=v, h=h, wp=who_(r[94]), lp=who_(r[96]), sv=who_(r[98]),
+                time=int(r[18]) if r[18].isdigit() and int(r[18]) else None, v=v, h=h, wp=who_(r[94]), lp=who_(r[96]), sv=who_(r[98]), wpl=retro_who.get(r[93]), lpl=retro_who.get(r[95]), svl=retro_who.get(r[97]),
                 br=f"https://www.baseball-reference.com/boxes/{r[6]}/{r[6]}{date}{r[1]}.shtml")
 boxes, matched = {}, 0
 for key, g in games.items():
@@ -698,6 +737,31 @@ for tid, ks in roster.items():  # your list's players on each team, by their mod
     cw = {k: round(contrib[(players[k]['id'], tid)], 1) for k in set(ks) if (players[k].get('id'), tid) in contrib}
     teams[tid]['ro'] = sorted(set(ks), key=lambda k: (-cw.get(k, -99), players[k]['ovr'] or 999))
     if cw: teams[tid]['ros'] = cw
+
+# ---------------------------------------------------------------- managers and executives (franchise pages)
+# managers: each run of seasons with a franchise, with his record there: [name, player key or None, bbref id, y0, y1, W, L]
+if (LAH / 'Managers.csv').exists():
+    key_of = {o['id']: k for k, o in players.items() if o.get('id')}
+    MG = rd('Managers').merge(T[['yearID', 'teamID', 'franchID']].astype({'yearID': int}), on=['yearID', 'teamID'])
+    for fr, g in MG.sort_values(['yearID', 'inseason']).groupby('franchID'):
+        if fr not in franch: continue
+        runs = []
+        for r in g.itertuples():
+            e = runs[-1] if runs and runs[-1][0] == r.playerID and runs[-1][4] >= r.yearID - 1 else None
+            if e:
+                e[4] = r.yearID; e[5] += int(r.W or 0); e[6] += int(r.L or 0); continue
+            runs.append([r.playerID, None, None, r.yearID, r.yearID, int(r.W or 0), int(r.L or 0)])
+        for x in runs:
+            pid = x[0]; pp = Pi.loc[pid] if pid in Pi.index else None
+            x[0] = ' '.join(str(s) for s in (nz(pp.nameFirst), nz(pp.nameLast)) if s) if pp is not None else pid
+            x[1], x[2] = key_of.get(pid), (nz(pp.bbrefID) if pp is not None else None)
+        franch[fr]['mg'] = runs
+else:
+    print('no data/lahman/Managers.csv: run python scripts/fetch_lahman.py for manager histories')
+# owners and general managers (scripts/fetch_execs.py -> data/source/executives.json): {kind: [[group, [[name, article]...], years]]}
+if (SRC / 'executives.json').exists():
+    for fr, ex in json.load(open(SRC / 'executives.json')).items():
+        if fr in franch: franch[fr]['ex'] = ex
 
 # ---------------------------------------------------------------- logos manifest
 logos = sorted(p.name for p in (ROOT / 'docs' / 'logos').glob('*') if p.suffix.lower() in ('.png', '.svg', '.jpg', '.jpeg', '.webp', '.none'))

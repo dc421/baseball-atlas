@@ -1,6 +1,6 @@
 "use strict";
 /* Living Atlas of Baseball
-   Data: data/atlas.json (built by scripts/build_data.py), data/photos.json (scripts/fetch_photos.py),
+   Data: data/atlas.json (built by scripts/build_data.py), data/photos.json (scripts/fetch_photos.py), data/parks.json (scripts/fetch_parks.py),
    data/progress.json (your exported check-offs, committed), plus whatever this browser has saved. */
 
 const $ = s => document.querySelector(s);
@@ -9,7 +9,7 @@ const enc = encodeURIComponent;
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
 
 let ROSTERS = null, rosterLoad = null, BOXES = null, boxLoad = null;  // + data/games.json (line scores), on first game page  // data/rosters.json, fetched when a team page first opens
-let D, WORLD, STATES, PHOTOS = {}, NOTES = { pre: [], years: {}, decades: {}, players: {} };
+let D, WORLD, STATES, PHOTOS = {}, PARKS = {}, NOTES = { pre: [], years: {}, decades: {}, players: {} };
 const LG = { NA: 'National Association', NL: 'National League', AL: 'American League', AA: 'American Association', UA: 'Union Association', PL: "Players' League", FL: 'Federal League', NNL: 'Negro National League', NN2: 'Negro National League (II)', ECL: 'Eastern Colored League', ANL: 'American Negro League', EWL: 'East-West League', NSL: 'Negro Southern League', NAL: 'Negro American League', EAS: 'Eastern independent clubs', WES: 'Western independent clubs', IND: 'Independent clubs', NAC: 'Negro American (Cuban) clubs', INT: 'Interracial independents' };
 const POSP = new Set(['SP', 'RP']);
 const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'SP', 'RP'];
@@ -649,7 +649,7 @@ function vPlayer() {
    <div class="who"><div class="eyebrow">${rank}</div><h1 class="name">${esc(n)}</h1>
    ${f ? `<div class="sub"><span>From ${placeLink(f)}</span></div>` : ''}</div></div>
    ${careerHTML(p, k)}
-   ${noteSection(key, 'career', 'Stories from the career', 'The 1934 strike, the trade, the slump he broke…', [['Baseball-Reference', br], ['Old newspapers', loc(n)]])}
+   ${noteSection(key, 'career', 'Stories from the career', 'The 1934 strike, the trade, the slump he broke…', [['Baseball-Reference', br], ['Old newspapers', loc(n)]], { pre: storiesHTML(p.sto?.c) })}
    ${playerNotes(k, (p.ss || []).length > 0)}
    <h2>The person</h2>
    <dl class="facts">
@@ -658,7 +658,7 @@ function vPlayer() {
      ${ht ? `<dt>Size</dt><dd>${ht}</dd>` : ''}
      ${p.bt && p.bt !== '?/?' ? `<dt>Bats/Throws</dt><dd>${esc(p.bt)}</dd>` : ''}
    </dl>
-   ${noteSection(key, 'person', 'Stories about the person', 'Where he grew up, what teammates said, a quote…', [['SABR biography', sabr(n)], ['Wikipedia', wiki(n + ' baseball')], ['A biography', books(n + ' biography')]], { sub: true })}
+   ${noteSection(key, 'person', 'Stories about the person', 'Where he grew up, what teammates said, a quote…', [['SABR biography', sabr(n)], ['Wikipedia', wiki(n + ' baseball')], ['A biography', books(n + ' biography')]], { sub: true, pre: storiesHTML(p.sto?.p) })}
    ${noteSection(key, 'highlights', 'Highlights', 'Paste a video link', [['YouTube', yt(n + ((p.pk || 2000) < 1925 ? ' baseball footage' : ' highlights'))]], { link: true, pre: ytEmbed(p.md?.hl) })}
    ${noteSection(key, 'interview', 'Interview or voice', 'Paste a video or audio link', [['YouTube', yt(n + ' interview')]], { link: true, pre: ytEmbed(p.md?.iv) })}
    ${noteSection(key, 'photos', 'Photos', 'Paste an image link', [['Image search', img(n + ' baseball ' + (p.pk || ''))]], { link: true, img: true, pre: photoGrid(p.md?.ph) })}
@@ -696,7 +696,9 @@ function careerHTML(p, k) {
 }
 const ytEmbed = v => v ? `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${esc(v[0])}" title="${esc(v[1])}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
   <p class="note">${esc(v[1])} · ${esc(v[2])}: the top YouTube result; add a better one below if it isn’t right.</p>` : '';
-const photoGrid = ph => ph && ph.length ? `<div class="pgrid">${ph.map(x => `<a href="${esc(x[3])}" target="_blank" rel="noopener" title="${esc(x[4] ? x[4] + ' · ' : '')}Photo: ${esc(x[1])}${x[2] ? ' · ' + esc(x[2]) : ''}"><img src="${esc(x[0])}" alt="${esc(x[4] || '')}" loading="lazy"></a>`).join('')}</div>` : '';
+// stories written from his SABR biography and Wikipedia article: [text, link, where it's from]
+const storiesHTML = st => st && st.length ? st.map(x => `<div class="clip story">${esc(x[0])} <a class="src" href="${esc(x[1])}" target="_blank" rel="noopener">${esc(x[2])} ↗</a></div>`).join('') : '';
+const photoGrid =ph => ph && ph.length ? `<div class="pgrid">${ph.map(x => `<a href="${esc(x[3])}" target="_blank" rel="noopener" title="${esc(x[4] ? x[4] + ' · ' : '')}Photo: ${esc(x[1])}${x[2] ? ' · ' + esc(x[2]) : ''}"><img src="${esc(x[0])}" alt="${esc(x[4] || '')}" loading="lazy"></a>`).join('')}</div>` : '';
 // a section you fill in, like clippings: a line of text and/or a link per entry
 function noteSection(key, sec, title, ph, links = [], o = {}) {
   const list = prog(key)?.notes?.[sec] || [], isImg = u => /\.(png|jpe?g|gif|webp)(\?|$)/i.test(u) || /upload\.wikimedia\.org/.test(u);
@@ -754,10 +756,65 @@ function vFranchise() {
    ${lightsHTML(key)}
    <h2>Doors</h2>${doorsHTML(key)}
    <h2>Names and homes</h2><div class="list">${eras.map(e => `<button class="row" onclick="go('t_${e.tid}')"><span class="yr">${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}</span><span class="rn">${esc(e.n)}${e.c ? `<small>${esc(e.c)}</small>` : ''}</span></button>`).join('')}</div>
+   ${(fr.pk || []).length ? `<h2>Ballparks <small>photos and diagrams from Wikipedia; hover for credits</small></h2><div class="parks">${fr.pk.map(parkCard).join('')}</div>` : ''}
    ${rated.length ? `<h2>Best seasons <small>by your model</small></h2><div class="list">${rated.slice(0, 8).map(teamRankRow).join('')}</div>` : ''}
    ${mine.length ? `<h2>From your list <small>${mine.length} played here</small></h2><div class="chips">${mine.map(playerChip).join('')}</div>` : ''}
+   ${managersHTML(fr.mg)}
+   ${fr.ex ? `<h2>Front office <small>from Wikipedia</small></h2><div class="execs">${[['own', 'Principal owners'], ['gm', 'General managers']].filter(([k]) => fr.ex[k]).map(([k, l]) => `<div><h3 class="sm">${l}</h3>${execRows(fr.ex[k])}</div>`).join('')}</div>` : ''}
    <h2>Every season</h2><div class="statline"><table class="stats roster fr"><tr><th>Year</th><th class="nm">Team</th><th>W–L</th><th>Finish</th><th></th><th title="Your model, wins over an average team">Score</th><th>Rank</th><th title="Best team that season (tracked)">★</th></tr>${ts.map(season).join('')}</table></div>
    <h2>Clippings</h2>${clipsHTML(key)}`;
+}
+// a home park: Wikipedia photo, its dimensions diagram (or a field drawn from the infobox distances), years here
+const wpFile = f => 'https://en.wikipedia.org/wiki/File:' + enc(f);
+const credit = x => `${x.credit}${x.license ? ' · ' + x.license : ''} · ${x.source}`;
+const DIM_ABBR = [[/left.*cent/i, 'LC'], [/right.*cent/i, 'RC'], [/cent/i, 'CF'], [/left/i, 'LF'], [/right/i, 'RF'], [/backstop|home/i, 'BS']];
+const dimAbbr = l => (DIM_ABBR.find(([re]) => re.test(l)) || [, l])[1];
+function parkCard([pk, spans]) {
+  const p = D.parks[pk], m = PARKS[pk] || {}; if (!p) return '';
+  const yrs = spans.map(([a, b]) => a === b ? a : `${a}–${b}`).join(', ');
+  const wp = m.page ? 'https://en.wikipedia.org/wiki/' + enc(m.page.replace(/ /g, '_')) : wiki(`${p.n} ${p.c} ballpark`);
+  const photo = m.photo ? `<a class="pph" href="${wpFile(m.photo.source)}" target="_blank" rel="noopener" title="Photo: ${esc(credit(m.photo))}"><img src="parks/${esc(m.photo.file)}" alt="${esc(p.n)}" loading="lazy"></a>` : '';
+  const dim = m.diagram ? `<a class="pdim" href="${wpFile(m.diagram.source)}" target="_blank" rel="noopener" title="Diagram: ${esc(credit(m.diagram))}"><img src="parks/${esc(m.diagram.file)}" alt="${esc(p.n)} dimensions" loading="lazy"></a>`
+    : m.dims ? fieldSVG(m.dims) : '';
+  const dims = (m.dims || []).filter(([l]) => dimAbbr(l) !== 'BS');
+  return `<div class="park">${photo || dim ? `<div class="pimgs${photo && dim ? '' : ' one'}">${photo}${dim}</div>` : ''}
+   <div class="pinfo"><b>${esc(p.n)}</b> · ${esc(p.c)}${p.st && !/^x/.test(pk) ? ', ' + esc(p.st) : ''} · ${yrs}
+   ${dims.length ? `<div class="note">${dims.map(([l, ft]) => `<span title="${esc(l)}">${dimAbbr(l)} ${ft}</span>`).join(' · ')}</div>` : ''}
+   ${p.al ? `<div class="note">Also called ${esc(p.al)}</div>` : ''}${p.note ? `<div class="note">Your note: ${esc(p.note)}</div>` : ''}
+   <div class="note"><a href="${esc(wp)}" target="_blank" rel="noopener">Wikipedia ↗</a></div></div></div>`;
+}
+// no diagram on Wikipedia: draw the field from the infobox distances (feet), home plate at the bottom
+function fieldSVG(dims) {
+  const ANG = { LF: -45, LC: -22.5, CF: 0, RC: 22.5, RF: 45 }, seen = {};
+  const pts = dims.map(([l, ft]) => { const a = dimAbbr(l); if (!(a in ANG)) return null; const n = seen[a] = (seen[a] || 0) + 1;
+    const deg = a === 'LF' || a === 'RF' ? ANG[a] : ANG[a] + (n - 1) * 6; return { deg, ft, r: deg * Math.PI / 180 }; })
+    .filter(Boolean).sort((a, b) => a.deg - b.deg);
+  if (pts.length < 3 || pts[0].deg !== -45 || pts[pts.length - 1].deg !== 45) return '';
+  const xy = (r, ft) => [ft * Math.sin(r), -ft * Math.cos(r)], P = pts.map(p => xy(p.r, p.ft));
+  let d = `M0,0L${P[0]}`;  // Catmull-Rom through the wall points
+  for (let i = 0; i < P.length - 1; i++) { const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || p2;
+    d += `C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2}`; }
+  const xs = P.map(p => p[0]), top = Math.min(...P.map(p => p[1])) - 50, b = 90 / Math.SQRT2;
+  const x0 = Math.min(...xs) - 50, x1 = Math.max(...xs) + 50;
+  return `<svg class="pdim field" viewBox="${x0} ${top} ${x1 - x0} ${20 - top}" role="img" aria-label="Field dimensions"><path class="g" d="${d}Z"/>
+   <path class="dirt" d="M0,0L${-b},${-b}L0,${-2 * b}L${b},${-b}Z"/><path class="ln" d="M0,0L${P[0]}M0,0L${P[P.length - 1]}"/>
+   ${pts.map(p => { const [x, y] = xy(p.r, p.ft + 22); return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">${p.ft}</text>`; }).join('')}</svg>`;
+}
+// a name in a box score: your list's players open their pages, others Baseball-Reference ([key, bbref id])
+const whoLink = (n, [k, br] = []) => k ? `<a href="#" onclick="go('p_${k}');return false">${esc(n)}</a>`
+  : br ? `<a href="https://www.baseball-reference.com/players/${esc(br[0])}/${esc(br)}.shtml" target="_blank" rel="noopener">${esc(n)}</a>` : esc(n);
+function managersHTML(mg) {
+  if (!mg || !mg.length) return '';
+  const row = ([n, k, br, y0, y1, w, l]) => `<tr><td>${y0}${y1 !== y0 ? '–' + y1 : ''}</td><td class="nm">${k ? `<a href="#" onclick="go('p_${k}');return false">${esc(n)}</a>`
+    : br ? `<a href="https://www.baseball-reference.com/managers/${esc(br)}.shtml" target="_blank" rel="noopener">${esc(n)}</a>` : esc(n)}</td><td>${w}–${l}</td><td>${w + l ? (w / (w + l)).toFixed(3).replace(/^0/, '') : ''}</td></tr>`;
+  return `<h2>Managers <small>${mg.length} stints; your list’s players open their pages, others Baseball-Reference</small></h2>
+   <div class="statline"><table class="stats roster fr"><tr><th>Years</th><th class="nm">Manager</th><th>W–L</th><th>Pct</th></tr>${mg.map(row).join('')}</table></div>`;
+}
+// owners or general managers, grouped by the franchise's eras: [group, parts (text or [name, article]), years]
+function execRows(rows) {
+  let g = null;
+  return rows.map(([grp, parts, yrs]) => `${grp !== g && (g = grp) ? `<div class="exg">${esc(grp)}</div>` : ''}<div class="exr"><span class="yr">${esc(yrs)}</span><span>${parts.map(x => Array.isArray(x)
+    ? `<a href="https://en.wikipedia.org/wiki/${enc(x[1].replace(/ /g, '_'))}" target="_blank" rel="noopener">${esc(x[0])}</a>` : esc(x)).join('')}</span></div>`).join('');
 }
 function vClub() {  // clubs outside the database (NPB, Cuba, Mexico, Puerto Rico...): who of yours played there
   const k = view.id, c = D.clubs[k]; if (!c) return notFound(); const key = 'c_' + k;
@@ -774,9 +831,9 @@ function vGame() {
   const line = bx ? (() => { const k = Math.max(9, bx.v.inn.length, bx.h.inn.length), cells = a => [...Array(k)].map((_, i) => `<td>${esc(a[i] ?? '')}</td>`).join('');
     return `<div class="statline"><table class="stats linescore"><tr><th></th>${[...Array(k)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th class="rhe">R</th><th>H</th><th>E</th></tr>
       ${[bx.v, bx.h].map(s => `<tr><td class="nm">${team(s)}</td>${cells(s.inn)}<td class="rhe"><b>${s.r}</b></td><td>${s.h}</td><td>${s.e}</td></tr>`).join('')}</table></div>
-      <div class="sub" style="margin-top:6px">${[bx.wp && `<span>W: <b>${esc(bx.wp)}</b></span>`, bx.lp && `<span>L: <b>${esc(bx.lp)}</b></span>`, bx.sv && `<span>S: <b>${esc(bx.sv)}</b></span>`].filter(Boolean).join('')}</div>
+      <div class="sub" style="margin-top:6px">${[['W', bx.wp, bx.wpl], ['L', bx.lp, bx.lpl], ['S', bx.sv, bx.svl]].filter(x => x[1]).map(([l, n, w]) => `<span>${l}: <b>${whoLink(n, w)}</b></span>`).join('')}</div>
       <p class="note">${esc(bx.date)} · ${esc(bx.park)}${bx.att ? ` · ${bx.att.toLocaleString()} fans` : ''}${bx.time ? ` · ${Math.floor(bx.time / 60)}:${String(bx.time % 60).padStart(2, '0')}` : ''}</p>`; })() : '';
-  const lineups = bx && (bx.v.lu.length || bx.h.lu.length) ? `<div class="lineups">${[bx.v, bx.h].map(s => `<div><h3 class="sm">${esc(s.n)}</h3><table class="stats roster">${s.lu.map((p, i) => `<tr><td>${i + 1}</td><td class="nm">${esc(p[0])}</td><td>${esc(p[1])}</td></tr>`).join('')}</table></div>`).join('')}</div>` : '';
+  const lineups = bx && (bx.v.lu.length || bx.h.lu.length) ? `<div class="lineups">${[bx.v, bx.h].map(s => `<div><h3 class="sm">${esc(s.n)}</h3><table class="stats roster">${s.lu.map((p, i) => `<tr><td>${i + 1}</td><td class="nm">${whoLink(p[0], p.slice(2))}</td><td>${esc(p[1])}</td></tr>`).join('')}</table></div>`).join('')}</div>` : '';
   const vid = ytEmbed(g.yt);
   return `${crumbs('Game', key)}${banner()}<div class="eyebrow">${g.o ? 'From the “Others” row' : `#${g.rk}`}</div>
    <h1 class="name">${esc(n)}</h1>${g.vs ? `<p style="font-size:17px;margin:2px 0 0"><b>${esc(g.vs)}</b></p>` : ''}${g.d ? `<p style="font-size:17px;margin:2px 0 0">${esc(g.d)}</p>` : ''}
@@ -1003,7 +1060,7 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
 
 /* ================================================================ boot */
 (async function boot() {
-  [D, WORLD, STATES, PHOTOS] = await Promise.all([getJSON('data/atlas.json'), getJSON('data/world.json'), getJSON('data/states.json'), getJSON('data/photos.json', {})]);
+  [D, WORLD, STATES, PHOTOS, PARKS] = await Promise.all([getJSON('data/atlas.json'), getJSON('data/world.json'), getJSON('data/states.json'), getJSON('data/photos.json', {}), getJSON('data/parks.json', {})]);
   NOTES = { ...NOTES, ...(await getJSON('data/notes.json', {})) };
   const [committed, synced] = await Promise.all([getJSON('data/progress.json', {}), ghPull()]);
   loadStore(committed, synced);

@@ -31,12 +31,15 @@ python scripts/export_other_leagues.py                                  # Japan/
 python scripts/fetch_retrosheet.py                                      # Retrosheet game logs -> data/retrosheet/ (line scores, lineups)
 python scripts/fetch_videos.py                                          # a YouTube video per game -> data/source/game_videos.csv
 python scripts/fetch_player_media.py --photos --videos                  # player photos + highlight/interview videos -> data/source/player_media.json
+python scripts/fetch_parks.py                                           # a photo + dimensions diagram per home park -> docs/parks/, docs/data/parks.json
+python scripts/fetch_execs.py                                           # owners and general managers (Wikipedia) -> data/source/executives.json
 python scripts/build_data.py                                            # rebuild with all of the above
 ```
 
 - **Your list** comes from the IN, Year-by-Year Top 5, Games, Parks R/L and Checklist tabs. Only the IN columns the site uses are exported.
 - **Your rating model** comes from `~/Documents/Baseball Ratings 2023.R` (pass another path to use a different version). `export_ratings.R` runs it unchanged up to the Hall of Fame models and saves every player-season's rating, year rank and tools, plus each player's peak-weighted rating and Hall odds. The site shows them as a career arc, 20-80 tools and the model's rank on player pages, the model's best five on team pages, and its top 10 on year pages. Skip this step and the site builds without them.
-- **Everything else** (careers, birthplaces, teams, parks, stats through 2025) comes from the Lahman database (SABR's 2025 release, fetched by `fetch_lahman.py`).
+- **Franchise pages** list every home park (a park counts in a season when it held a quarter of the home games) with a Wikipedia photo and its dimensions diagram, or a field drawn from the infobox distances when there is no diagram; every manager (Lahman); and, for today's 30 clubs, the principal owners and general managers from Wikipedia's navigation boxes.
+- **Everything else** (careers, birthplaces, teams, parks, managers, stats through 2025) comes from the Lahman database (SABR's 2025 release, fetched by `fetch_lahman.py`).
 - **Hand fixes** live in `data/overrides/`:
   - `player_ids.csv`: force a player match (or `NONE` for players outside the database)
   - `manual_players.csv`: players outside the database (NPB, Cuba, Mexico...), with home clubs
@@ -44,6 +47,7 @@ python scripts/build_data.py                                            # rebuil
   - `team_cities.csv`: locations for teams without a home-park record (mostly Negro League and Cuban clubs)
   - `team_colors.csv`: badge colors per franchise
   - `photo_titles.csv`: the Wikipedia article to use when the photo script picks the wrong person (`NONE` to skip)
+  - `park_titles.csv`: the Wikipedia article (or a specific photo / diagram file) for a park the park script gets wrong; check `data/park_review.csv`
 - **Logos**: see `docs/logos/README.md`.
 
 ## Your progress

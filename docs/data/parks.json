@@ -1,0 +1,4941 @@
+{
+ "BOS01": {
+  "page": "South End Grounds",
+  "photo": {
+   "file": "BOS01.jpg",
+   "source": "Southendgrounds.jpg",
+   "credit": "Creator: not identified.",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "BOS01_dim.jpg",
+   "source": "South_End_Grounds_Boston_1887_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    250
+   ],
+   [
+    "Left-center",
+    445
+   ],
+   [
+    "Deep left-center",
+    450
+   ],
+   [
+    "Center field",
+    440
+   ],
+   [
+    "Right-center",
+    440
+   ],
+   [
+    "Right field",
+    255
+   ]
+  ]
+ },
+ "BOS07": {
+  "page": "Fenway Park",
+  "photo": {
+   "file": "BOS07.jpg",
+   "source": "131023-F-PR861-033_Hanscom_participates_in_World_Series_pregame_events.jpg",
+   "credit": "Rick Berry",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "BOS07_dim.png",
+   "source": "FenwayParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    310
+   ],
+   [
+    "Deep left-center",
+    379
+   ],
+   [
+    "Center field",
+    389
+   ],
+   [
+    "Deep right-center",
+    420
+   ],
+   [
+    "Right center",
+    380
+   ],
+   [
+    "Right field",
+    302
+   ]
+  ]
+ },
+ "LOS03": {
+  "page": "Dodger Stadium",
+  "photo": {
+   "file": "LOS03.jpg",
+   "source": "Dodger_Stadium_and_Chavez_Ravine_far_view,_Chicago_Cubs_at_Los_Angeles_Dodgers,_(April_12,_2025).jpg",
+   "credit": "Spatms",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "LOS03_dim.png",
+   "source": "DodgerStadiumDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    330
+   ],
+   [
+    "Medium left-center",
+    360
+   ],
+   [
+    "True left-center",
+    375
+   ],
+   [
+    "Center field",
+    395
+   ],
+   [
+    "True center field",
+    400
+   ],
+   [
+    "True right-center",
+    375
+   ],
+   [
+    "Medium right-center",
+    360
+   ],
+   [
+    "Right field",
+    330
+   ]
+  ]
+ },
+ "NYC14": {
+  "page": "Polo Grounds",
+  "photo": {
+   "file": "NYC14.jpg",
+   "source": "No_Known_Restrictions_Polo_Grounds_during_World_Series_Game,_1913_from_the_Bain_Collection_(LOC)_(434431507).jpg",
+   "credit": "David Shapinsky from Washington, D.C., United States",
+   "license": "CC BY-SA 2.0"
+  },
+  "diagram": {
+   "file": "NYC14_dim.png",
+   "source": "PoloGroundsDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    279
+   ],
+   [
+    "Left-center",
+    450
+   ],
+   [
+    "Center field",
+    483
+   ],
+   [
+    "Right-center",
+    449
+   ],
+   [
+    "Right field",
+    258
+   ]
+  ]
+ },
+ "NYC16": {
+  "page": "Yankee Stadium (1923)",
+  "photo": {
+   "file": "NYC16.jpg",
+   "source": "Yankee_Stadium_aerial_from_Blackhawk.jpg",
+   "credit": "Severin St. Martin",
+   "license": "CC BY 2.0"
+  },
+  "diagram": {
+   "file": "NYC16_dim.png",
+   "source": "YankeeStadium_I_Dimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    318
+   ],
+   [
+    "Left-center",
+    399
+   ],
+   [
+    "Center field",
+    408
+   ],
+   [
+    "Right-center",
+    385
+   ],
+   [
+    "Right field",
+    314
+   ]
+  ]
+ },
+ "NYC17": {
+  "page": "Shea Stadium",
+  "photo": {
+   "file": "NYC17.jpg",
+   "source": "Shea_10-12-07.jpg",
+   "credit": "Originally uploaded at Wikipedia (English) by Metsfan84 02:39, 29 October 2008 (UTC) 3,264×1,086 (362 KB) Metsfan84 (Tak",
+   "license": "CC BY 3.0"
+  },
+  "diagram": {
+   "file": "NYC17_dim.png",
+   "source": "SheaStadiumBaseballFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "PIT08": {
+  "page": "PNC Park",
+  "photo": {
+   "file": "PIT08.jpg",
+   "source": "Pittsburgh_Pirates_park_(Unsplash).jpg",
+   "credit": "Joshua Peacock jcpeacock",
+   "license": "CC0"
+  },
+  "diagram": {
+   "file": "PIT08_dim.png",
+   "source": "PNCParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    325
+   ],
+   [
+    "Left-center",
+    383
+   ],
+   [
+    "Deep left-center field",
+    410
+   ],
+   [
+    "Center field",
+    399
+   ],
+   [
+    "Right-center",
+    375
+   ],
+   [
+    "Right field",
+    320
+   ]
+  ]
+ },
+ "ALT01": {
+  "page": "Columbia Park (Altoona)",
+  "photo": {
+   "file": "ALT01.jpg",
+   "source": "Columbiapark.jpg",
+   "credit": "Unknown, uploaded by SPKOMO",
+   "license": "PD-US"
+  }
+ },
+ "ANA01": {
+  "page": "Angel Stadium",
+  "photo": {
+   "file": "ANA01.jpg",
+   "source": "Angelstadiummarch2019.jpg",
+   "credit": "CrispyCream27",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "ANA01_dim.png",
+   "source": "AngelStadiumDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    347
+   ],
+   [
+    "Left-center",
+    390
+   ],
+   [
+    "Center field",
+    396
+   ],
+   [
+    "Right-center",
+    370
+   ],
+   [
+    "Right field",
+    350
+   ]
+  ]
+ },
+ "ARL01": {
+  "page": "Arlington Stadium",
+  "photo": {
+   "file": "ARL01.jpg",
+   "source": "Arlington_Stadium_1988.jpg",
+   "credit": "Jerry Reuss",
+   "license": "CC BY-SA 2.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    330
+   ],
+   [
+    "Left-center",
+    380
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center",
+    380
+   ],
+   [
+    "Right field",
+    330
+   ]
+  ]
+ },
+ "ARL02": {
+  "page": "Choctaw Stadium",
+  "photo": {
+   "file": "ARL02.jpg",
+   "source": "Richard_Greene_Linear_Park_June_2020_13_(Globe_Life_Park_in_Arlington).jpg",
+   "credit": "Michael Barera",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "ARL02_dim.png",
+   "source": "GlobeLifeParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "ARL03": {
+  "page": "Globe Life Field",
+  "photo": {
+   "file": "ARL03.jpg",
+   "source": "GlobeLifeField2021.jpg",
+   "credit": "slgckgc",
+   "license": "CC BY 2.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    329
+   ],
+   [
+    "Left center",
+    372
+   ],
+   [
+    "Center field",
+    407
+   ],
+   [
+    "Right center",
+    374
+   ],
+   [
+    "Right field",
+    326
+   ]
+  ]
+ },
+ "ATL01": {
+  "page": "Atlanta–Fulton County Stadium",
+  "photo": {
+   "file": "ATL01.jpg",
+   "source": "Atlanta–Fulton_County_Stadium_Postcard_(1960s-70s)_(Stadium_crop).jpg",
+   "credit": "Don Ceppi/Scenic South Card Co.",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    330
+   ],
+   [
+    "Left-center",
+    375
+   ],
+   [
+    "Center field",
+    402
+   ],
+   [
+    "Right-center",
+    385
+   ],
+   [
+    "Right field",
+    330
+   ]
+  ]
+ },
+ "ATL02": {
+  "page": "Turner Field",
+  "photo": {
+   "file": "ATL02.jpg",
+   "source": "Turner_Field_2013.jpg",
+   "credit": "Zpb52",
+   "license": "CC BY-SA 3.0"
+  },
+  "diagram": {
+   "file": "ATL02_dim.png",
+   "source": "TurnerFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    335
+   ],
+   [
+    "Left-center",
+    380
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center",
+    390
+   ],
+   [
+    "Right field",
+    330
+   ]
+  ]
+ },
+ "ATL03": {
+  "page": "Truist Park",
+  "photo": {
+   "file": "ATL03.jpg",
+   "source": "Truist_Park_2025.jpg",
+   "credit": "TarheelBornBred",
+   "license": "CC0"
+  },
+  "diagram": {
+   "file": "ATL03_dim.png",
+   "source": "SuntrustParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    335
+   ],
+   [
+    "Left-center",
+    385
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center",
+    375
+   ],
+   [
+    "Right field",
+    325
+   ]
+  ]
+ },
+ "BAL02": {
+  "page": "Newington Park"
+ },
+ "BAL03": {
+  "page": "Oriole Park",
+  "photo": {
+   "file": "BAL03.jpg",
+   "source": "Baltimore_Oriole_Stadium_1938_1b.JPG",
+   "credit": "Wikimedia Commons",
+   "license": "Fair use"
+  },
+  "diagram": {
+   "file": "BAL03_dim.jpg",
+   "source": "American_League_Park_Baltimore_1902_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left",
+    290
+   ]
+  ]
+ },
+ "BAL04": {
+  "page": "Belair Lot",
+  "photo": {
+   "file": "BAL04.jpg",
+   "source": "Belair_Lot_Baltimore_1884.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "BAL06": {
+  "page": "Oriole Park",
+  "photo": {
+   "file": "BAL06.jpg",
+   "source": "Baltimore_Oriole_Stadium_1938_1b.JPG",
+   "credit": "Wikimedia Commons",
+   "license": "Fair use"
+  },
+  "diagram": {
+   "file": "BAL06_dim.jpg",
+   "source": "American_League_Park_Baltimore_1902_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left",
+    290
+   ]
+  ]
+ },
+ "BAL07": {
+  "page": "Oriole Park",
+  "photo": {
+   "file": "BAL07.jpg",
+   "source": "Baltimore_Oriole_Stadium_1938_1b.JPG",
+   "credit": "Wikimedia Commons",
+   "license": "Fair use"
+  },
+  "diagram": {
+   "file": "BAL07_dim.jpg",
+   "source": "American_League_Park_Baltimore_1902_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left",
+    290
+   ]
+  ]
+ },
+ "BAL09": {
+  "page": "Oriole Park",
+  "photo": {
+   "file": "BAL09.jpg",
+   "source": "Baltimore_Oriole_Stadium_1938_1b.JPG",
+   "credit": "Wikimedia Commons",
+   "license": "Fair use"
+  },
+  "diagram": {
+   "file": "BAL09_dim.jpg",
+   "source": "American_League_Park_Baltimore_1902_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left",
+    290
+   ]
+  ]
+ },
+ "BAL10": {
+  "page": "Oriole Park (V)",
+  "photo": {
+   "file": "BAL10.jpg",
+   "source": "Baltimore_Oriole_Stadium_1938_1b.JPG",
+   "credit": "Wikimedia Commons",
+   "license": "Fair use"
+  },
+  "diagram": {
+   "file": "BAL10_dim.jpg",
+   "source": "Terrapin_Park_and_Oriole_Park_1915_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "BAL11": {
+  "page": "Baltimore Memorial Stadium",
+  "photo": {
+   "file": "BAL11.jpg",
+   "source": "Memorial_Stadium_(Baltimore).jpg",
+   "credit": "Original uploader was Jmj1000 at en.wikipedia",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    309
+   ],
+   [
+    "Left-center",
+    446
+   ],
+   [
+    "Center field",
+    445
+   ],
+   [
+    "Right-center",
+    446
+   ],
+   [
+    "Right field",
+    309
+   ]
+  ]
+ },
+ "BAL12": {
+  "page": "Oriole Park at Camden Yards",
+  "photo": {
+   "file": "BAL12.jpg",
+   "source": "OrioleParkatCamdenYardsSummer2025.jpg",
+   "credit": "Aspifi",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "BAL12_dim.png",
+   "source": "CamdenYardsDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field line",
+    333
+   ],
+   [
+    "Straight away left",
+    373
+   ],
+   [
+    "Left center",
+    376
+   ],
+   [
+    "Deep left center",
+    410
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right center",
+    373
+   ],
+   [
+    "Right field line",
+    318
+   ]
+  ]
+ },
+ "BIR01": {
+  "page": "Rickwood Field",
+  "photo": {
+   "file": "BIR01.jpg",
+   "source": "Rickwood_Field.jpg",
+   "credit": "Chris \"Mojo\" Denbow (Photo-Mojo) from Birmingham, USA",
+   "license": "CC BY 2.0"
+  },
+  "diagram": {
+   "file": "BIR01_dim.png",
+   "source": "Rickwood_site_plan.png",
+   "credit": "HABS - NPS",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    325
+   ],
+   [
+    "Left center",
+    399
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right center",
+    370
+   ],
+   [
+    "Right field",
+    332
+   ]
+  ]
+ },
+ "BOS02": {
+  "page": null
+ },
+ "BOS03": {
+  "page": "South End Grounds",
+  "photo": {
+   "file": "BOS03.jpg",
+   "source": "Southendgrounds.jpg",
+   "credit": "Creator: not identified.",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "BOS03_dim.jpg",
+   "source": "South_End_Grounds_Boston_1887_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    250
+   ],
+   [
+    "Left-center",
+    445
+   ],
+   [
+    "Deep left-center",
+    450
+   ],
+   [
+    "Center field",
+    440
+   ],
+   [
+    "Right-center",
+    440
+   ],
+   [
+    "Right field",
+    255
+   ]
+  ]
+ },
+ "BOS04": {
+  "page": "Congress Street Grounds",
+  "photo": {
+   "file": "BOS04.jpg",
+   "source": "Congress_Street_Grounds_1890.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    250
+   ]
+  ]
+ },
+ "BOS05": {
+  "page": "South End Grounds",
+  "photo": {
+   "file": "BOS05.jpg",
+   "source": "Southendgrounds.jpg",
+   "credit": "Creator: not identified.",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "BOS05_dim.jpg",
+   "source": "South_End_Grounds_Boston_1887_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    250
+   ],
+   [
+    "Left-center",
+    445
+   ],
+   [
+    "Deep left-center",
+    450
+   ],
+   [
+    "Center field",
+    440
+   ],
+   [
+    "Right-center",
+    440
+   ],
+   [
+    "Right field",
+    255
+   ]
+  ]
+ },
+ "BOS06": {
+  "page": "Huntington Avenue Grounds",
+  "photo": {
+   "file": "BOS06.jpg",
+   "source": "WorldSeries1903-640.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "BOS06_dim.jpg",
+   "source": "Huntington_Ave_Grounds_plan_1901_04_01.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    350
+   ],
+   [
+    "Left-center",
+    440
+   ],
+   [
+    "Center field",
+    530
+   ],
+   [
+    "Right field",
+    280
+   ]
+  ]
+ },
+ "BOS08": {
+  "page": "Braves Field",
+  "photo": {
+   "file": "BOS08.jpg",
+   "source": "Boston_braves_field_night_postcard.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "CC BY 2.0"
+  },
+  "diagram": {
+   "file": "BOS08_dim.png",
+   "source": "BravesFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "BUF01": {
+  "page": null
+ },
+ "BUF02": {
+  "page": "Olympic Park (Buffalo)",
+  "diagram": {
+   "file": "BUF02_dim.jpg",
+   "source": "Olympic_Park_II_Buffalo_1899_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "BUF03": {
+  "page": "Olympic Park (Buffalo)",
+  "diagram": {
+   "file": "BUF03_dim.jpg",
+   "source": "Olympic_Park_II_Buffalo_1899_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "BUF04": {
+  "page": "International Fair Association Grounds",
+  "photo": {
+   "file": "BUF04.jpg",
+   "source": "Main_building_of_the_Buffalo_International_Fair_Association,_1888.png",
+   "credit": "Anonymous engraver",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left",
+    354
+   ]
+  ]
+ },
+ "BUF05": {
+  "page": "Sahlen Field",
+  "photo": {
+   "file": "BUF05.jpg",
+   "source": "Sahlen_Field_aerial_view_in_2023_-_Quintin_Soloviev_(cropped).jpg",
+   "credit": "Quintinsoloviev",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "BUF05_dim.png",
+   "source": "Sahlen_Field_Dimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    325
+   ],
+   [
+    "Left-center field",
+    371
+   ],
+   [
+    "Center field",
+    404
+   ],
+   [
+    "Right-center field",
+    367
+   ],
+   [
+    "Right field",
+    325
+   ]
+  ]
+ },
+ "CHI01": {
+  "page": "Union Base-Ball Grounds",
+  "photo": {
+   "file": "CHI01.jpg",
+   "source": "Lake_Shore_Park_1883.JPG",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "CHI02": {
+  "page": "23rd Street Grounds"
+ },
+ "CHI03": {
+  "page": "Union Base-Ball Grounds",
+  "photo": {
+   "file": "CHI03.jpg",
+   "source": "Lake_Shore_Park_1883.JPG",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "CHI05": {
+  "page": "South Side Park",
+  "photo": {
+   "file": "CHI05.jpg",
+   "source": "South_Side_Park_1907.JPG",
+   "credit": "Chicago Daily News photographer",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "CHI05_dim.jpg",
+   "source": "South_Side_Park_III_Chicago_1912_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "CHI06": {
+  "page": "West Side Park",
+  "photo": {
+   "file": "CHI06.jpg",
+   "source": "West_Side_Park_postcard,_1909.jpg",
+   "credit": "V.O., Hammon",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "CHI06_dim.jpg",
+   "source": "West_Side_Park_I_diagram_1885_Apr_26.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "CHI07": {
+  "page": "South Side Park",
+  "photo": {
+   "file": "CHI07.jpg",
+   "source": "South_Side_Park_1907.JPG",
+   "credit": "Chicago Daily News photographer",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "CHI07_dim.jpg",
+   "source": "South_Side_Park_III_Chicago_1912_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "CHI08": {
+  "page": "West Side Park",
+  "photo": {
+   "file": "CHI08.jpg",
+   "source": "West_Side_Park_postcard,_1909.jpg",
+   "credit": "V.O., Hammon",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "CHI08_dim.jpg",
+   "source": "West_Side_Park_I_diagram_1885_Apr_26.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "CHI10": {
+  "page": "Comiskey Park",
+  "photo": {
+   "file": "CHI10.jpg",
+   "source": "Old_comiskey_park.jpg",
+   "credit": "User Rdikeman on en.wikipedia",
+   "license": "CC BY-SA 3.0"
+  },
+  "diagram": {
+   "file": "CHI10_dim.png",
+   "source": "ComiskeyParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "CHI11": {
+  "page": "Wrigley Field",
+  "photo": {
+   "file": "CHI11.jpg",
+   "source": "Wrigley_Field_in_line_with_sign.jpg",
+   "credit": "Sea Cow",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "CHI11_dim.png",
+   "source": "WrigleyFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    355
+   ],
+   [
+    "Left-center",
+    368
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center",
+    368
+   ],
+   [
+    "Right field",
+    353
+   ]
+  ]
+ },
+ "CHI12": {
+  "page": "Rate Field",
+  "photo": {
+   "file": "CHI12.jpg",
+   "source": "Chicago,_Illinois,_U.S._(2023)_-_062.jpg",
+   "credit": "Another Believer",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "CHI12_dim.png",
+   "source": "GuaranteedRateFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    330
+   ],
+   [
+    "Left-center",
+    375
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center",
+    375
+   ],
+   [
+    "Right field",
+    335
+   ]
+  ]
+ },
+ "CIN01": {
+  "page": "Lincoln Park Grounds"
+ },
+ "CIN02": {
+  "page": "Avenue Grounds",
+  "photo": {
+   "file": "CIN02.jpg",
+   "source": "Avenue_Grounds_Cincinnati_1875_Sep_9.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "CIN03": {
+  "page": "Bank Street Grounds",
+  "photo": {
+   "file": "CIN03.jpg",
+   "source": "Bank_Street_Grounds_Cincinnati_1886_Sep_14_Order_of_Cincinnatus.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "CIN03_dim.png",
+   "source": "Bank_Street_Grounds_diagram.png",
+   "credit": "Baseball Bugs",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "CIN04": {
+  "page": "League Park (Cincinnati)",
+  "photo": {
+   "file": "CIN04.jpg",
+   "source": "CincyBallparkca1884.JPG",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "CIN04_dim.jpg",
+   "source": "CincyDiagram.JPG",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    253
+   ]
+  ]
+ },
+ "CIN05": {
+  "page": "League Park (Cincinnati)",
+  "photo": {
+   "file": "CIN05.jpg",
+   "source": "CincyBallparkca1884.JPG",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "CIN05_dim.jpg",
+   "source": "CincyDiagram.JPG",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    253
+   ]
+  ]
+ },
+ "CIN06": {
+  "page": "Palace of the Fans",
+  "photo": {
+   "file": "CIN06.jpg",
+   "source": "PalceotFans2.JPG",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    360
+   ],
+   [
+    "Left-center",
+    418
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center",
+    375
+   ],
+   [
+    "Right field",
+    450
+   ]
+  ]
+ },
+ "CIN07": {
+  "page": "Crosley Field",
+  "photo": {
+   "file": "CIN07.jpg",
+   "source": "Crosley_Field_1969.jpg",
+   "credit": "Blake Bolinger from Central NJ, United States",
+   "license": "CC BY 2.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    328
+   ],
+   [
+    "Left-center",
+    380
+   ],
+   [
+    "Center field",
+    387
+   ],
+   [
+    "Right-center",
+    383
+   ],
+   [
+    "Right field",
+    366
+   ]
+  ]
+ },
+ "CIN08": {
+  "page": "Riverfront Stadium",
+  "photo": {
+   "file": "CIN08.jpg",
+   "source": "Riverfront_Stadium_in_Cincinnati,_Ohio.jpg",
+   "credit": "Flickr user Brent NAshville",
+   "license": "CC BY 2.0"
+  },
+  "diagram": {
+   "file": "CIN08_dim.png",
+   "source": "RiverfrontStadiumBaseballFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    325
+   ],
+   [
+    "Left-center field",
+    370
+   ],
+   [
+    "Center field",
+    393
+   ],
+   [
+    "Right-center field",
+    373
+   ],
+   [
+    "Right field",
+    325
+   ]
+  ]
+ },
+ "CIN09": {
+  "page": "Great American Ball Park",
+  "photo": {
+   "file": "CIN09.jpg",
+   "source": "10Cincinnati_2015_(2).jpg",
+   "credit": "Laslovarga",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "CIN09_dim.png",
+   "source": "GreatAmericanBalparkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    328
+   ],
+   [
+    "Left-center",
+    379
+   ],
+   [
+    "Center field",
+    404
+   ],
+   [
+    "Right-center",
+    370
+   ],
+   [
+    "Right field",
+    325
+   ]
+  ]
+ },
+ "CLE01": {
+  "page": "National Association Grounds"
+ },
+ "CLE02": {
+  "page": "National League Park",
+  "photo": {
+   "file": "CLE02.jpg",
+   "source": "National_League_Park_(Plain_Dealer_illustration).png",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "CLE03": {
+  "page": "League Park",
+  "photo": {
+   "file": "CLE03.jpg",
+   "source": "Leagueaerial.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    375
+   ],
+   [
+    "Left-center",
+    415
+   ],
+   [
+    "Deep center",
+    460
+   ],
+   [
+    "Center field",
+    420
+   ],
+   [
+    "Right-center",
+    340
+   ],
+   [
+    "Right field",
+    290
+   ]
+  ]
+ },
+ "CLE04": {
+  "page": "Brotherhood Park"
+ },
+ "CLE05": {
+  "page": "League Park",
+  "photo": {
+   "file": "CLE05.jpg",
+   "source": "Leagueaerial.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    375
+   ],
+   [
+    "Left-center",
+    415
+   ],
+   [
+    "Deep center",
+    460
+   ],
+   [
+    "Center field",
+    420
+   ],
+   [
+    "Right-center",
+    340
+   ],
+   [
+    "Right field",
+    290
+   ]
+  ]
+ },
+ "CLE06": {
+  "page": "League Park",
+  "photo": {
+   "file": "CLE06.jpg",
+   "source": "Leagueaerial.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    375
+   ],
+   [
+    "Left-center",
+    415
+   ],
+   [
+    "Deep center",
+    460
+   ],
+   [
+    "Center field",
+    420
+   ],
+   [
+    "Right-center",
+    340
+   ],
+   [
+    "Right field",
+    290
+   ]
+  ]
+ },
+ "CLE07": {
+  "page": "Cleveland Stadium",
+  "photo": {
+   "file": "CLE07.jpg",
+   "source": "Cleveland_Municipal_Stadium_(NBY_6450).jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "CLE07_dim.png",
+   "source": "ClevelandMunicipalStadiumBaseballFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    322
+   ],
+   [
+    "Left-center",
+    385
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center",
+    385
+   ],
+   [
+    "Right field",
+    322
+   ]
+  ]
+ },
+ "CLE08": {
+  "page": "Progressive Field",
+  "photo": {
+   "file": "CLE08.jpg",
+   "source": "Cleveland_Guardians_vs._New_York_Yankees_on_Oct_17_2024_(54102149292).jpg",
+   "credit": "Erik Drost",
+   "license": "CC BY 2.0"
+  },
+  "diagram": {
+   "file": "CLE08_dim.png",
+   "source": "ProgressiveFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    325
+   ],
+   [
+    "Left-center",
+    370
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Deep center field",
+    410
+   ],
+   [
+    "Right-center",
+    375
+   ],
+   [
+    "Right field",
+    325
+   ]
+  ]
+ },
+ "COL01": {
+  "page": "Recreation Park (Columbus)"
+ },
+ "COL02": {
+  "page": "Recreation Park (Columbus)"
+ },
+ "COL04": {
+  "page": null
+ },
+ "DEN01": {
+  "page": "Mile High Stadium",
+  "photo": {
+   "file": "DEN01.jpg",
+   "source": "Denver_Mile_High_Stadium_postcard_(c._1970s-1980s).jpg",
+   "credit": "Mel Schieltz/G. R. Dickson Co.",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    333
+   ],
+   [
+    "Left-center",
+    366
+   ],
+   [
+    "Center field",
+    423
+   ],
+   [
+    "Right-center",
+    400
+   ],
+   [
+    "Right field",
+    370
+   ]
+  ]
+ },
+ "DEN02": {
+  "page": "Coors Field",
+  "photo": {
+   "file": "DEN02.jpg",
+   "source": "Coors_Field_July_2015.jpg",
+   "credit": "Thelastcanadian",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "DEN02_dim.png",
+   "source": "CoorsFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    347
+   ],
+   [
+    "Left-center",
+    390
+   ],
+   [
+    "Center field",
+    415
+   ],
+   [
+    "Right-center",
+    375
+   ],
+   [
+    "Right field",
+    350
+   ]
+  ]
+ },
+ "DET01": {
+  "page": "Recreation Park (Detroit)",
+  "photo": {
+   "file": "DET01.jpg",
+   "source": "Det_Rec_Park.JPG",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "DET01_dim.jpg",
+   "source": "Recreation_Park_Detroit_1884_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "DET02": {
+  "page": "Bennett Park (Detroit)",
+  "photo": {
+   "file": "DET02.jpg",
+   "source": "BennetPark.jpg",
+   "credit": "en.wikipedia upload by Albemarle 06:01, 2 December 2005 (UTC)",
+   "license": "Public domain"
+  }
+ },
+ "DET04": {
+  "page": "Tiger Stadium (Detroit)",
+  "photo": {
+   "file": "DET04.jpg",
+   "source": "Inside_Tiger_Stadium,_Detroit.jpg",
+   "credit": "user:RickDikeman",
+   "license": "CC BY-SA 3.0"
+  }
+ },
+ "DET05": {
+  "page": "Comerica Park",
+  "photo": {
+   "file": "DET05.jpg",
+   "source": "Detroit_Tigers_opening_game_at_Comerica_Park,_2007.jpg",
+   "credit": "User MJCdetroit on en.wikipedia",
+   "license": "CC BY-SA 3.0"
+  },
+  "diagram": {
+   "file": "DET05_dim.png",
+   "source": "ComericaParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    342
+   ],
+   [
+    "Left-center",
+    370
+   ],
+   [
+    "Center field",
+    412
+   ],
+   [
+    "Right-center",
+    365
+   ],
+   [
+    "Right field",
+    330
+   ]
+  ]
+ },
+ "DUN01": {
+  "page": "TD Ballpark",
+  "photo": {
+   "file": "DUN01.jpg",
+   "source": "TD_Ballpark_in_2021.jpg",
+   "credit": "Whoisjohngalt",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    333
+   ],
+   [
+    "Left-center",
+    380
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center",
+    363
+   ],
+   [
+    "Right field",
+    336
+   ]
+  ]
+ },
+ "FOR01": {
+  "page": "Kekionga Ball Grounds"
+ },
+ "HAR01": {
+  "page": null
+ },
+ "HOU01": {
+  "page": "Colt Stadium",
+  "photo": {
+   "file": "HOU01.jpg",
+   "source": "Colt_Stadium_1962.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Fair use"
+  },
+  "dims": [
+   [
+    "Left field",
+    360
+   ],
+   [
+    "Left-center",
+    395
+   ],
+   [
+    "Center-left",
+    427
+   ],
+   [
+    "Center field",
+    420
+   ],
+   [
+    "Center-right",
+    427
+   ],
+   [
+    "Right center",
+    395
+   ],
+   [
+    "Right field",
+    360
+   ]
+  ]
+ },
+ "HOU02": {
+  "page": "Astrodome",
+  "photo": {
+   "file": "HOU02.jpg",
+   "source": "Reliant_Astrodome_in_January_2014.jpg",
+   "credit": "EricEnfermero",
+   "license": "CC BY-SA 3.0"
+  },
+  "diagram": {
+   "file": "HOU02_dim.png",
+   "source": "AstrodomeDimensions.svg",
+   "credit": "Angelgreat",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    325
+   ],
+   [
+    "Left center",
+    375
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right center",
+    375
+   ],
+   [
+    "Right field",
+    325
+   ]
+  ]
+ },
+ "HOU03": {
+  "page": "Daikin Park",
+  "photo": {
+   "file": "HOU03.jpg",
+   "source": "Houston,_Texas_(2024)_-_09.jpg",
+   "credit": "Another Believer",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "HOU03_dim.png",
+   "source": "MinuteMaidParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    315
+   ],
+   [
+    "Left-center",
+    366
+   ],
+   [
+    "Center field",
+    409
+   ],
+   [
+    "Right-center",
+    370
+   ],
+   [
+    "Right field",
+    326
+   ]
+  ]
+ },
+ "HRT01": {
+  "page": "Hartford Ball Club Grounds"
+ },
+ "HRT02": {
+  "page": null
+ },
+ "IND01": {
+  "page": "South Street Park"
+ },
+ "IND02": {
+  "page": "Tinker Park"
+ },
+ "IND04": {
+  "page": "Tinker Park"
+ },
+ "IND05": {
+  "page": "Tinker Park"
+ },
+ "IND07": {
+  "page": "Federal League Park",
+  "photo": {
+   "file": "IND07.jpg",
+   "source": "Federal_League_Park_Indianapolis_1914_Apr_4.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "KAN01": {
+  "page": "Athletic Park (Kansas City)"
+ },
+ "KAN02": {
+  "page": "Association Park",
+  "photo": {
+   "file": "KAN02.jpg",
+   "source": "Kansas_City_MO_Association_Park_demolition_1925_07_07.jpg",
+   "credit": "Unknown newspaper staff member",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "KAN02_dim.jpg",
+   "source": "Kansas_City_MO_Association_Park_football_diagram_1909_11_25.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "KAN03": {
+  "page": "Exposition Park (Kansas City)",
+  "diagram": {
+   "file": "KAN03_dim.jpg",
+   "source": "Exposition_Park_Kansas_City_1896_Sanborn_maps.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "KAN04": {
+  "page": "Gordon and Koppel Field",
+  "photo": {
+   "file": "KAN04.jpg",
+   "source": "Gordon_Koppel_Field.png",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "KAN04_dim.jpg",
+   "source": "KC_Gordon_Koppel_diagram_1910_11_16.jpg",
+   "credit": "Anonymous staff member of the Times",
+   "license": "Public domain"
+  }
+ },
+ "KAN05": {
+  "page": "Municipal Stadium (Kansas City, Missouri)",
+  "photo": {
+   "file": "KAN05.jpg",
+   "source": "Kansas_City_Municipal_Stadium_1955.jpg",
+   "credit": "Barth, Harry",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    369
+   ],
+   [
+    "L. center",
+    408
+   ],
+   [
+    "Center f",
+    421
+   ],
+   [
+    "R. center",
+    382
+   ],
+   [
+    "Right field",
+    338
+   ]
+  ]
+ },
+ "KAN06": {
+  "page": "Kauffman Stadium",
+  "photo": {
+   "file": "KAN06.jpg",
+   "source": "Kauffman2017.jpg",
+   "credit": "Chibears85",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "KAN06_dim.png",
+   "source": "KauffmanStadiumDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "KEO01": {
+  "page": "Perry Park (Iowa)"
+ },
+ "LOS01": {
+  "page": "Los Angeles Memorial Coliseum",
+  "photo": {
+   "file": "LOS01.jpg",
+   "source": "Los_Angeles_Memorial_Coliseum.png",
+   "credit": "Quintin Soloviev",
+   "license": "CC BY 4.0"
+  },
+  "diagram": {
+   "file": "LOS01_dim.png",
+   "source": "MemorialColiseumDimensions.svg",
+   "credit": "Angelgreat",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "LOS02": {
+  "page": "Wrigley Field (Los Angeles)",
+  "photo": {
+   "file": "LOS02.jpg",
+   "source": "Wrigley_Field,_Los_Angeles,_1925.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    340
+   ],
+   [
+    "L.c. field",
+    345
+   ],
+   [
+    "Center field",
+    412
+   ],
+   [
+    "R.c. field",
+    345
+   ],
+   [
+    "Right field",
+    339
+   ]
+  ]
+ },
+ "LOU01": {
+  "page": "Louisville Baseball Park"
+ },
+ "LOU02": {
+  "page": "Eclipse Park",
+  "diagram": {
+   "file": "LOU02_dim.jpg",
+   "source": "Eclipse_Park_I_Louisville_1892_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "LOU03": {
+  "page": "Eclipse Park",
+  "diagram": {
+   "file": "LOU03_dim.jpg",
+   "source": "Eclipse_Park_I_Louisville_1892_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "MIA01": {
+  "page": "Hard Rock Stadium",
+  "photo": {
+   "file": "MIA01.jpg",
+   "source": "Hard_Rock_Stadium_for_Super_Bowl_LIV_(49606710103).jpg",
+   "credit": "elisfkc2",
+   "license": "CC BY-SA 2.0"
+  }
+ },
+ "MIA02": {
+  "page": "LoanDepot Park",
+  "photo": {
+   "file": "MIA02.jpg",
+   "source": "LOAN_DEPOT_PARK.jpg",
+   "credit": "Ven-Lib",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "MIA02_dim.png",
+   "source": "MarlinsParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field line",
+    344
+   ],
+   [
+    "Left-center power alley",
+    386
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center power alley",
+    387
+   ],
+   [
+    "Right field line",
+    335
+   ]
+  ]
+ },
+ "MID01": {
+  "page": "Mansfield Club Grounds"
+ },
+ "MIL01": {
+  "page": "Eclipse Park (Milwaukee)"
+ },
+ "MIL02": {
+  "page": "Wright Street Grounds"
+ },
+ "MIL03": {
+  "page": "Borchert Field",
+  "photo": {
+   "file": "MIL03.jpg",
+   "source": "BorchertField_1911.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "MIL03_dim.jpg",
+   "source": "1894_Sanborn_Map_of_Borchert_Field.jpg",
+   "credit": "Sanborn Map Company",
+   "license": "Public domain"
+  }
+ },
+ "MIL04": {
+  "page": "Lloyd Street Grounds",
+  "photo": {
+   "file": "MIL04.jpg",
+   "source": "Lloyd_Street_Grounds.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "MIL05": {
+  "page": "Milwaukee County Stadium",
+  "photo": {
+   "file": "MIL05.jpg",
+   "source": "Milwaukee_County_Stadium_satellite_view.png",
+   "credit": "Photograph: NASA",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left line",
+    315
+   ],
+   [
+    "Left field",
+    362
+   ],
+   [
+    "Deep l.c",
+    392
+   ],
+   [
+    "Center f",
+    402
+   ],
+   [
+    "Deep r.c",
+    392
+   ],
+   [
+    "Right field",
+    362
+   ],
+   [
+    "Right line",
+    315
+   ]
+  ]
+ },
+ "MIL06": {
+  "page": "American Family Field",
+  "photo": {
+   "file": "MIL06.jpg",
+   "source": "Miller_Park_in_Milwaukee,_Wisconsin.jpg",
+   "credit": "Carol H. Highsmith",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "MIL06_dim.png",
+   "source": "MillerParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    342
+   ],
+   [
+    "Left-center",
+    371
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center",
+    374
+   ],
+   [
+    "Right field",
+    337
+   ]
+  ]
+ },
+ "MIN02": {
+  "page": "Metropolitan Stadium",
+  "photo": {
+   "file": "MIN02.jpg",
+   "source": "Metropolitan_Stadium_1962.jpeg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    343
+   ],
+   [
+    "Left-center",
+    365
+   ],
+   [
+    "Center field",
+    402
+   ],
+   [
+    "Right-center",
+    370
+   ],
+   [
+    "Right field",
+    330
+   ]
+  ]
+ },
+ "MIN03": {
+  "page": "Hubert H. Humphrey Metrodome",
+  "photo": {
+   "file": "MIN03.jpg",
+   "source": "051207-MPLS-006Metrodome-crop.jpg",
+   "credit": "Bobak Ha'Eri",
+   "license": "CC BY 3.0"
+  },
+  "diagram": {
+   "file": "MIN03_dim.png",
+   "source": "MetrodomeDimensions.svg",
+   "credit": "Angelgreat",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    343
+   ],
+   [
+    "Left-center",
+    385
+   ],
+   [
+    "Center field",
+    408
+   ],
+   [
+    "Right-center",
+    367
+   ],
+   [
+    "Right field",
+    327
+   ],
+   [
+    "Dome apex",
+    186
+   ]
+  ]
+ },
+ "MIN04": {
+  "page": "Target Field",
+  "photo": {
+   "file": "MIN04.jpg",
+   "source": "Target_Field,_Minneapolis,_Minnesota_(43167053335).jpg",
+   "credit": "Ken Lund from Reno, Nevada, USA",
+   "license": "CC BY-SA 2.0"
+  },
+  "diagram": {
+   "file": "MIN04_dim.png",
+   "source": "TargetFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    339
+   ],
+   [
+    "Left-center",
+    377
+   ],
+   [
+    "Center field left corner",
+    411
+   ],
+   [
+    "Center field right corner",
+    403
+   ],
+   [
+    "Right-center",
+    367
+   ],
+   [
+    "Right field",
+    328
+   ]
+  ]
+ },
+ "MON01": {
+  "page": "Jarry Park Stadium",
+  "photo": {
+   "file": "MON01.jpg",
+   "source": "Coupe_Rogers_2015_@_Montréal_!_(19971844064).jpg",
+   "credit": "Francis Bourgouin from Montréal, Québec, Canada",
+   "license": "CC BY-SA 2.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    340
+   ],
+   [
+    "Left-centre",
+    368
+   ],
+   [
+    "Centre field",
+    420
+   ],
+   [
+    "Right-centre",
+    368
+   ],
+   [
+    "Right field",
+    340
+   ]
+  ]
+ },
+ "MON02": {
+  "page": "Olympic Stadium (Montreal)",
+  "photo": {
+   "file": "MON02.jpg",
+   "source": "Olympic_Stadium_Montreal_(23761669).jpeg",
+   "credit": "Harrystyle",
+   "license": "CC BY 3.0"
+  },
+  "diagram": {
+   "file": "MON02_dim.png",
+   "source": "OlympicStadiumDimensions.svg",
+   "credit": "Angelgreat",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "NEW01": {
+  "page": "Howard Avenue Grounds"
+ },
+ "NYC01": {
+  "page": "Union Grounds",
+  "photo": {
+   "file": "NYC01.jpg",
+   "source": "Union_grounds_1865.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "PD-US"
+  }
+ },
+ "NYC02": {
+  "page": "Capitoline Grounds",
+  "photo": {
+   "file": "NYC02.jpg",
+   "source": "Capitoline_Grounds.jpg",
+   "credit": "C. S. Reinhart",
+   "license": "Public domain"
+  }
+ },
+ "NYC03": {
+  "page": "Polo Grounds",
+  "photo": {
+   "file": "NYC03.jpg",
+   "source": "No_Known_Restrictions_Polo_Grounds_during_World_Series_Game,_1913_from_the_Bain_Collection_(LOC)_(434431507).jpg",
+   "credit": "David Shapinsky from Washington, D.C., United States",
+   "license": "CC BY-SA 2.0"
+  },
+  "diagram": {
+   "file": "NYC03_dim.png",
+   "source": "PoloGroundsDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    279
+   ],
+   [
+    "Left-center",
+    450
+   ],
+   [
+    "Center field",
+    483
+   ],
+   [
+    "Right-center",
+    449
+   ],
+   [
+    "Right field",
+    258
+   ]
+  ]
+ },
+ "NYC04": {
+  "page": "Polo Grounds",
+  "photo": {
+   "file": "NYC04.jpg",
+   "source": "No_Known_Restrictions_Polo_Grounds_during_World_Series_Game,_1913_from_the_Bain_Collection_(LOC)_(434431507).jpg",
+   "credit": "David Shapinsky from Washington, D.C., United States",
+   "license": "CC BY-SA 2.0"
+  },
+  "diagram": {
+   "file": "NYC04_dim.png",
+   "source": "PoloGroundsDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    279
+   ],
+   [
+    "Left-center",
+    450
+   ],
+   [
+    "Center field",
+    483
+   ],
+   [
+    "Right-center",
+    449
+   ],
+   [
+    "Right field",
+    258
+   ]
+  ]
+ },
+ "NYC05": {
+  "page": "Washington Park (baseball)",
+  "photo": {
+   "file": "NYC05.jpg",
+   "source": "Washington-Park-Entrance,-1911.jpg",
+   "credit": "unknown photographer",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "NYC05_dim.jpg",
+   "source": "Washington_Park_I_and_II_Brooklyn_Sanborn_maps.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "NYC06": {
+  "page": "Metropolitan Park (Queens)",
+  "photo": {
+   "file": "NYC06.jpg",
+   "source": "Citi_Field_baseball_stadium_-_July_2024.jpg",
+   "credit": "LostplanetKD73",
+   "license": "CC0"
+  }
+ },
+ "NYC08": {
+  "page": "Washington Park (baseball)",
+  "photo": {
+   "file": "NYC08.jpg",
+   "source": "Washington-Park-Entrance,-1911.jpg",
+   "credit": "unknown photographer",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "NYC08_dim.jpg",
+   "source": "Washington_Park_I_and_II_Brooklyn_Sanborn_maps.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "NYC09": {
+  "page": "Polo Grounds",
+  "photo": {
+   "file": "NYC09.jpg",
+   "source": "No_Known_Restrictions_Polo_Grounds_during_World_Series_Game,_1913_from_the_Bain_Collection_(LOC)_(434431507).jpg",
+   "credit": "David Shapinsky from Washington, D.C., United States",
+   "license": "CC BY-SA 2.0"
+  },
+  "diagram": {
+   "file": "NYC09_dim.png",
+   "source": "PoloGroundsDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    279
+   ],
+   [
+    "Left-center",
+    450
+   ],
+   [
+    "Center field",
+    483
+   ],
+   [
+    "Right-center",
+    449
+   ],
+   [
+    "Right field",
+    258
+   ]
+  ]
+ },
+ "NYC10": {
+  "page": "Polo Grounds",
+  "photo": {
+   "file": "NYC10.jpg",
+   "source": "No_Known_Restrictions_Polo_Grounds_during_World_Series_Game,_1913_from_the_Bain_Collection_(LOC)_(434431507).jpg",
+   "credit": "David Shapinsky from Washington, D.C., United States",
+   "license": "CC BY-SA 2.0"
+  },
+  "diagram": {
+   "file": "NYC10_dim.png",
+   "source": "PoloGroundsDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    279
+   ],
+   [
+    "Left-center",
+    450
+   ],
+   [
+    "Center field",
+    483
+   ],
+   [
+    "Right-center",
+    449
+   ],
+   [
+    "Right field",
+    258
+   ]
+  ]
+ },
+ "NYC11": {
+  "page": "Eastern Park",
+  "photo": {
+   "file": "NYC11.jpg",
+   "source": "EasternPark.JPG",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "NYC12": {
+  "page": null
+ },
+ "NYC13": {
+  "page": "Hilltop Park",
+  "photo": {
+   "file": "NYC13.jpg",
+   "source": "Hilltoppark1903.jpg",
+   "credit": "Uploaded to enWiki by en:User:Randall311",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    365
+   ],
+   [
+    "Left-center",
+    378
+   ],
+   [
+    "Center field",
+    420
+   ],
+   [
+    "Right-center",
+    424
+   ],
+   [
+    "Right field",
+    385
+   ]
+  ]
+ },
+ "NYC15": {
+  "page": "Ebbets Field",
+  "photo": {
+   "file": "NYC15.jpg",
+   "source": "Ebbets1913OpeningDay.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    348
+   ],
+   [
+    "Left-center",
+    351
+   ],
+   [
+    "Center field",
+    399
+   ],
+   [
+    "Right-center",
+    344
+   ],
+   [
+    "Right field",
+    297
+   ]
+  ]
+ },
+ "NYC18": {
+  "page": "Ridgewood Park (baseball ground)",
+  "photo": {
+   "file": "NYC18.jpg",
+   "source": "RidgewoodParkGrandstand1922.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "NYC19": {
+  "page": null
+ },
+ "NYC20": {
+  "page": "Citi Field",
+  "photo": {
+   "file": "NYC20.jpg",
+   "source": "Citi_Field_baseball_stadium_-_July_2024.jpg",
+   "credit": "LostplanetKD73",
+   "license": "CC0"
+  },
+  "diagram": {
+   "file": "NYC20_dim.png",
+   "source": "CitiFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field line",
+    335
+   ],
+   [
+    "Left center",
+    358
+   ],
+   [
+    "Deep left center",
+    385
+   ],
+   [
+    "Center field",
+    408
+   ],
+   [
+    "Deep right center",
+    398
+   ],
+   [
+    "Right center",
+    375
+   ],
+   [
+    "Right field line",
+    330
+   ]
+  ]
+ },
+ "NYC21": {
+  "page": "Yankee Stadium",
+  "photo": {
+   "file": "NYC21.jpg",
+   "source": "Yankee_Stadium_overhead_2010.jpg",
+   "credit": "vtravelled.com",
+   "license": "CC BY 2.0"
+  },
+  "diagram": {
+   "file": "NYC21_dim.png",
+   "source": "YankeeStadiumDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    318
+   ],
+   [
+    "Left center",
+    399
+   ],
+   [
+    "Center field",
+    408
+   ],
+   [
+    "Right center",
+    385
+   ],
+   [
+    "Right field",
+    314
+   ]
+  ]
+ },
+ "OAK01": {
+  "page": "Oakland Coliseum",
+  "photo": {
+   "file": "OAK01.jpg",
+   "source": "Oakland_Coliseum_from_above_2024.png",
+   "credit": "Quintin Soloviev",
+   "license": "CC BY 4.0"
+  },
+  "diagram": {
+   "file": "OAK01_dim.png",
+   "source": "OaklandColiseumDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    330
+   ],
+   [
+    "Left center",
+    388
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right center",
+    388
+   ],
+   [
+    "Right field",
+    330
+   ]
+  ]
+ },
+ "PEN01": {
+  "page": "East End Park (Cincinnati)",
+  "photo": {
+   "file": "PEN01.jpg",
+   "source": "PendletonPark1.JPG",
+   "credit": "unknown Transferred from en.wikipedia; transfer was stated to be made by User:Baseball Bugs. Original uploader was Baseb",
+   "license": "Public domain"
+  }
+ },
+ "PHI01": {
+  "page": "Jefferson Street Grounds",
+  "photo": {
+   "file": "PHI01.jpg",
+   "source": "1887_Burk&McFetridge_Philadelphiaofto-day.jpg",
+   "credit": "Burk & McFetridge",
+   "license": "Public domain"
+  }
+ },
+ "PHI02": {
+  "page": "Centennial Grounds",
+  "photo": {
+   "file": "PHI02.jpg",
+   "source": "Centennial_Grounds._Government_building,_by_Cremer,_James,_1821-1893.jpg",
+   "credit": "Cremer, James, 1821-1893 -- Photographer",
+   "license": "Public domain"
+  }
+ },
+ "PHI03": {
+  "page": "Oakdale Park"
+ },
+ "PHI04": {
+  "page": "Recreation Park (Philadelphia)",
+  "photo": {
+   "file": "PHI04.jpg",
+   "source": "Recreation_Park_1883-86_(cropped).jpg",
+   "credit": "Public Domain",
+   "license": "CC0"
+  },
+  "dims": [
+   [
+    "Left",
+    300
+   ],
+   [
+    "Center",
+    331
+   ],
+   [
+    "Right",
+    247
+   ]
+  ]
+ },
+ "PHI05": {
+  "page": "Keystone Park",
+  "photo": {
+   "file": "PHI05.jpg",
+   "source": "Libertybell_alone_small.jpg",
+   "credit": "original: UnknownUnknown derivative work: Bcrowell",
+   "license": "Public domain"
+  }
+ },
+ "PHI06": {
+  "page": "Baker Bowl",
+  "photo": {
+   "file": "PHI06.jpg",
+   "source": "Baker_Bowl_and_Huntingdon_Street_station,_1928.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "PHI06_dim.png",
+   "source": "BakerBowlDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    341
+   ],
+   [
+    "Center field",
+    408
+   ],
+   [
+    "Right-center",
+    300
+   ],
+   [
+    "Right field",
+    280
+   ]
+  ]
+ },
+ "PHI07": {
+  "page": "Forepaugh Park",
+  "photo": {
+   "file": "PHI07.jpg",
+   "source": "Forepaugh_Park,_1894.jpg",
+   "credit": "G.W. Bromley",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    345
+   ],
+   [
+    "Center field",
+    450
+   ],
+   [
+    "Right field",
+    380
+   ]
+  ]
+ },
+ "PHI09": {
+  "page": "Baker Bowl",
+  "photo": {
+   "file": "PHI09.jpg",
+   "source": "Baker_Bowl_and_Huntingdon_Street_station,_1928.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "PHI09_dim.png",
+   "source": "BakerBowlDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    341
+   ],
+   [
+    "Center field",
+    408
+   ],
+   [
+    "Right-center",
+    300
+   ],
+   [
+    "Right field",
+    280
+   ]
+  ]
+ },
+ "PHI10": {
+  "page": "Columbia Park",
+  "photo": {
+   "file": "PHI10.jpg",
+   "source": "Columbia_Park_Philadelphia.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    340
+   ],
+   [
+    "Left center",
+    392
+   ],
+   [
+    "Deep left center",
+    440
+   ],
+   [
+    "Center field",
+    396
+   ],
+   [
+    "Right center",
+    323
+   ],
+   [
+    "Right field",
+    280
+   ]
+  ]
+ },
+ "PHI11": {
+  "page": "Shibe Park",
+  "photo": {
+   "file": "PHI11.jpg",
+   "source": "ShibePark1973HABS1of9.jpg",
+   "credit": "Historic American Buildings Survey/Historic American Engineering Record",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "PHI11_dim.png",
+   "source": "ShibeParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    334
+   ],
+   [
+    "Deep left center",
+    387
+   ],
+   [
+    "Center field",
+    410
+   ],
+   [
+    "Deep right center",
+    390
+   ],
+   [
+    "Right field",
+    329
+   ]
+  ]
+ },
+ "PHI12": {
+  "page": "Veterans Stadium",
+  "photo": {
+   "file": "PHI12.jpg",
+   "source": "Veterans_stade.png",
+   "credit": "NASA",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "PHI12_dim.png",
+   "source": "VeteransStadiumBaseballFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    330
+   ],
+   [
+    "Left center field",
+    371
+   ],
+   [
+    "Center field",
+    408
+   ],
+   [
+    "Right center field",
+    371
+   ],
+   [
+    "Right field",
+    330
+   ]
+  ]
+ },
+ "PHI13": {
+  "page": "Citizens Bank Park",
+  "photo": {
+   "file": "PHI13.jpg",
+   "source": "Citizens_Bank_Park_2021.jpg",
+   "credit": "Chris6d",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "PHI13_dim.png",
+   "source": "CitizensBankParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Ft",
+    381
+   ]
+  ]
+ },
+ "PHI14": {
+  "page": "Baker Bowl",
+  "photo": {
+   "file": "PHI14.jpg",
+   "source": "Baker_Bowl_and_Huntingdon_Street_station,_1928.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "PHI14_dim.png",
+   "source": "BakerBowlDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    341
+   ],
+   [
+    "Center field",
+    408
+   ],
+   [
+    "Right-center",
+    300
+   ],
+   [
+    "Right field",
+    280
+   ]
+  ]
+ },
+ "PHO01": {
+  "page": "Chase Field",
+  "photo": {
+   "file": "PHO01.jpg",
+   "source": "Reserve_A-10_Warthogs_Flyover_2023_World_Series_(8099146).jpg",
+   "credit": "U.S. Air Force photo by Staff Sgt. Tyler J. Bolken",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "PHO01_dim.png",
+   "source": "ChaseFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    330
+   ],
+   [
+    "Left-center",
+    374
+   ],
+   [
+    "Center field",
+    407
+   ],
+   [
+    "Right-center",
+    374
+   ],
+   [
+    "Right field",
+    334
+   ]
+  ]
+ },
+ "PIT02": {
+  "page": "Exposition Park (Pittsburgh)",
+  "photo": {
+   "file": "PIT02.jpg",
+   "source": "Exposition_Park_Pittsburgh_1903.jpg",
+   "credit": "Boston Public Library",
+   "license": "CC BY 2.0"
+  },
+  "dims": [
+   [
+    "Left and right field",
+    400
+   ],
+   [
+    "Center field",
+    450
+   ]
+  ]
+ },
+ "PIT03": {
+  "page": "Exposition Park (Pittsburgh)",
+  "photo": {
+   "file": "PIT03.jpg",
+   "source": "Exposition_Park_Pittsburgh_1903.jpg",
+   "credit": "Boston Public Library",
+   "license": "CC BY 2.0"
+  },
+  "dims": [
+   [
+    "Left and right field",
+    400
+   ],
+   [
+    "Center field",
+    450
+   ]
+  ]
+ },
+ "PIT04": {
+  "page": "Recreation Park (Pittsburgh)",
+  "photo": {
+   "file": "PIT04.jpg",
+   "source": "AAA_Park_1892.jpg",
+   "credit": "The Pittsburg[h] Press",
+   "license": "Public domain"
+  }
+ },
+ "PIT05": {
+  "page": "Exposition Park (Pittsburgh)",
+  "photo": {
+   "file": "PIT05.jpg",
+   "source": "Exposition_Park_Pittsburgh_1903.jpg",
+   "credit": "Boston Public Library",
+   "license": "CC BY 2.0"
+  },
+  "dims": [
+   [
+    "Left and right field",
+    400
+   ],
+   [
+    "Center field",
+    450
+   ]
+  ]
+ },
+ "PIT06": {
+  "page": "Forbes Field",
+  "photo": {
+   "file": "PIT06.jpg",
+   "source": "Forbes_Field_exterior.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "PIT06_dim.png",
+   "source": "ForbesFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    365
+   ],
+   [
+    "Left center",
+    406
+   ],
+   [
+    "Center field",
+    457
+   ],
+   [
+    "Right center",
+    408
+   ],
+   [
+    "Right field",
+    375
+   ]
+  ]
+ },
+ "PIT07": {
+  "page": "Three Rivers Stadium",
+  "photo": {
+   "file": "PIT07.jpg",
+   "source": "Three_Rivers_Stadium.jpg",
+   "credit": "dbking",
+   "license": "CC BY 2.0"
+  },
+  "diagram": {
+   "file": "PIT07_dim.png",
+   "source": "ThreeRiversStadiumDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    335
+   ],
+   [
+    "Left-center",
+    375
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center",
+    375
+   ],
+   [
+    "Right field",
+    335
+   ]
+  ]
+ },
+ "PRO02": {
+  "page": "Messer Street Grounds",
+  "photo": {
+   "file": "PRO02.jpg",
+   "source": "Messer_Street_Grounds,_1879.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    281
+   ],
+   [
+    "Left-center",
+    356
+   ],
+   [
+    "Center field",
+    318
+   ],
+   [
+    "Right-center",
+    356
+   ],
+   [
+    "Right field",
+    431
+   ]
+  ]
+ },
+ "RCK01": {
+  "page": "Agricultural Society Fair Grounds"
+ },
+ "RIC02": {
+  "page": null
+ },
+ "ROC01": {
+  "page": "Culver Field",
+  "photo": {
+   "file": "ROC01.jpg",
+   "source": "RochesterRedWingsVsBuffaloBisonsAugust2017Game.jpg",
+   "credit": "DanielPenfield",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "SAC01": {
+  "page": "Sutter Health Park",
+  "photo": {
+   "file": "SAC01.jpg",
+   "source": "Sutter_Health_Park_aerial_view_2023_(Quintin_Soloviev).jpg",
+   "credit": "Quintin Soloviev",
+   "license": "CC BY 4.0"
+  },
+  "diagram": {
+   "file": "SAC01_dim.png",
+   "source": "SutterHealthParkFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "SAI01": {
+  "page": "St. George Cricket Grounds",
+  "photo": {
+   "file": "SAI01.jpg",
+   "source": "StGeorgeCricketGrounds1.JPG",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "SAN01": {
+  "page": "San Diego Stadium",
+  "photo": {
+   "file": "SAN01.jpg",
+   "source": "Qualcomm_Stadium.jpg",
+   "credit": "The original uploader was Intersofia at English Wikipedia.",
+   "license": "CC BY-SA 2.0"
+  },
+  "diagram": {
+   "file": "SAN01_dim.png",
+   "source": "SanDiegoStadiumDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "SAN02": {
+  "page": "Petco Park",
+  "photo": {
+   "file": "SAN02.jpg",
+   "source": "Petco_Park_Padres_Game.jpg",
+   "credit": "Mds08011",
+   "license": "CC BY 4.0"
+  },
+  "diagram": {
+   "file": "SAN02_dim.png",
+   "source": "PetcoParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field line",
+    336
+   ],
+   [
+    "Left field",
+    343
+   ],
+   [
+    "Left field alley",
+    386
+   ],
+   [
+    "Center field",
+    396
+   ],
+   [
+    "Right field alley",
+    391
+   ],
+   [
+    "Right field",
+    382
+   ],
+   [
+    "Right field line",
+    331
+   ]
+  ]
+ },
+ "SEA01": {
+  "page": "Sick's Stadium",
+  "photo": {
+   "file": "SEA01.jpg",
+   "source": "Sick's_Stadium,_1965.jpg",
+   "credit": "Seattle Municipal Archives",
+   "license": "CC BY 2.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    305
+   ],
+   [
+    "Center field",
+    402
+   ]
+  ]
+ },
+ "SEA02": {
+  "page": "Kingdome",
+  "photo": {
+   "file": "SEA02.jpg",
+   "source": "Kingdome_across_parking_lot_in_1996.jpg",
+   "credit": "Blake Handley from Victoria, Canada",
+   "license": "CC BY 2.0"
+  },
+  "diagram": {
+   "file": "SEA02_dim.png",
+   "source": "KingdomeDimensions.svg",
+   "credit": "Angelgreat",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "SEA03": {
+  "page": "T-Mobile Park",
+  "photo": {
+   "file": "SEA03.jpg",
+   "source": "SafecoFieldTop.jpg",
+   "credit": "MyName (Cacophony)",
+   "license": "CC BY-SA 3.0"
+  },
+  "diagram": {
+   "file": "SEA03_dim.png",
+   "source": "TMobileParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    331
+   ],
+   [
+    "Left-center",
+    378
+   ],
+   [
+    "Center field",
+    401
+   ],
+   [
+    "Right-center",
+    381
+   ],
+   [
+    "Right field",
+    326
+   ]
+  ]
+ },
+ "SFO01": {
+  "page": "Seals Stadium",
+  "photo": {
+   "file": "SFO01.jpg",
+   "source": "Corbett_&_Fields,_1933.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    365
+   ],
+   [
+    "Left-center",
+    375
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right-center",
+    397
+   ],
+   [
+    "Right field",
+    385
+   ]
+  ]
+ },
+ "SFO02": {
+  "page": "Candlestick Park",
+  "photo": {
+   "file": "SFO02.jpg",
+   "source": "The_view_from_our_section.jpg",
+   "credit": "User Salim Virji on Flickr",
+   "license": "CC BY-SA 2.0"
+  },
+  "diagram": {
+   "file": "SFO02_dim.png",
+   "source": "CandlestickParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "SFO03": {
+  "page": "Oracle Park",
+  "photo": {
+   "file": "SFO03.jpg",
+   "source": "Oracle_Park_2021.jpg",
+   "credit": "Chris6d",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "SFO03_dim.png",
+   "source": "OracleParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field line",
+    339
+   ],
+   [
+    "Left field",
+    354
+   ],
+   [
+    "Left-center field",
+    399
+   ],
+   [
+    "Center field",
+    391
+   ],
+   [
+    "Right-center field",
+    415
+   ],
+   [
+    "Right field",
+    365
+   ],
+   [
+    "Right field line",
+    309
+   ]
+  ]
+ },
+ "SJU01": {
+  "page": "Hiram Bithorn Stadium",
+  "photo": {
+   "file": "SJU01.jpg",
+   "source": "Hiram_Bithorn_Stadium_2.JPG",
+   "credit": "Mtmelendez",
+   "license": "CC BY-SA 3.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    325
+   ],
+   [
+    "Left-center",
+    375
+   ],
+   [
+    "Center field",
+    404
+   ],
+   [
+    "Right-center",
+    375
+   ],
+   [
+    "Right field",
+    325
+   ]
+  ]
+ },
+ "STL01": {
+  "page": "Red Stocking Baseball Park",
+  "photo": {
+   "file": "STL01.jpg",
+   "source": "Red_Stockings_Park_(4820162380).jpg",
+   "credit": "Paul Sableman",
+   "license": "CC BY 2.0"
+  }
+ },
+ "STL02": {
+  "page": "Sportsman's Park",
+  "photo": {
+   "file": "STL02.jpg",
+   "source": "Sportsman's_Park_St_Louis_1875.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "STL02_dim.jpg",
+   "source": "Sportsmans_Park_St_Louis_1909_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    351
+   ],
+   [
+    "Left-center",
+    379
+   ],
+   [
+    "Right-center",
+    354
+   ],
+   [
+    "Right field",
+    310
+   ]
+  ]
+ },
+ "STL03": {
+  "page": "Sportsman's Park",
+  "photo": {
+   "file": "STL03.jpg",
+   "source": "Sportsman's_Park_St_Louis_1875.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "STL03_dim.jpg",
+   "source": "Sportsmans_Park_St_Louis_1909_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    351
+   ],
+   [
+    "Left-center",
+    379
+   ],
+   [
+    "Right-center",
+    354
+   ],
+   [
+    "Right field",
+    310
+   ]
+  ]
+ },
+ "STL04": {
+  "page": "Union Grounds (St. Louis)"
+ },
+ "STL05": {
+  "page": "Robison Field",
+  "photo": {
+   "file": "STL05.jpg",
+   "source": "Crowd_gathered_around_St._Louis_Cardinals_baseball_players_during_the_pre-game_warm-ups_at_Robison_Field.jpg",
+   "credit": "William H. Trefts Jr.",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "STL05_dim.jpg",
+   "source": "Robison_Field_St_Louis_1909_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    470
+   ],
+   [
+    "Left-center",
+    520
+   ],
+   [
+    "Center field",
+    500
+   ],
+   [
+    "Right-center",
+    330
+   ],
+   [
+    "Right field",
+    290
+   ],
+   [
+    "Backstop",
+    120
+   ]
+  ]
+ },
+ "STL06": {
+  "page": "Sportsman's Park",
+  "photo": {
+   "file": "STL06.jpg",
+   "source": "Sportsman's_Park_St_Louis_1875.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "STL06_dim.jpg",
+   "source": "Sportsmans_Park_St_Louis_1909_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    351
+   ],
+   [
+    "Left-center",
+    379
+   ],
+   [
+    "Right-center",
+    354
+   ],
+   [
+    "Right field",
+    310
+   ]
+  ]
+ },
+ "STL07": {
+  "page": "Sportsman's Park",
+  "photo": {
+   "file": "STL07.jpg",
+   "source": "Sportsman's_Park_St_Louis_1875.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "STL07_dim.jpg",
+   "source": "Sportsmans_Park_St_Louis_1909_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    351
+   ],
+   [
+    "Left-center",
+    379
+   ],
+   [
+    "Right-center",
+    354
+   ],
+   [
+    "Right field",
+    310
+   ]
+  ]
+ },
+ "STL08": {
+  "page": "Handlan's Park",
+  "photo": {
+   "file": "STL08.jpg",
+   "source": "Handlan_park_baseball.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "STL08_dim.jpg",
+   "source": "Handlan's_Park_plan_published_in_1914.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left",
+    325
+   ],
+   [
+    "Center",
+    375
+   ],
+   [
+    "Right",
+    300
+   ]
+  ]
+ },
+ "STL09": {
+  "page": "Busch Memorial Stadium",
+  "photo": {
+   "file": "STL09.jpg",
+   "source": "BuschMemorialStadium.jpg",
+   "credit": "User Haaron755 on en.wikipedia",
+   "license": "CC BY-SA 3.0"
+  },
+  "diagram": {
+   "file": "STL09_dim.png",
+   "source": "BuschStadiumIIBaseballFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    330
+   ],
+   [
+    "Left-center",
+    372
+   ],
+   [
+    "Center field",
+    402
+   ],
+   [
+    "Right-center",
+    372
+   ],
+   [
+    "Right field",
+    330
+   ]
+  ]
+ },
+ "STL10": {
+  "page": "Busch Stadium",
+  "photo": {
+   "file": "STL10.jpg",
+   "source": "Busch_Stadium_2022.jpg",
+   "credit": "Lightmetro",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "STL10_dim.png",
+   "source": "BuschStadium_III_Dimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    336
+   ],
+   [
+    "Left center field",
+    375
+   ],
+   [
+    "Center field",
+    400
+   ],
+   [
+    "Right center field",
+    375
+   ],
+   [
+    "Right field",
+    335
+   ]
+  ]
+ },
+ "STP01": {
+  "page": "Tropicana Field",
+  "photo": {
+   "file": "STP01.jpg",
+   "source": "PXL_20220528_205520913.jpg",
+   "credit": "Vmartin12",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "STP01_dim.png",
+   "source": "TropicanaFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    315
+   ],
+   [
+    "Left-center",
+    370
+   ],
+   [
+    "Center field",
+    404
+   ],
+   [
+    "Right-center",
+    370
+   ],
+   [
+    "Right field",
+    322
+   ]
+  ]
+ },
+ "SYR01": {
+  "page": "Newell Park"
+ },
+ "SYR02": {
+  "page": "Star Park",
+  "photo": {
+   "file": "SYR02.jpg",
+   "source": "Star-Park-Syracuse-1885.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "TAM02": {
+  "page": "George M. Steinbrenner Field",
+  "photo": {
+   "file": "TAM02.jpg",
+   "source": "MacDill_Aircrew,_service_members_kick_off_opening_day_ceremony_for_TB_Rays_(250328-F-YW699-1029).jpg",
+   "credit": "Senior Airman Sterling Sutton",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "TAM02_dim.png",
+   "source": "GeorgeMSteinbrennerFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    318
+   ],
+   [
+    "Left-center",
+    399
+   ],
+   [
+    "Center field",
+    408
+   ],
+   [
+    "Right-center",
+    385
+   ],
+   [
+    "Right field",
+    314
+   ]
+  ]
+ },
+ "TOL01": {
+  "page": "League Park (Toledo)"
+ },
+ "TOL03": {
+  "page": "Speranza Park"
+ },
+ "TOR01": {
+  "page": "Exhibition Stadium",
+  "photo": {
+   "file": "TOR01.jpg",
+   "source": "Exhibition_Stadium_before_the_Toronto_Blue_Jays_faced_the_Chicago_White_Sox_on_May_27,_1988_1.jpg",
+   "credit": "Jerry Reuss",
+   "license": "CC BY-SA 2.0"
+  },
+  "diagram": {
+   "file": "TOR01_dim.png",
+   "source": "ExhibitionStadiumDimensions.svg",
+   "credit": "Angelgreat",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    330
+   ],
+   [
+    "Left-centre",
+    375
+   ],
+   [
+    "Centre field",
+    400
+   ],
+   [
+    "Right-centre",
+    375
+   ],
+   [
+    "Right field",
+    330
+   ]
+  ]
+ },
+ "TOR02": {
+  "page": "Rogers Centre",
+  "photo": {
+   "file": "TOR02.jpg",
+   "source": "Rogers_Centre_(500_Level)_-_Toronto,_ON.jpg",
+   "credit": "JFVoll",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "TOR02_dim.png",
+   "source": "RogersCentreDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field line",
+    328
+   ],
+   [
+    "Left-centre",
+    368
+   ],
+   [
+    "Left-centre power alley",
+    381
+   ],
+   [
+    "Centre field",
+    400
+   ],
+   [
+    "Right-centre power alley",
+    372
+   ],
+   [
+    "Right-centre",
+    359
+   ],
+   [
+    "Right field line",
+    328
+   ]
+  ]
+ },
+ "TRO01": {
+  "page": "Haymakers' Grounds"
+ },
+ "TRO02": {
+  "page": "Haymakers' Grounds"
+ },
+ "WAS01": {
+  "page": "Olympics Grounds"
+ },
+ "WAS02": {
+  "page": "Swampoodle Grounds",
+  "photo": {
+   "file": "WAS02.jpg",
+   "source": "Swampoodle_Grounds,_Washington_Nationals_baseball_team_of_the_National_League_circa_1886-1889.jpg",
+   "credit": "USCapitol",
+   "license": "Public domain"
+  }
+ },
+ "WAS03": {
+  "page": "Capitol Grounds",
+  "photo": {
+   "file": "WAS03.jpg",
+   "source": "Capitol_Park_I_advertisement_1884_04_19_.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "WAS04": {
+  "page": "Washington Park (baseball)",
+  "photo": {
+   "file": "WAS04.jpg",
+   "source": "Washington-Park-Entrance,-1911.jpg",
+   "credit": "unknown photographer",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "WAS04_dim.jpg",
+   "source": "Washington_Park_I_and_II_Brooklyn_Sanborn_maps.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "WAS05": {
+  "page": "Swampoodle Grounds",
+  "photo": {
+   "file": "WAS05.jpg",
+   "source": "Swampoodle_Grounds,_Washington_Nationals_baseball_team_of_the_National_League_circa_1886-1889.jpg",
+   "credit": "USCapitol",
+   "license": "Public domain"
+  }
+ },
+ "WAS06": {
+  "page": "Boundary Field",
+  "photo": {
+   "file": "WAS06.jpg",
+   "source": "American_League_Park_Washington_1905.jpg",
+   "credit": "Geo. R. Lawrence Co. , copyright claimant",
+   "license": "Public domain"
+  }
+ },
+ "WAS07": {
+  "page": "American League Park",
+  "diagram": {
+   "file": "WAS07_dim.jpg",
+   "source": "American_League_Park_Washington_DC_1903_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "WAS09": {
+  "page": "Griffith Stadium",
+  "photo": {
+   "file": "WAS09.jpg",
+   "source": "TaftAtBallGame1912.jpg",
+   "credit": "Bain News Service",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    388
+   ],
+   [
+    "L. center",
+    360
+   ],
+   [
+    "Center f",
+    421
+   ],
+   [
+    "R. center",
+    373
+   ],
+   [
+    "Right field",
+    320
+   ]
+  ]
+ },
+ "WAS10": {
+  "page": "Robert F. Kennedy Memorial Stadium",
+  "photo": {
+   "file": "WAS10.jpg",
+   "source": "RFK_Stadium_(2015).jpg",
+   "credit": "Duane Lempke",
+   "license": "CC0"
+  },
+  "diagram": {
+   "file": "WAS10_dim.png",
+   "source": "RFKMemorialStadiumBaseballFieldDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    335
+   ],
+   [
+    "Left-center",
+    380
+   ],
+   [
+    "Center field",
+    410
+   ],
+   [
+    "Right-center",
+    380
+   ],
+   [
+    "Right field",
+    335
+   ]
+  ]
+ },
+ "WAS11": {
+  "page": "Nationals Park",
+  "photo": {
+   "file": "WAS11.jpg",
+   "source": "Nationals_Park_8.16.19_-_7.jpg",
+   "credit": "APK",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "WAS11_dim.png",
+   "source": "NationalsParkDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    337
+   ],
+   [
+    "Left-center",
+    377
+   ],
+   [
+    "Center field",
+    402
+   ],
+   [
+    "Right-center",
+    370
+   ],
+   [
+    "Right field",
+    335
+   ]
+  ]
+ },
+ "WAT01": {
+  "page": "Troy Ball Club Grounds"
+ },
+ "WAV01": {
+  "page": "Waverly Fairgrounds",
+  "photo": {
+   "file": "WAV01.jpg",
+   "source": "Waverly_Racing_Oval.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "WIL01": {
+  "page": null
+ },
+ "WOR01": {
+  "page": "Worcester Agricultural Fairgrounds",
+  "photo": {
+   "file": "WOR01.jpg",
+   "source": "Worcester_Agricultural_Fairgrounds.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "xWestSeventhStreetParkStPaul": {
+  "page": "West Seventh Street Park",
+  "photo": {
+   "file": "xWestSeventhStreetParkStPaul.jpg",
+   "source": "St_Paul_baseball_grounds_1886_04_08.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "xLongIslandGroundsTrenton": {
+  "page": null
+ },
+ "xIslandParkNewYork": {
+  "page": null
+ },
+ "xUnionParkChicago": {
+  "page": "Union Park (Chicago)",
+  "photo": {
+   "file": "xUnionParkChicago.jpg",
+   "source": "Chicago_Union_Park.jpg",
+   "credit": "soundfromwayout",
+   "license": "CC BY 2.0"
+  }
+ },
+ "xColumbiaParkChicago": {
+  "page": null
+ },
+ "xFairGroundsAlgona": {
+  "page": null
+ },
+ "xAuburnParkChicago": {
+  "page": null
+ },
+ "xSaratogaParkBrooklyn": {
+  "page": "Saratoga Park",
+  "photo": {
+   "file": "xSaratogaParkBrooklyn.jpg",
+   "source": "Saratoga_Park,_Brooklyn,_New_York,_US.jpg",
+   "credit": "Clyde Charles Brown",
+   "license": "CC BY-SA 4.0"
+  }
+ },
+ "xMeyerroseParkBrooklyn": {
+  "page": "Ridgewood Park (baseball ground)",
+  "photo": {
+   "file": "xMeyerroseParkBrooklyn.jpg",
+   "source": "RidgewoodParkGrandstand1922.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "xLoganSquareParkChicago": {
+  "page": null
+ },
+ "xRiversideParkKansasCity": {
+  "page": null
+ },
+ "xDowntownParkStPaul": {
+  "page": null
+ },
+ "xRedSoxParkChicago": {
+  "page": null
+ },
+ "xShelleyParkKansasCity": {
+  "page": null
+ },
+ "xNormalParkChicago": {
+  "page": "Normal Park",
+  "photo": {
+   "file": "xNormalParkChicago.jpg",
+   "source": "250920-Driscoll-Runs-Against-Harvey.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "PD-US"
+  }
+ },
+ "xColcordParkOklahomaCity": {
+  "page": null
+ },
+ "xSprudelParkWestBadenSprings": {
+  "page": null
+ },
+ "xOlympicFieldNewYork": {
+  "page": null
+ },
+ "xRidgewoodGroundsBrooklyn": {
+  "page": "Ridgewood Park (baseball ground)",
+  "photo": {
+   "file": "xRidgewoodGroundsBrooklyn.jpg",
+   "source": "RidgewoodParkGrandstand1922.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "xIslandParkSchenectady": {
+  "page": null
+ },
+ "xPlutoParkFrenchLick": {
+  "page": null
+ },
+ "xLenoxOvalNewYork": {
+  "page": null
+ },
+ "xNorthwesternParkIndianapolis": {
+  "page": null
+ },
+ "xKueblerParkStLouis": {
+  "page": null
+ },
+ "xChristianBrothersCollegeDiamondStLouis": {
+  "page": null
+ },
+ "xWashingtonParkIIIndianapolis": {
+  "page": "Washington Park (Indianapolis)",
+  "photo": {
+   "file": "xWashingtonParkIIIndianapolis.jpg",
+   "source": "1904_Indianapolis,_Indiana_photographs_-_DPLA_-_b744c3ac0fe67b5e9bb59e06dd412500_(page_55)_(cropped)_2.jpg",
+   "credit": "S. H. Knox and Company; Quick, F. E",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "xWashingtonParkIIIndianapolis_dim.jpg",
+   "source": "Washington_Park_II_Indianapolis_1915_Sanborn_maps.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "xBacharachParkAtlanticCity": {
+  "page": "Bacharach Park",
+  "dims": [
+   [
+    "Left",
+    358
+   ],
+   [
+    "Left center",
+    432
+   ],
+   [
+    "Center",
+    489
+   ],
+   [
+    "Right center",
+    365
+   ],
+   [
+    "Right",
+    270
+   ]
+  ]
+ },
+ "xDexterParkBrooklyn": {
+  "page": "Dexter Park (Queens)",
+  "photo": {
+   "file": "xDexterParkBrooklyn.jpg",
+   "source": "Babe_Ruth_Lou_Gehrig_Rodeo.png",
+   "credit": "Andrew Ross and David Dyte",
+   "license": "Public domain"
+  }
+ },
+ "xHilldaleParkDarby": {
+  "page": null
+ },
+ "xInletParkAtlanticCity": {
+  "page": "Bacharach Park",
+  "dims": [
+   [
+    "Left",
+    358
+   ],
+   [
+    "Left center",
+    432
+   ],
+   [
+    "Center",
+    489
+   ],
+   [
+    "Right center",
+    365
+   ],
+   [
+    "Right",
+    270
+   ]
+  ]
+ },
+ "xMackParkDetroit": {
+  "page": "Mack Park"
+ },
+ "xInletParkIIAtlanticCity": {
+  "page": null
+ },
+ "xCatholicProtectoryOvalNewYork": {
+  "page": null
+ },
+ "xWestwoodFieldDayton": {
+  "page": null
+ },
+ "xAssociationParkIIKansasCity": {
+  "page": "Association Park",
+  "photo": {
+   "file": "xAssociationParkIIKansasCity.jpg",
+   "source": "Kansas_City_MO_Association_Park_demolition_1925_07_07.jpg",
+   "credit": "Unknown newspaper staff member",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "xAssociationParkIIKansasCity_dim.jpg",
+   "source": "Kansas_City_MO_Association_Park_football_diagram_1909_11_25.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "xGiantsParkIIStLouis": {
+  "page": null
+ },
+ "xNeilParkColumbus": {
+  "page": "Neil Park (Columbus, Ohio)",
+  "photo": {
+   "file": "xNeilParkColumbus.jpg",
+   "source": "Neil_Park,_Columbus,_Ohio_-_DPLA_-_24d602f3be82ccb640137c02502ef307_(page_1).jpg",
+   "credit": "Louis Messerschmidt, 925 South 3rd Street, Columbus, Ohio",
+   "license": "No restrictions"
+  }
+ },
+ "xMarylandParkBaltimore": {
+  "page": null
+ },
+ "xDexterParkNewYork": {
+  "page": "Dexter Park (Queens)",
+  "photo": {
+   "file": "xDexterParkNewYork.jpg",
+   "source": "Babe_Ruth_Lou_Gehrig_Rodeo.png",
+   "credit": "Andrew Ross and David Dyte",
+   "license": "Public domain"
+  }
+ },
+ "xNewYorkOvalNewYork": {
+  "page": null
+ },
+ "xTateFieldCleveland": {
+  "page": null
+ },
+ "xCentralParkPittsburgh": {
+  "page": "Central Park (Pittsburgh)"
+ },
+ "xStarsParkStLouis": {
+  "page": "Stars Park",
+  "photo": {
+   "file": "xStarsParkStLouis.jpg",
+   "source": "Stars'_Park_(4819537937).jpg",
+   "credit": "Paul Sableman",
+   "license": "CC BY 2.0"
+  }
+ },
+ "xLewisParkMemphis": {
+  "page": "Martin Stadium (Memphis)"
+ },
+ "xSwayneFieldToledo": {
+  "page": "Swayne Field",
+  "photo": {
+   "file": "xSwayneFieldToledo.jpg",
+   "source": "12,000_People_at_Swayne_Field_Opening_Day,_Toledo,_O._-_DPLA_-_9be1f71ed2d654caecb5e29e9e369d42_(page_1).jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "xIslandParkHarrisburg": {
+  "page": null
+ },
+ "xHooperFieldCleveland": {
+  "page": null
+ },
+ "xWestSideParkNewYork": {
+  "page": null
+ },
+ "xHarlanFieldWilmington": {
+  "page": null
+ },
+ "xDavidsStadiumNewark": {
+  "page": null
+ },
+ "xDavidsStadiumNewYork": {
+  "page": null
+ },
+ "xForbesFieldHomestead": {
+  "page": null
+ },
+ "xPencoydFieldPhiladelphia": {
+  "page": null
+ },
+ "xLunaParkCleveland": {
+  "page": "Luna Park, Cleveland",
+  "photo": {
+   "file": "xLunaParkCleveland.jpg",
+   "source": "Luna-park-cleveland-entrance.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "xSouthSideParkChicago": {
+  "page": "South Side Park",
+  "photo": {
+   "file": "xSouthSideParkChicago.jpg",
+   "source": "South_Side_Park_1907.JPG",
+   "credit": "Chicago Daily News photographer",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "xSouthSideParkChicago_dim.jpg",
+   "source": "South_Side_Park_III_Chicago_1912_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "xHamtramckStadiumDetroit": {
+  "page": "Hamtramck Stadium",
+  "photo": {
+   "file": "xHamtramckStadiumDetroit.jpg",
+   "source": "HamtramckStadium1.jpg",
+   "credit": "Andrew Jameson",
+   "license": "CC BY-SA 3.0"
+  }
+ },
+ "xWilsonParkNashville": {
+  "page": "Tom Wilson Park"
+ },
+ "xHardwareFieldCleveland": {
+  "page": null
+ },
+ "xParkwayFieldLouisville": {
+  "page": "Parkway Field",
+  "photo": {
+   "file": "xParkwayFieldLouisville.jpg",
+   "source": "Parkway_Field_1923_Aug_15.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ },
+ "xGreenleeFieldHomestead": {
+  "page": "Greenlee Field"
+ },
+ "xGeneralElectricFieldNewark": {
+  "page": null
+ },
+ "xDyckmanOvalNewYork": {
+  "page": "Dyckman Oval"
+ },
+ "xGreenleeFieldPittsburgh": {
+  "page": "Greenlee Field"
+ },
+ "xPerryStadiumIndianapolis": {
+  "page": "Bush Stadium",
+  "photo": {
+   "file": "xPerryStadiumIndianapolis.jpg",
+   "source": "Bush_Stadium_Indianapolis.JPG",
+   "credit": "Xti90",
+   "license": "CC BY-SA 3.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    335
+   ],
+   [
+    "Left center field",
+    350
+   ],
+   [
+    "Deep left center",
+    405
+   ],
+   [
+    "Center field inner fence",
+    395
+   ],
+   [
+    "Deep right center",
+    405
+   ],
+   [
+    "Right center field",
+    350
+   ],
+   [
+    "Right field",
+    335
+   ]
+  ]
+ },
+ "xPoncedeLeonParkAtlanta": {
+  "page": "Ponce de Leon Park",
+  "photo": {
+   "file": "xPoncedeLeonParkAtlanta.jpg",
+   "source": "Spiller_Field,_Atlanta,_1924.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "xPoncedeLeonParkAtlanta_dim.jpg",
+   "source": "Ponce_de_Leon_Park_Atlanta_1911_Sanborn_map.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "xPanhandleParkColumbus": {
+  "page": null
+ },
+ "xCrumpParkLittleRock": {
+  "page": null
+ },
+ "xCollegeHillParkMontgomery": {
+  "page": null
+ },
+ "xCasinoParkMonroe": {
+  "page": null
+ },
+ "xHinchliffeStadiumNewYork": {
+  "page": "Hinchliffe Stadium",
+  "photo": {
+   "file": "xHinchliffeStadiumNewYork.jpg",
+   "source": "Hinchliffe_Stadium_(Paterson,_NJ).jpg",
+   "credit": "Quintin Soloviev",
+   "license": "CC BY 4.0"
+  }
+ },
+ "xHilldaleParkPhiladelphia": {
+  "page": null
+ },
+ "xLeagueParkIIAkron": {
+  "page": "League Park (Akron)"
+ },
+ "xPerryStadiumChicago": {
+  "page": null
+ },
+ "xBugleFieldBaltimore": {
+  "page": "Bugle Field"
+ },
+ "xPassonFieldPhiladelphia": {
+  "page": null
+ },
+ "xOllemarStadiumNewark": {
+  "page": null
+ },
+ "xPRRYMCAFieldPhiladelphia": {
+  "page": null
+ },
+ "xMunicipalStadiumNewYork": {
+  "page": null
+ },
+ "xRuppertStadiumNewark": {
+  "page": "Ruppert Stadium (New Jersey)",
+  "photo": {
+   "file": "xRuppertStadiumNewark.jpg",
+   "source": "Madison_Square_Garden,_2005.jpg",
+   "credit": "No machine-readable author provided. Chensiyuan assumed (based on copyright claims).",
+   "license": "CC BY-SA 3.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    305
+   ],
+   [
+    "Left center",
+    365
+   ],
+   [
+    "Center field",
+    410
+   ],
+   [
+    "Right center",
+    365
+   ],
+   [
+    "Right field",
+    305
+   ]
+  ]
+ },
+ "x44thParksidePhiladelphia": {
+  "page": "44th and Parkside Ballpark",
+  "photo": {
+   "file": "x44thParksidePhiladelphia.jpg",
+   "source": "AthleticFieldBelmontParkside.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "PD-US"
+  },
+  "dims": [
+   [
+    "Left",
+    330
+   ],
+   [
+    "Center",
+    410
+   ],
+   [
+    "Right",
+    310
+   ]
+  ]
+ },
+ "xMartinParkMemphis": {
+  "page": "Martin Stadium (Memphis)"
+ },
+ "xMetropolitanParkStLouis": {
+  "page": null
+ },
+ "xPonceDeLeonParkAtlanta": {
+  "page": "Ponce de Leon Park",
+  "photo": {
+   "file": "xPonceDeLeonParkAtlanta.jpg",
+   "source": "Spiller_Field,_Atlanta,_1924.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "xPonceDeLeonParkAtlanta_dim.jpg",
+   "source": "Ponce_de_Leon_Park_Atlanta_1911_Sanborn_map.jpg",
+   "credit": "Unknown authorUnknown author",
+   "license": "Public domain"
+  }
+ },
+ "xDurkeeFieldJacksonville": {
+  "page": "J. P. Small Memorial Stadium",
+  "photo": {
+   "file": "xDurkeeFieldJacksonville.jpg",
+   "source": "J._P._Small_Memorial_Stadium.jpg",
+   "credit": "LittleT889",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    337
+   ],
+   [
+    "Center field",
+    375
+   ],
+   [
+    "Right field",
+    285
+   ]
+  ]
+ },
+ "xPoncedeLeonParkIndianapolis": {
+  "page": null
+ },
+ "xSouthEndGroundsStLouis": {
+  "page": null
+ },
+ "xOrioleParkBaltimore": {
+  "page": "Oriole Park",
+  "photo": {
+   "file": "xOrioleParkBaltimore.jpg",
+   "source": "Baltimore_Oriole_Stadium_1938_1b.JPG",
+   "credit": "Wikimedia Commons",
+   "license": "Fair use"
+  },
+  "diagram": {
+   "file": "xOrioleParkBaltimore_dim.jpg",
+   "source": "American_League_Park_Baltimore_1902_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left",
+    290
+   ]
+  ]
+ },
+ "xParksideAthleticFieldPhiladelphia": {
+  "page": "44th and Parkside Ballpark",
+  "photo": {
+   "file": "xParksideAthleticFieldPhiladelphia.jpg",
+   "source": "AthleticFieldBelmontParkside.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "PD-US"
+  },
+  "dims": [
+   [
+    "Left",
+    330
+   ],
+   [
+    "Center",
+    410
+   ],
+   [
+    "Right",
+    310
+   ]
+  ]
+ },
+ "xGriffithStadiumHomestead": {
+  "page": "Griffith Stadium",
+  "photo": {
+   "file": "xGriffithStadiumHomestead.jpg",
+   "source": "TaftAtBallGame1912.jpg",
+   "credit": "Bain News Service",
+   "license": "Public domain"
+  },
+  "dims": [
+   [
+    "Left field",
+    388
+   ],
+   [
+    "L. center",
+    360
+   ],
+   [
+    "Center f",
+    421
+   ],
+   [
+    "R. center",
+    373
+   ],
+   [
+    "Right field",
+    320
+   ]
+  ]
+ },
+ "xRedCapStadiumJacksonville": {
+  "page": null
+ },
+ "xPelicanStadiumStLouis": {
+  "page": null
+ },
+ "xVictoryFieldICincinnati": {
+  "page": null
+ },
+ "xRusswoodParkMemphis": {
+  "page": "Russwood Park"
+ },
+ "xVictoryFieldIIndianapolis": {
+  "page": "Victory Field",
+  "photo": {
+   "file": "xVictoryFieldIIndianapolis.jpg",
+   "source": "Victory_Field_panorama,_2019.jpg",
+   "credit": "https://www.reddit.com/user/styrofoamjesuschrist",
+   "license": "CC BY 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    320
+   ],
+   [
+    "Left-center field",
+    418
+   ],
+   [
+    "Center field",
+    402
+   ],
+   [
+    "Right-center field",
+    362
+   ],
+   [
+    "Right field",
+    320
+   ]
+  ]
+ },
+ "xRedWingStadiumNewYork": {
+  "page": "Silver Stadium",
+  "photo": {
+   "file": "xRedWingStadiumNewYork.jpg",
+   "source": "RochesterRedWingsVsBuffaloBisonsAugust2017Game.jpg",
+   "credit": "DanielPenfield",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    320
+   ],
+   [
+    "Center field",
+    420
+   ],
+   [
+    "Right field",
+    315
+   ]
+  ]
+ },
+ "xAngelStadiumAnaheim": {
+  "page": "Angel Stadium",
+  "photo": {
+   "file": "xAngelStadiumAnaheim.jpg",
+   "source": "Angelstadiummarch2019.jpg",
+   "credit": "CrispyCream27",
+   "license": "CC BY-SA 4.0"
+  },
+  "diagram": {
+   "file": "xAngelStadiumAnaheim_dim.png",
+   "source": "AngelStadiumDimensions.svg",
+   "credit": "XrysD",
+   "license": "CC BY-SA 4.0"
+  },
+  "dims": [
+   [
+    "Left field",
+    347
+   ],
+   [
+    "Left-center",
+    390
+   ],
+   [
+    "Center field",
+    396
+   ],
+   [
+    "Right-center",
+    370
+   ],
+   [
+    "Right field",
+    350
+   ]
+  ]
+ },
+ "CHI09": {
+  "page": "South Side Park",
+  "photo": {
+   "file": "CHI09.jpg",
+   "source": "South_Side_Park_1907.JPG",
+   "credit": "Chicago Daily News photographer",
+   "license": "Public domain"
+  },
+  "diagram": {
+   "file": "CHI09_dim.jpg",
+   "source": "South_Side_Park_III_Chicago_1912_Sanborn_map.jpg",
+   "credit": "Wikimedia Commons",
+   "license": "Public domain"
+  }
+ }
+}

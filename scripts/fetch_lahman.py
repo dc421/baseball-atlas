@@ -13,7 +13,7 @@ import requests
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / 'data' / 'lahman'
 SHARE = 'y1prhc795jk8zvmelfd3jq7tl389y6cd'  # "lahman_1871-2025_csv" on sabr.box.com
-NEED = ['People', 'Appearances', 'Teams', 'HomeGames', 'Parks', 'TeamsFranchises', 'Batting', 'Pitching']
+NEED = ['People', 'Appearances', 'Teams', 'HomeGames', 'Parks', 'TeamsFranchises', 'Batting', 'Pitching', 'Managers']
 
 
 def file_ids():

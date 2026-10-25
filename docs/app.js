@@ -560,8 +560,8 @@ function careerHTML(p, k) {
   const t5 = {}; for (const r of p.ranks || []) if (r[1] !== 'WPA') t5[r[0]] = `#${r[2]}${r[1] === 'P' ? ' P' : r[1] === 'RP' ? ' RP' : ''}`;
   const by0 = p.born ? p.born.split('-').map(Number) : null, age = y => by0 ? y - by0[0] - ((by0[1] || 1) > 6 ? 1 : 0) : '';
   const m = p.mr, best = Object.values(by).reduce((b, a) => !b || a[1] > b[1] ? a : b, null);
-  const head = m ? `<div class="sub" style="margin-top:0">${m.rel ? `<span><b>${fmtS(m.r)}</b> per-batter rating</span><span><b>#${m.rk}</b> among relievers</span>` : `<span><b>${fmtS(m.r)}</b> ${tierOf(m.r)}</span><span><b>#${m.rk}</b> overall</span><span><b>#${m.prk}</b> ${esc(m.pos)}</span>`}${m.war != null ? `<span><b>${m.war}</b> career WAR</span>` : ''}<span>${m.hof ? 'In the Hall' : m.rel ? '' : `<b>${Math.round(m.odds * 100)}%</b> Hall case`}</span>${best ? `<span>best: <a href="#" onclick="go('y_${best[0]}');return false">${best[0]}</a></span>` : ''}</div>` : '';
-  const clubs = p.clubs && p.clubs.length ? `<div class="list">${p.clubs.map(c => `<div class="row" style="cursor:default"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></div>`).join('')}</div>` : '';
+  const head = m ? `<div class="sub" style="margin-top:0">${m.rel ? `<span><b>${fmtS(m.r)}</b> per-batter rating</span><span><b>#${m.rk}</b> among relievers</span>` : `<span><b>${fmtS(m.r)}</b> ${tierOf(m.r)}</span><span><b>#${m.rk}</b> overall</span><span><b>#${m.prk}</b> ${esc(m.pos)}</span>`}${m.war ? `<span><b>${m.war}</b> career WAR</span>` : ''}<span>${m.hof ? 'In the Hall' : m.rel ? '' : `<b>${Math.round(m.odds * 100)}%</b> Hall case`}</span>${best ? `<span>best: <a href="#" onclick="go('y_${best[0]}');return false">${best[0]}</a></span>` : ''}</div>` : '';
+  const clubs = p.clubs && p.clubs.length ? `<h3 class="sm">Clubs</h3><div class="list">${p.clubs.map(c => c[4] ? `<button class="row" onclick="go('c_${c[4]}')"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></button>` : `<div class="row" style="cursor:default"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></div>`).join('')}</div>` : '';
   if (!ss.length || !(showBat || showPit)) return `<h2>Career</h2>${head}${clubs}`;
   const primP = !showBat || (pitcher && showPit);
   const B = [['G', 0], ['PA', 1], ['R', 3], ['H', 4], ['2B', 5], ['3B', 6], ['HR', 7], ['RBI', 8], ['SB', 9], ['BB', 10], ['SO', 11], ['AVG', 12], ['OBP', 13], ['SLG', 14]];
@@ -572,13 +572,13 @@ function careerHTML(p, k) {
   const readRow = y => reads[y] && reads[y][0] ? `<tr class="read"><td></td><td colspan="${ncol - 1}">${md(reads[y][0])}</td></tr>` : '';
   const rows = yrs.map(y => { const rs = ss.filter(r => r[0] === y), a = by[y];
     if (!rs.length) return `<tr class="nostat"><td><a href="#" onclick="go('y_${y}');return false">${y}</a></td><td>${age(y)}</td><td colspan="${ncol - 2}">${esc(reads[y][1])}</td></tr>${readRow(y)}`;
-    return rs.map((r, i) => `<tr><td>${i ? '' : `<a href="#" onclick="go('y_${y}');return false">${y}</a>`}</td><td>${i ? '' : age(y)}</td><td>${r[1] ? `<a href="#" onclick="go('t_${r[1]}');return false">${esc(r[2])}</a>` : esc(r[2])}</td><td class="mdl">${!i && a ? fmtS(a[1]) : ''}</td><td class="mdl">${!i && a ? '#' + a[2] : ''}</td><td class="t5">${!i && t5[y] ? t5[y] : ''}</td>${main.map(c => `<td>${cell(r[mi], c)}</td>`).join('')}${second.map(c => `<td class="sec">${cell(r[si], c)}</td>`).join('')}</tr>`).join('') + readRow(y); }).join('');
+    return rs.map((r, i) => `<tr><td>${i ? '' : `<a href="#" onclick="go('y_${y}');return false">${y}</a>`}</td><td>${i ? '' : age(y)}</td><td>${r[1] ? `<a href="#" onclick="go('t_${r[1]}');return false">${esc(r[2])}</a>` : r[5] ? `<a href="#" onclick="go('c_${r[5]}');return false">${esc(r[2])}</a>` : esc(r[2])}</td><td class="mdl">${!i && a ? fmtS(a[1]) : ''}</td><td class="mdl">${!i && a ? '#' + a[2] : ''}</td><td class="t5">${!i && t5[y] ? t5[y] : ''}</td>${main.map(c => `<td>${cell(r[mi], c)}</td>`).join('')}${second.map(c => `<td class="sec">${cell(r[si], c)}</td>`).join('')}</tr>`).join('') + readRow(y); }).join('');
   const sum = (idx, i) => ss.reduce((t, r) => t + (r[idx] ? +r[idx][i] || 0 : 0), 0);
   const tot = c => primP ? ({ ERA: pit.ERA, IP: pit.IP }[c[0]] ?? sum(4, c[1])) : ({ AVG: bat.AVG, OBP: bat.OBP, SLG: bat.SLG }[c[0]] ?? sum(3, c[1]));
   const tot2 = c => c[1] === -1 ? `${pit.W}–${pit.L}` : primP ? bat[c[0]] : pit[c[0]];
   return `<h2>Career <small>${rel ? 'Rating is per batter faced' : 'Rating is your model’s for the season, Rk where it ranked that year'}; your read from the doc under each season</small></h2>${head}
    <div class="statline"><table class="stats career"><tr><th>Year</th><th>Age</th><th>Team</th><th class="mdl">Rating</th><th class="mdl">Rk</th><th class="t5" title="Your top 5 that year">Top 5</th>${main.map(c => `<th>${c[0]}</th>`).join('')}${second.map(c => `<th class="sec">${c[0]}</th>`).join('')}</tr>
-   ${rows}<tr class="tot"><td>Career</td><td></td><td></td><td class="mdl">${m ? fmtS(m.r) : ''}</td><td class="mdl">${m ? '#' + m.rk : ''}</td><td></td>${main.map(c => `<td>${tot(c)}</td>`).join('')}${second.map(c => `<td class="sec">${tot2(c)}</td>`).join('')}</tr></table></div>${clubs}`;
+   ${rows}<tr class="tot"><td>Career</td><td></td><td></td><td class="mdl">${m ? fmtS(m.r) : ''}</td><td class="mdl">${m ? '#' + m.rk : ''}</td><td></td>${main.map(c => `<td>${tot(c)}</td>`).join('')}${second.map(c => `<td class="sec">${tot2(c)}</td>`).join('')}</tr></table></div>`;
 }
 const ytEmbed = v => v ? `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${esc(v[0])}" title="${esc(v[1])}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
   <p class="note">${esc(v[1])} · ${esc(v[2])}: the top YouTube result; add a better one below if it isn’t right.</p>` : '';
@@ -644,6 +644,14 @@ function vFranchise() {
    ${mine.length ? `<h2>From your list <small>${mine.length} played here</small></h2><div class="chips">${mine.map(playerChip).join('')}</div>` : ''}
    <h2>Every season</h2><div class="statline"><table class="stats roster fr"><tr><th>Year</th><th class="nm">Team</th><th>W–L</th><th>Finish</th><th></th><th title="Your model, wins over an average team">Score</th><th>Rank</th><th title="Best team that season (tracked)">★</th></tr>${ts.map(season).join('')}</table></div>
    <h2>Clippings</h2>${clipsHTML(key)}`;
+}
+function vClub() {  // clubs outside the database (NPB, Cuba, Mexico, Puerto Rico...): who of yours played there
+  const k = view.id, c = D.clubs[k]; if (!c) return notFound(); const key = 'c_' + k;
+  const pl = c.pl.filter(x => D.players[x[0]]).sort((a, b) => (a[1] || 9999) - (b[1] || 9999));
+  return `${crumbs('Club', key)}${banner()}<div class="eyebrow">${esc([c.c, c.cn].filter(Boolean).join(', '))}</div><h1 class="name">${esc(c.n)}</h1>
+   <h2>From your list <small>${pl.length} played here</small></h2><div class="list">${pl.map(([pk, y0, y1]) => { const p = D.players[pk];
+     return `<button class="row" onclick="go('p_${pk}')">${avatar(pk)}<span class="yr">${y0 ? y0 + (y1 !== y0 ? '–' + y1 : '') : ''}</span><span class="rn">${esc(nameOf(p))}<small>${esc(p.pos)}</small></span></button>`; }).join('')}</div>
+   ${noteSection(key, 'club', 'The club', 'Its history, its park, its great teams…', [['Wikipedia', wiki(c.n + ' baseball')], ['Photos', img(c.n + ' baseball')]])}`;
 }
 function vGame() {
   const g = D.games[view.id]; if (!g) return notFound(); const key = 'g_' + g.rk, n = `${g.y} ${g.gt || g.g}`;
@@ -765,6 +773,7 @@ function mapFor() {
   if (t === 't') { const tm = D.teams[view.id]; if (tm) { MAPMODE = 'teams'; if (YEAR !== tm.y) { YEAR = tm.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; } highlight = 't_' + view.id; if (tm.ll) fit = [tm.ll]; } }
   if (t === 'f') { const fr = D.franch[view.id]; if (fr) { MAPMODE = 'teams'; const last = D.teams[fr.s[fr.s.length - 1]]; YEAR = last.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; highlight = 't_' + fr.s[fr.s.length - 1];
       focusPts = []; const seen = new Set(); for (const tid of fr.s) { const x = D.teams[tid]; if (x.ll && !seen.has(x.ll + '')) { seen.add(x.ll + ''); focusPts.push({ ll: x.ll, label: `${x.n} (${x.y})`, key: 't_' + tid, r: 6 }); } } fit = focusPts.map(x => x.ll); } }
+  if (t === 'c') { const c = D.clubs[view.id]; MAPMODE = 'teams'; if (c && c.ll) { focusPts = [{ ll: c.ll, label: c.n, r: 8 }]; fit = [c.ll]; } }
   if (t === 'g') { const g = D.games[view.id]; if (g) { MAPMODE = 'teams'; YEAR = g.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; if (g.tid) { highlight = 't_' + g.tid; const tm = D.teams[g.tid]; if (tm.ll) fit = [tm.ll]; } } }
   if (t === 'p') { MAPMODE = 'players'; highlight = 'p_' + view.id; const p = D.players[view.id]; if (p) { const f = fromOf(view.id); focusPts = [];
       if (f && f.ll) focusPts.push({ ll: f.ll, label: 'From: ' + (f.c || f.r || f.n), r: 7 });
@@ -781,7 +790,7 @@ function mapFor() {
 function render(newView = true, opts = {}) {
   const panel = $('#panel'), t = view.type, st = panel.scrollTop, active = document.activeElement && document.activeElement.id;
   const drafts = {}; for (const id of ['clip-t', 'clip-u', 'rkfilter']) { const el = document.getElementById(id); if (el) drafts[id] = el.value; }
-  const V = { d: vDecade, y: vYear, p: vPlayer, t: vTeam, g: vGame, f: vFranchise, r: vList, l: vPlace };
+  const V = { d: vDecade, y: vYear, p: vPlayer, t: vTeam, g: vGame, f: vFranchise, c: vClub, r: vList, l: vPlace };
   const lay = layoutOf(view), home = homeOf(view);
   document.body.classList.remove('lay-map', 'lay-page', 'lay-list'); document.body.classList.add('lay-' + lay);
   if (home) lastHome = home;
@@ -847,6 +856,7 @@ let IDX = [], selI = 0;
 function buildIndex() {
   IDX = [];
   for (const [k, p] of Object.entries(D.players)) IDX.push({ t: nameOf(p), s: `${p.pos} · peak ${p.pk}`, key: 'p_' + k, w: 3 });
+  for (const [k, c] of Object.entries(D.clubs || {})) IDX.push({ t: c.n, s: [c.c, c.cn].filter(Boolean).join(', ') || 'club', key: 'c_' + k, w: 1.5 });
   for (const [k, g] of Object.entries(D.games)) IDX.push({ t: `${g.y} ${g.gt || g.g} ${g.d}`, s: 'game #' + g.rk, key: 'g_' + k, w: 1 });
   for (const nd of Object.values(PL)) if (nd.from.length || nd.teams.length > 20) IDX.push({ t: placeLabel(nd), s: ['country', 'state / region', 'city'][nd.lvl] + (nd.lvl ? ' · ' + nd.n : ''), key: 'l_' + enc(nd.k), w: 2 });
 }
@@ -895,7 +905,7 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
   $('#ynext').addEventListener('click', () => { stopPlay(); setYear(YEAR + 1); });
   $('#searchbtn').addEventListener('click', () => { const on = $('#top').classList.toggle('searching'); if (on) $('#q').focus(); });
   $('#q').addEventListener('blur', () => setTimeout(() => { if (!$('#q').value) $('#top').classList.remove('searching'); }, 200));
-  const m = (location.hash || '').slice(1).match(/^([ptgfyarld])-(.+)$/);
+  const m = (location.hash || '').slice(1).match(/^([ptgfcyarld])-(.+)$/);
   if (m) { const pk = pageKey(m[1] + '_' + m[2]); view = { type: pk[0], id: pk[0] === 'r' && !HOMES.includes(pk.slice(2)) ? 'players' : pk.slice(2) }; if (m[1] === 'y') YEAR = +m[2]; }
   if (homeOf(view) === 'map') lastMap = view;
   $('#yr').value = YEAR; $('#bigyear').textContent = YEAR;

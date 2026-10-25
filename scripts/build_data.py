@@ -9,7 +9,7 @@ Inputs:
 Output:
   docs/data/atlas.json
 """
-import json, math, re, unicodedata, importlib.util
+import csv, json, math, re, unicodedata, importlib.util
 from pathlib import Path
 import numpy as np, pandas as pd
 
@@ -475,6 +475,65 @@ for pid, k in key_of.items():
     rows = sorted({kk[1:] for kk in list(bk) + list(pk_) if kk[0] == pid})
     players[k]['ss'] = [[y, tkey.get((tm, y)), (teams.get(tkey.get((tm, y))) or {}).get('br') or tm, bk.get((pid, y, tm)), pk_.get((pid, y, tm))] for y, tm in rows]
 
+# players outside the database: year-by-year lines from your ratings sheet's other-league tabs
+# (scripts/export_other_leagues.py), and club pages for the clubs they played for (data/overrides/clubs.csv)
+CLUBS = {}  # slug -> {n, c, cn, ll, pl: {key: [y0, y1]}}
+slug = lambda n: re.sub(r'[^a-z0-9]+', '-', unicodedata.normalize('NFKD', n).encode('ascii', 'ignore').decode().lower()).strip('-')
+CL = {r.short: r for r in pd.read_csv(OVR / 'clubs.csv').itertuples()} if (OVR / 'clubs.csv').exists() else {}
+def club(name, city=None, lat=None, lon=None, country=None):
+    r = CL.get(name)
+    if r is not None: name, city, lat, lon, country = r.name, r.city, r.lat, r.lon, r.country
+    k = slug(name); c = CLUBS.setdefault(k, dict(n=name, c=city, cn=country, ll=[float(lat), float(lon)] if lat is not None else None, pl={}))
+    if not c['ll'] and lat is not None: c['ll'] = [float(lat), float(lon)]
+    return k
+def played(k, key, y=None):
+    c = CLUBS[k]; cur = c['pl'].get(key)
+    if y is None: c['pl'].setdefault(key, None); return
+    c['pl'][key] = [min(cur[0], y), max(cur[1], y)] if cur else [y, y]
+by_nm = {norm(o['f'] + o['l']): k for k, o in players.items()}
+num = lambda v: float(v) if str(v).strip() not in ('', 'nan') else 0.0
+f3s = lambda v: ('%.3f' % float(v)).lstrip('0') if str(v).strip() not in ('', 'nan') else ''
+def sheet(f):
+    p = SRC / f
+    return [r for r in csv.DictReader(open(p, encoding='utf-8'))] if p.exists() else []
+JH, JP = sheet('japan_hitters.csv'), sheet('japan_pitchers.csv')  # the other tabs are full-season translations, not real lines
+other = {}  # key -> {(y, team): [bat, pit]}
+for r in JH:
+    k = by_nm.get(norm(r['name_common'])); y = int(float(r['yearID']))
+    if not k or players[k].get('ss'): continue
+    t = r['Tm']; bat = [int(num(r['G'])), int(num(r['PA'])), int(num(r['AB'])), int(num(r['R'])), int(num(r['H'])), int(num(r['2B'])), int(num(r['3B'])), int(num(r['HR'])),
+                         int(num(r['RBI'])), int(num(r['SB'])), int(num(r['BB'])), int(num(r['SO'])), f3s(r['BA']), f3s(r['OBP']), f3s(r['SLG'])]
+    other.setdefault(k, {}).setdefault((y, t), [None, None])[0] = bat
+for r in JP:
+    k = by_nm.get(norm(r['name_common'])); y = int(float(r['yearID']))
+    if not k or players[k].get('ss'): continue
+    pit = [int(num(r['W'])), int(num(r['L'])), int(num(r['G'])), int(num(r['GS'])), int(num(r['SV'])), r['IP'] or '', int(num(r['H'])), int(num(r['BB'])), int(num(r['SO'])), int(num(r['HR'])), ('%.2f' % float(r['ERA'])) if r['ERA'] else '']
+    other.setdefault(k, {}).setdefault((y, r['Tm']), [None, None])[1] = pit
+for k, rows in other.items():
+    o = players[k]; ss = []
+    for (y, t), (bat, pit) in sorted(rows.items()):
+        ck = club(t) if t in CL else None
+        if ck: played(ck, k, y)
+        ss.append([y, None, t, bat, pit, ck])
+    o['ss'] = ss
+    B = [r[3] for r in ss if r[3]]; Pp = [r[4] for r in ss if r[4]]
+    if B and any(isinstance(b[2], int) and b[2] for b in B):
+        sm = lambda i: sum(b[i] for b in B if isinstance(b[i], int)); ab, h = sm(2), sm(4); bb, pa = sm(10), sm(1)
+        tb = h + sm(5) + 2 * sm(6) + 3 * sm(7)
+        raw = [r for r in JH if by_nm.get(norm(r['name_common'])) == k]; hbp, sf = sum(num(r['HBP']) for r in raw), sum(num(r['SF']) for r in raw)
+        o['bat'] = dict(G=sm(0), AB=ab, H=h, HR=sm(7), R=sm(3), RBI=sm(8), SB=sm(9), BB=bb, AVG=f3(h / ab) if ab else '',
+                        OBP=f3((h + bb + hbp) / (ab + bb + hbp + sf)) if ab else '', SLG=f3(tb / ab) if ab else '')
+    if Pp:
+        sm = lambda i: sum(x[i] for x in Pp if isinstance(x[i], int)); ip = sum(float(str(x[5]).split('.')[0] or 0) + (int(str(x[5]).split('.')[1]) / 3 if '.' in str(x[5]) else 0) for x in Pp)
+        o['pit'] = dict(W=sm(0), L=sm(1), G=sm(2), GS=sm(3), SV=sm(4), IP=f"{int(ip)}{'.' + str(round((ip % 1) * 3)) if ip % 1 else ''}", SO=sm(8), BB=sm(7), ERA='')
+# hand-entered clubs (data/overrides/manual_players.csv) join the same pages
+for k, o in players.items():
+    for c in o.get('clubs') or []:
+        ck = club(c[0], c[1], c[2], c[3], (o.get('from') or {}).get('n')); c.append(ck)
+        if k not in CLUBS[ck]['pl']: played(ck, k)
+clubs_out = {k: dict(n=c['n'], c=c['c'], cn=c['cn'], ll=c['ll'], pl=[[pk, *(yy or [None, None])] for pk, yy in c['pl'].items()]) for k, c in CLUBS.items() if c['pl']}
+print(f"other leagues: season lines for {len(other)} players; {len(clubs_out)} club pages")
+
 # team pages: lineup by position (most games there, each player once), rotation, bullpen, bench
 PN = {p: f"{f or ''} {l or ''}".strip() for p, f, l in zip(P.playerID, P.nameFirst, P.nameLast)}
 POSC = [('C', 'G_c'), ('1B', 'G_1b'), ('2B', 'G_2b'), ('3B', 'G_3b'), ('SS', 'G_ss'), ('LF', 'G_lf'), ('CF', 'G_cf'), ('RF', 'G_rf'), ('DH', 'G_dh')]
@@ -644,7 +703,7 @@ for tid, ks in roster.items():  # your list's players on each team, by their mod
 logos = sorted(p.name for p in (ROOT / 'docs' / 'logos').glob('*') if p.suffix.lower() in ('.png', '.svg', '.jpg', '.jpeg', '.webp', '.none'))
 photos_manifest = ROOT / 'docs' / 'data' / 'photos.json'
 
-DATA = dict(players=players, teams=teams, franch=franch, parks=parks, years={str(k): v for k, v in years.items()},
+DATA = dict(clubs=clubs_out, players=players, teams=teams, franch=franch, parks=parks, years={str(k): v for k, v in years.items()},
             games=games, eras=eras, logos=logos)
 OUT.mkdir(parents=True, exist_ok=True)
 s = json.dumps(DATA, separators=(',', ':'), ensure_ascii=False)

@@ -131,14 +131,14 @@ function lights(key) {
 // a page is done when you mark it complete (the checkbox on each tracked page); everything starts incomplete
 const isDone = key => !!prog(key)?.done;
 const litN = key => isDone(key) ? 3 : 0;
-// tracked pages: your players, the best team each season (plus the 1869 Red Stockings), as many of your top games,
+// tracked pages: your players, the top team seasons (one per season played, the 1869 Red Stockings included), as many of your top games,
 // each of those seasons' year pages, every decade (before 1871 is one), the US states and other countries your players
 // are from, and every franchise
 function trackKeys() {
   const P = Object.keys(D.players).map(k => 'p_' + k);
   const T = Object.entries(D.teams).filter(([, t]) => t.top).sort((a, b) => a[1].y - b[1].y).map(([k]) => 't_' + k);
   const G = Object.values(D.games).filter(g => !g.o).sort((a, b) => a.rk - b.rk).slice(0, T.length).map(g => 'g_' + g.rk);
-  const Y = [...new Set(T.map(k => D.teams[k.slice(2)].y))].map(y => 'y_' + y);
+  const Y = [...new Set(Object.values(D.teams).map(t => t.y))].sort((a, b) => a - b).map(y => 'y_' + y);  // every season since 1869
   const Dc = ['d_pre', ...Array.from({ length: 16 }, (_, i) => 'd_' + (1870 + 10 * i))];
   if (!PL) buildPlaces();
   // places of origin: US states, and every other country (no cities)
@@ -295,7 +295,7 @@ function leave() {  // remember the home we're leaving
   const h = homeOf(view); if (!h) return;
   if (h === 'map') { lastMap = view; mapT = d3.zoomTransform(svg.node()); } else homeScroll[h] = scroller().scrollTop;
 }
-// only tracked team seasons have pages (the best team each season, plus 1869); any other season opens its franchise
+// only tracked team seasons have pages (the top ones by your model, one per season played); any other season opens its franchise
 const pageKey = key => { if (key.startsWith('t_')) { const t = D.teams[key.slice(2)]; if (t && !t.top) return 'f_' + t.fr; } return key; };
 function go(key, push = true) {
   key = pageKey(key);
@@ -369,8 +369,8 @@ function rosterHTML(tid) {
    Everything counts only once you tick "Mark complete" on its page (see trackKeys for what's tracked). */
 function vTracker() {
   const K = trackKeys(), done = keys => keys.filter(isDone).length;
-  const types = [['Players', K.P, 'your list'], ['Team seasons', K.T, 'the best team each season, by your model'], ['Games', K.G, `your top ${K.G.length}`],
-    ['Years', K.Y, 'one per tracked season'], ['Decades', K.Dc, 'before 1871 is one page'], ['Franchises', K.F, 'every franchise'], ['Places of origin', K.Pl, 'the US states and other countries your players are from']];
+  const types = [['Players', K.P, 'your list'], ['Team seasons', K.T, `the top ${K.T.length} by your model, one per season played (1869 included)`], ['Games', K.G, `your top ${K.G.length}`],
+    ['Years', K.Y, 'every season since 1869'], ['Decades', K.Dc, 'before 1871 is one page'], ['Franchises', K.F, 'every franchise'], ['Places of origin', K.Pl, 'the US states and other countries your players are from']];
   const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
   const bar = (d, n) => `<div class="tbar" title="${d} of ${n} complete"><i class="d" style="width:${100 * d / (n || 1)}%"></i></div>`;
   const row = ([label, keys, note]) => { const d = done(keys); return `<tr><td>${label}${note ? `<small>${note}</small>` : ''}</td><td><b>${d}</b>/${keys.length} <span class="pc">${pct(d, keys.length)}%</span></td><td class="wide">${bar(d, keys.length)}</td></tr>`; };

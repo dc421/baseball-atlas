@@ -426,7 +426,10 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
     TR['a'] = .80 * TR.tal + .15 * TR.py + .05 * TR.wp
     TR['yr'] = TR.groupby('y').a.rank(ascending=False, method='min').astype(int)
     TR['ar'] = TR.a.rank(ascending=False, method='min').astype(int)
-    for tid in TR.loc[TR.groupby('y').a.idxmax(), 'tid']: teams[tid]['top'] = 1  # best team each season (tracked)
+    # tracked team seasons: one per season played since 1869 in total (the 1869 Red Stockings plus the best by all-time
+    # rank), so the list grows by one each new season
+    n_track = len({t['y'] for t in teams.values()}) - sum(1 for t in teams.values() if t.get('top'))
+    for tid in TR.nsmallest(n_track, 'ar').tid: teams[tid]['top'] = 1
     for r in TR.itertuples(): teams[r.tid]['tr'] = dict(tr[r.tid], a=round(r.a, 1), tal=round(r.tal, 1), py=round(r.py, 1), wp=round(r.wp, 1), yr=int(r.yr), ar=int(r.ar), n=int((TR.y == r.y).sum()))
     print(f'team ratings: {len(TR)} of {len(teams)} team seasons rated; best: ' +
           ', '.join(f"{teams[r.tid]['y']} {teams[r.tid]['n']} {r.a:+.1f}" for r in TR.nsmallest(5, 'ar').itertuples()))

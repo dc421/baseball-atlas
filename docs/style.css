@@ -356,3 +356,14 @@ table.stats.career tr.read td{white-space:normal;font-family:var(--f-body);font-
 table.stats.career tr.nostat td:nth-child(3){font-family:var(--f-body);color:var(--muted);text-align:left}
 .yrow .ylogo{background:none;border:0;padding:0;cursor:pointer;width:30px;height:30px}
 .yrow .ylogo .avatar{width:30px;height:30px}
+table.stats.linescore td.nm{font-family:var(--f-body);text-align:left;padding-right:14px;white-space:nowrap}
+table.stats.linescore td.nm a{color:inherit;text-underline-offset:2px}
+table.stats.linescore .rhe{padding-left:12px;border-left:1px solid var(--line)}
+.lineups{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:4px 28px}
+.lineups table.stats.roster td:first-child{color:var(--muted)}
+.video{position:relative;aspect-ratio:16/9;max-width:640px;border-radius:10px;overflow:hidden;background:var(--line)}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.credit{font-size:11px;margin-top:10px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:6px 0 10px}
+.pgrid a{display:block;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:var(--line)}
+.pgrid img{width:100%;height:100%;object-fit:cover;display:block}

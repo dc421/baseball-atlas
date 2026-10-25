@@ -27,6 +27,10 @@ python scripts/build_data.py                                            # -> doc
 python scripts/fetch_photos.py                                          # Wikipedia photos -> docs/photos/
 python scripts/fetch_logos.py                                           # Wikipedia logos -> docs/logos/ (then rerun build_data.py)
 python scripts/build_notes.py                                           # your Baseball History doc -> docs/data/notes.json
+python scripts/fetch_retrosheet.py                                      # Retrosheet game logs -> data/retrosheet/ (line scores, lineups)
+python scripts/fetch_videos.py                                          # a YouTube video per game -> data/source/game_videos.csv
+python scripts/fetch_player_media.py --photos --videos                  # player photos + highlight/interview videos -> data/source/player_media.json
+python scripts/build_data.py                                            # rebuild with all of the above
 ```
 
 - **Your list** comes from the IN, Year-by-Year Top 5, Games, Parks R/L and Checklist tabs. Only the IN columns the site uses are exported.

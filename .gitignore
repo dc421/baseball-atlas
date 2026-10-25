@@ -3,3 +3,4 @@ __pycache__/
 .DS_Store
 data/source/*.numbers
 data/lahman/
+data/retrosheet/

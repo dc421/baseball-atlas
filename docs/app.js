@@ -132,7 +132,8 @@ function lights(key) {
 const isDone = key => !!prog(key)?.done;
 const litN = key => isDone(key) ? 3 : 0;
 // tracked pages: your players, the best team each season (plus the 1869 Red Stockings), as many of your top games,
-// each of those seasons' year pages, every decade (before 1871 is one), every place your players are from and every franchise
+// each of those seasons' year pages, every decade (before 1871 is one), the US states and other countries your players
+// are from, and every franchise
 function trackKeys() {
   const P = Object.keys(D.players).map(k => 'p_' + k);
   const T = Object.entries(D.teams).filter(([, t]) => t.top).sort((a, b) => a[1].y - b[1].y).map(([k]) => 't_' + k);
@@ -140,7 +141,8 @@ function trackKeys() {
   const Y = [...new Set(T.map(k => D.teams[k.slice(2)].y))].map(y => 'y_' + y);
   const Dc = ['d_pre', ...Array.from({ length: 16 }, (_, i) => 'd_' + (1870 + 10 * i))];
   if (!PL) buildPlaces();
-  const Pl = Object.values(PL).filter(nd => nd.from.length).map(nd => 'l_' + nd.k);
+  // places of origin: US states, and every other country (no cities)
+  const Pl = Object.values(PL).filter(nd => nd.from.length && (nd.n === 'United States' ? nd.lvl === 1 : nd.lvl === 0)).map(nd => 'l_' + nd.k);
   const F = Object.keys(D.franch).map(k => 'f_' + k);
   return { P, T, G, Y, Dc, Pl, F, all: new Set([...P, ...T, ...G, ...Y, ...Dc, ...Pl, ...F]) };
 }
@@ -368,7 +370,7 @@ function rosterHTML(tid) {
 function vTracker() {
   const K = trackKeys(), done = keys => keys.filter(isDone).length;
   const types = [['Players', K.P, 'your list'], ['Team seasons', K.T, 'the best team each season, by your model'], ['Games', K.G, `your top ${K.G.length}`],
-    ['Years', K.Y, 'one per tracked season'], ['Decades', K.Dc, 'before 1871 is one page'], ['Franchises', K.F, 'every franchise'], ['Places of origin', K.Pl, 'countries, states and cities your players are from']];
+    ['Years', K.Y, 'one per tracked season'], ['Decades', K.Dc, 'before 1871 is one page'], ['Franchises', K.F, 'every franchise'], ['Places of origin', K.Pl, 'the US states and other countries your players are from']];
   const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
   const bar = (d, n) => `<div class="tbar" title="${d} of ${n} complete"><i class="d" style="width:${100 * d / (n || 1)}%"></i></div>`;
   const row = ([label, keys, note]) => { const d = done(keys); return `<tr><td>${label}${note ? `<small>${note}</small>` : ''}</td><td><b>${d}</b>/${keys.length} <span class="pc">${pct(d, keys.length)}%</span></td><td class="wide">${bar(d, keys.length)}</td></tr>`; };
@@ -441,17 +443,46 @@ function writeup(paras, open = 2) {  // first paragraphs shown, the rest behind 
   return `<div class="writeup">${paras.slice(0, open).map(p).join('')}${paras.length > open ? `<details><summary>Keep reading <small>${paras.length - open} more paragraphs</small></summary>${paras.slice(open).map(p).join('')}</details>` : ''}</div>`;
 }
 const quickList = xs => xs && xs.length ? `<ul class="quick">${xs.map(x => `<li>${md(x)}</li>`).join('')}</ul>` : '';
+/* the leagues your era notes name, one section each on the decade page */
+const LEAGUES = { NA: 'National Association', NL: 'National League', AL: 'American League', AA: 'American Association', UA: 'Union Association', PL: "Players' League", FL: 'Federal League',
+  IA: 'International Association', IBB: 'Independent Black baseball', Cuba: 'Cuban League', NNL: 'Negro National League', ECL: 'Eastern Colored League', ANL: 'American Negro League',
+  EWL: 'East-West League', NSL: 'Negro Southern League', NAL: 'Negro American League', Venezuela: 'Venezuelan League', Japan: 'Japanese Baseball League', NPB: 'Nippon Professional Baseball',
+  Dominican: 'Dominican League', LIDOM: 'Dominican Winter League (LIDOM)', Mexico: 'Mexican League', PR: 'Puerto Rican Winter League', 'Pre-major leagues': 'Before the major leagues' };
+const LG_ALIAS = { 'E-WL': 'EWL' };
+function leaguesOf(eras, y0, y1) {  // [{code, y0, y1, clubs}] in order of first appearance
+  const out = new Map();
+  for (const e of eras) for (let c of e[2].split(',').flatMap(x => x.split('/')).map(x => x.trim()).filter(Boolean)) {
+    c = LG_ALIAS[c] || c; const a = Math.max(e[0], y0), b = Math.min(e[1], y1), cur = out.get(c);
+    if (cur) { cur.y0 = Math.min(cur.y0, a); cur.y1 = Math.max(cur.y1, b); } else out.set(c, { code: c, y0: a, y1: b, clubs: [] });
+    if (c === 'IBB' && e[3]) for (const x of e[3].split(',').map(x => x.trim())) if (x && !out.get(c).clubs.includes(x)) out.get(c).clubs.push(x);
+  }
+  return [...out.values()];
+}
+function leagueSection(key, l, y0, y1) {
+  const codes = l.code === 'NNL' ? ['NNL', 'NN2'] : [l.code], champs = [];
+  for (let y = l.y0; y <= l.y1; y++) {
+    const tms = Object.entries(D.teams).filter(([, t]) => t.y === y && codes.includes(t.lg)); if (!tms.length) continue;
+    const w = tms.find(([, t]) => t.pen) || tms.slice().sort((a, b) => (a[1].rk || 99) - (b[1].rk || 99))[0]; champs.push([y, ...w]);
+  }
+  const yrs = l.y0 === l.y1 ? l.y0 : `${l.y0}–${l.y1}`;
+  return `<h2>${esc(LEAGUES[l.code] || l.code)} <small>${yrs}</small></h2>
+   ${l.clubs.length ? `<p class="note" style="margin:0 0 6px">Black clubs and independents: ${esc(l.clubs.join(', '))}</p>` : ''}
+   ${champs.length ? `<div class="list">${champs.map(([y, tid, t]) => `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="yr">${y}</span><span class="rn">${esc(t.n)}<small>${t.w ?? '?'}–${t.l ?? '?'}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ' · first place'}</small></span></button>`).join('')}</div>` : ''}
+   ${noteSection(key, 'lg_' + l.code, '', 'What this league was like, its stars, its stories…', [], { sub: true, bare: true })}`;
+}
 function vDecade() {
   const d = view.id === 'pre' ? 'pre' : String(Math.floor(+view.id / 10) * 10), pre = d === 'pre';
   const y0 = pre ? 1845 : +d, y1 = pre ? 1870 : Math.min(+d + 9, 2026), dn = NOTES.decades[d] || {};
   const eras = D.eras.filter(e => e[0] <= y1 && e[1] >= y0);
   const prev = pre ? null : +d === 1870 ? 'pre' : String(+d - 10), next = pre ? '1870' : +d < 2020 ? String(+d + 10) : null;
   const years = []; for (let y = Math.max(y0, 1871); y <= y1 && !pre; y++) years.push(y);
-  const yearRow = y => { const tms = Object.entries(D.teams).filter(([, t]) => t.y === y), ws = tms.find(([, t]) => t.ws), q = (NOTES.years[y] || {}).quick || [];
-    return `<div class="yrow"><button class="yhead" onclick="go('y_${y}')"><b>${y}</b>${ws ? `<span>${esc(ws[1].n)} win the Series</span>` : `<span>${tms.length} teams</span>`}</button>${quickList(q.filter(x => !/^New leagues: *$/i.test(x)))}</div>`; };
-  return `${pagebar('d_' + d)}${banner()}<div class="eyebrow">The decade</div>
+  const MAJ = ['NL', 'AL', 'AA', 'UA', 'PL', 'FL', 'NA'];  // the World Series champion, not a Negro World Series winner
+  const yearRow = y => { const tms = Object.entries(D.teams).filter(([, t]) => t.y === y), ws = tms.find(([, t]) => t.ws && MAJ.includes(t.lg)) || tms.find(([, t]) => t.ws), q = (NOTES.years[y] || {}).quick || [];
+    return `<div class="yrow">${ws ? `<button class="ylogo" onclick="go('t_${ws[0]}')" title="${esc(ws[1].n)}">${badgeSm(ws[1])}</button>` : '<span class="ylogo"></span>'}<button class="yhead" onclick="go('y_${y}')"><b>${y}</b>${ws ? `<span>${esc(ws[1].n)} win the Series</span>` : `<span>${tms.length} teams</span>`}</button>${quickList(q.filter(x => !/^New leagues: *$/i.test(x)))}</div>`; };
+  return `${pagebar('d_' + d)}${banner()}
   <div style="display:flex;align-items:center;gap:10px">${prev ? `<button class="iconbtn" onclick="go('d_${prev}')" aria-label="Previous decade">‹</button>` : ''}<h1 class="name" style="margin:0">${decadeName(d)}</h1>${next ? `<button class="iconbtn" onclick="go('d_${next}')" aria-label="Next decade">›</button>` : ''}</div>
-  ${eras.map(e => `<h2>Your era notes <small>${e[0]}–${e[1]}</small></h2><p style="margin:0">${esc(e[2])}</p>${e[3] ? `<p class="note" style="margin-top:4px">Black clubs and independents: ${esc(e[3])}</p>` : ''}`).join('')}
+  ${eras.length ? `<h2>Your era notes</h2><div class="list">${eras.map(e => `<div class="row" style="cursor:default"><span class="yr">${e[0]}${e[1] !== e[0] ? '–' + e[1] : ''}</span><span class="rn">${esc(e[2])}</span></div>`).join('')}</div>
+  ${leaguesOf(eras, y0, y1).map(l => leagueSection('d_' + d, l, y0, y1)).join('')}` : ''}
   ${pre ? `<h2>Your history <small>the game before the leagues</small></h2>${writeup(NOTES.pre, 4)}` : ''}
   ${years.length ? `<h2>Year by year <small>rule changes and your notes</small></h2><div class="years">${years.map(yearRow).join('')}</div>` : ''}
   ${dn.text && dn.text.length ? `<h2>Your write-up</h2>${writeup(dn.text)}` : ''}`;
@@ -552,7 +583,7 @@ function careerHTML(p, k) {
 // a section you fill in, like clippings: a line of text and/or a link per entry
 function noteSection(key, sec, title, ph, links = [], o = {}) {
   const list = prog(key)?.notes?.[sec] || [], isImg = u => /\.(png|jpe?g|gif|webp)(\?|$)/i.test(u) || /upload\.wikimedia\.org/.test(u);
-  const head = `${o.sub ? '<h3 class="sm">' : '<h2>'}${title}${links.length ? ` <small class="find">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join(' · ')}</small>` : ''}${o.sub ? '</h3>' : '</h2>'}`;
+  const head = o.bare ? '' : `${o.sub ? '<h3 class="sm">' : '<h2>'}${title}${links.length ? ` <small class="find">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join(' · ')}</small>` : ''}${o.sub ? '</h3>' : '</h2>'}`;
   return `${head}${list.map((c, i) => `<div class="clip">${o.img && c.u && isImg(c.u) ? `<img class="clipimg" src="${esc(c.u)}" alt="" loading="lazy">` : ''}${c.t ? `<div>${esc(c.t)}</div>` : ''}${c.u ? `<div><a href="${esc(c.u)}" target="_blank" rel="noopener">${esc(c.u)}</a></div>` : ''}<button class="x" data-delnote="${sec}:${i}" aria-label="Remove">×</button></div>`).join('')}
    <form class="add noteform" data-sec="${sec}">${o.link ? `<div class="r"><input class="t nu" type="url" placeholder="${esc(ph)}"><input class="t nt" placeholder="Note (optional)"><button class="btn" type="submit">Add</button></div>`
      : `<textarea class="t nt" placeholder="${esc(ph)}"></textarea><div class="r"><input class="t nu" type="url" placeholder="Link (optional)"><button class="btn" type="submit">Add</button></div>`}</form>`;

@@ -226,12 +226,12 @@ body.mapfull .maphint{display:block}
 .writeup a,.quick a{color:var(--muted)}
 ul.quick{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px;max-width:66ch}
 .years{display:grid;gap:2px}
-.yrow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 14px;padding:8px 0;border-bottom:1px solid var(--line);align-items:start}
+.yrow{display:grid;grid-template-columns:34px 150px minmax(0,1fr);gap:4px 14px;padding:8px 0;border-bottom:1px solid var(--line);align-items:start}
 .yrow .yhead{display:grid;text-align:left;background:none;border:0;padding:0;cursor:pointer}
 .yrow .yhead b{font-family:var(--f-display);font-weight:800;font-size:22px;line-height:1}
 .yrow .yhead span{font-size:12px;color:var(--muted)}
 .yrow .yhead:hover b{color:var(--lit)}
-@media (max-width:520px){.yrow{grid-template-columns:1fr}}
+@media (max-width:520px){.yrow{grid-template-columns:34px minmax(0,1fr)}.yrow>:nth-child(3){grid-column:2}}
 body.lay-page:not(.mapfull) .maplabel{display:none}
 .writeup,ul.quick,.row .rn{overflow-wrap:anywhere}
 aside.panel{min-width:0}
@@ -354,3 +354,5 @@ h3.sm small.find{margin-left:6px}
 table.stats.career td,table.stats.career th{white-space:nowrap}
 table.stats.career tr.read td{white-space:normal;font-family:var(--f-body);font-size:13px;color:var(--muted);text-align:left;padding:0 0 6px;max-width:0}
 table.stats.career tr.nostat td:nth-child(3){font-family:var(--f-body);color:var(--muted);text-align:left}
+.yrow .ylogo{background:none;border:0;padding:0;cursor:pointer;width:30px;height:30px}
+.yrow .ylogo .avatar{width:30px;height:30px}

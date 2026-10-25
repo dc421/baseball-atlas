@@ -533,7 +533,7 @@ function vPlayer() {
   const bat = p.bat, pit = p.pit, showBat = bat && (!pitcher || bat.AB > 1500), showPit = pit && (pitcher || parseFloat(pit.IP) > 300);
   const cols = (o, hs) => `<table class="stats"><tr>${hs.map(h => `<th>${h}</th>`).join('')}</tr><tr>${hs.map(h => `<td>${o[h]}</td>`).join('')}</tr></table>`;
   return `${crumbs('Player')}${banner()}
-   <div class="hero">${ph ? `<figure class="photo" style="margin:0"><img src="photos/${esc(ph.file)}" alt="${esc(nameOf(p))}"><figcaption>${esc(ph.credit || '')}${ph.license ? ' · ' + esc(ph.license) : ''}</figcaption></figure>` : ''}
+   <div class="hero">${ph ? `<figure class="photo" style="margin:0"><img src="photos/${esc(ph.file)}" alt="${esc(nameOf(p))}" title="Photo: ${esc(ph.credit || 'unknown')}${ph.license ? ' · ' + esc(ph.license) : ''}"></figure>` : ''}
    <div class="who"><div class="eyebrow">${esc(rank)} · ${prk} · peak ${p.pk ? `<a href="#" onclick="go('y_${p.pk}');return false">${p.pk}</a>` : '?'}</div>
    <h1 class="name">${esc(nameOf(p))}</h1>
    <div class="sub">${f ? `<span>From ${placeLink(f)} <button class="chip" id="editfrom" style="font-size:11px;padding:1px 8px">change</button></span>` : `<span><button class="chip" id="editfrom">Set where he’s from</button></span>`}${p.have ? `<span>In your collection: <b>${esc(p.have)}</b></span>` : ''}</div></div></div>

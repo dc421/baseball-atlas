@@ -490,6 +490,7 @@ for (y, tm), g in AP2.groupby(['yearID', 'teamID']):
     pen = sorted([p for p in ps if p not in rot and pl[(p, y, tm)].G > pl[(p, y, tm)].GS],
                  key=lambda p: (-pl[(p, y, tm)].SV, -(pl[(p, y, tm)].G - pl[(p, y, tm)].GS)))[:5]
     rosters[tid] = dict(L=L, B=Bn, R=[pit_row(p, y, tm) for p in rot], P=[pit_row(p, y, tm) for p in pen])
+rosters = {tid: r for tid, r in rosters.items() if teams[tid].get('top')}  # only tracked team seasons have pages
 (OUT / 'rosters.json').write_text(json.dumps(rosters, separators=(',', ':'), ensure_ascii=False))
 print(f'rosters: {len(rosters)} team seasons; season lines for {sum(1 for o in players.values() if o.get("ss"))} players')
 

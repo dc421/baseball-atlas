@@ -293,7 +293,10 @@ function leave() {  // remember the home we're leaving
   const h = homeOf(view); if (!h) return;
   if (h === 'map') { lastMap = view; mapT = d3.zoomTransform(svg.node()); } else homeScroll[h] = scroller().scrollTop;
 }
+// only tracked team seasons have pages (the best team each season, plus 1869); any other season opens its franchise
+const pageKey = key => { if (key.startsWith('t_')) { const t = D.teams[key.slice(2)]; if (t && !t.top) return 'f_' + t.fr; } return key; };
 function go(key, push = true) {
+  key = pageKey(key);
   stopPlay(); leave(); setFull(false, false);
   if (push) { stack.push(view); if (stack.length > 40) stack.shift(); }
   view = { type: key[0], id: key.slice(2) };
@@ -337,39 +340,6 @@ function gradesHTML(key, pitcher, mt = {}) {
 const TIERS = [[6.9, 'All-timer'], [3, 'Safely in'], [0, 'Borderline in'], [-3, 'Borderline out'], [-Infinity, 'Out']];
 const tierOf = s => TIERS.find(t => s > t[0])[1];
 const fmtS = s => (s > 0 ? '+' : '') + s.toFixed(1);
-function arcSVG(p) {
-  const rel = p.mr?.rel, by = {};  // one bar per season: the reliever line for relievers, else his better role that year
-  for (const a of p.arc || []) if ((a[3] === 'R') === !!rel && (!by[a[0]] || a[1] > by[a[0]][1])) by[a[0]] = a;
-  const arc = Object.values(by).sort((a, b) => a[0] - b[0]);
-  if (arc.length < 2) return '';
-  const top5 = new Set((p.ranks || []).filter(r => r[1] !== 'WPA').map(r => r[0])), y0 = arc[0][0], y1 = arc[arc.length - 1][0], n = y1 - y0 + 1;
-  const hi = Math.max(rel ? 2 : 8, ...arc.map(a => a[1])), lo = Math.min(rel ? -2 : -4, ...arc.map(a => a[1]));
-  const W = 600, H = 150, pad = 18, bw = W / n, yz = s => pad + (hi - s) / (hi - lo) * (H - 2 * pad);
-  const bars = arc.map(a => {
-    const x = (a[0] - y0) * bw, top = Math.min(yz(a[1]), yz(0)), h = Math.max(1.5, Math.abs(yz(a[1]) - yz(0)));
-    const tip = `${a[0]}: ${fmtS(a[1])} · #${a[2]} ${a[3] === 'R' ? 'reliever' : a[3] === 'P' ? 'pitcher' : 'hitter'} that year${top5.has(a[0]) ? ' · in your top 5' : ''}`;
-    return `<g class="bar ${a[1] > 0 ? 'up' : ''} ${top5.has(a[0]) ? 'mine' : ''}" onclick="go('y_${a[0]}')"><title>${esc(tip)}</title>
-      <rect class="hit" x="${x}" y="0" width="${bw}" height="${H}"></rect><rect x="${x + Math.min(2, bw * .15)}" y="${top}" width="${Math.max(1, bw - Math.min(4, bw * .3))}" height="${h}" rx="${Math.min(3, bw / 4)}"></rect></g>`;
-  }).join('');
-  const REF = rel ? [[0, 'comparison line']] : [[6.9, 'all-timer'], [0, 'borderline']];
-  const lines = REF.filter(l => l[0] <= hi && l[0] >= lo)
-    .map(l => `<line x1="0" x2="${W}" y1="${yz(l[0])}" y2="${yz(l[0])}" class="${l[0] ? 'ref' : 'zero'}"></line>`).join('');
-  const labs = REF.filter(l => l[0] <= hi && l[0] >= lo && (l[0] === 0 || yz(0) - yz(l[0]) > 14)).map(l => `<span class="lab" style="top:${yz(l[0]) / H * 100}%">${l[1]}</span>`).join('');
-  return `<figure class="arc"><div class="plot">${labs}<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Season ratings ${y0} to ${y1}">${lines}${bars}</svg></div>
-    <figcaption><span>${y0}</span><span>Each season's rating · outlined = in your top 5 · tap a season for that year</span><span>${y1}</span></figcaption></figure>`;
-}
-function modelHTML(p) {
-  const m = p.mr, t = p.tools;
-  if (!m && !p.arc) return '';
-  const best = (p.arc || []).reduce((b, a) => !b || a[1] > b[1] ? a : b, null);
-  return `<h2>By your model <small>from Baseball Ratings</small></h2>
-   ${m && m.rel ? `<div class="sub" style="margin-top:0"><span><b>${fmtS(m.r)}</b> per-batter rating</span><span><b>#${m.rk}</b> among relievers</span>${m.war != null ? `<span><b>${m.war}</b> career WAR</span>` : ''}${m.hof ? '<span>In the Hall</span>' : ''}</div>` : ''}
-   ${m && !m.rel ? `<div class="sub" style="margin-top:0"><span><b>${fmtS(m.r)}</b> ${tierOf(m.r)}</span><span><b>#${m.rk}</b> overall</span><span><b>#${m.prk}</b> ${esc(m.pos)}</span>${m.war != null ? `<span><b>${m.war}</b> career WAR</span>` : ''}<span>${m.hof ? 'In the Hall' : `<b>${Math.round(m.odds * 100)}%</b> Hall case`}</span></div>
-   ${p.ovr && !m.rel && Math.abs(p.ovr - m.rk) >= 10 ? `<p class="note">Your list has him #${p.ovr}; the model, #${m.rk}.</p>` : ''}` : ''}
-   ${arcSVG(p)}
-   ${best ? `<p class="note">Best season by the model: <a href="#" onclick="go('y_${best[0]}');return false">${best[0]}</a>, ${fmtS(best[1])} (#${best[2]} that year).</p>` : ''}
-   ${t && Object.keys(t).length ? `<p class="note">Tool grades (20–80, against every regular season, averaged over his four best) are filled into the scouting card below.</p>` : ''}`;
-}
 function modelList(lst, mine) {
   return `<div class="list">${lst.map((e, i) => { const [nm, k, s, pos, tid] = e, inner = `<span class="yr">#${i + 1} ${esc(pos || '')}</span><span class="rn">${esc(nm)}${mine && mine.has(nm) ? ' <span class="badge gold">your top 5</span>' : ''}${tid && D.teams[tid] ? `<small>${esc(D.teams[tid].n)}</small>` : ''}</span><span class="meta">${fmtS(s)}</span>`;
     return k ? `<button class="row" onclick="go('p_${k}')">${inner}</button>` : tid ? `<button class="row" onclick="go('t_${tid}')">${inner}</button>` : `<div class="row" style="cursor:default">${inner}</div>`; }).join('')}</div>`;
@@ -450,7 +420,8 @@ function teamBadge(t) {
   const logo = logoFor(t), [bg, fg] = teamColors(t);
   return logo ? `<span class="teambadge"><img src="logos/${esc(logo)}" alt=""></span>` : `<span class="teambadge" style="background:${bg};color:${fg}">${esc(t.br || t.tm)}</span>`;
 }
-const crumbs = label => `<div class="crumbs">${stack.length ? `<button id="backbtn">← Back</button><span>·</span>` : ''}<span>${esc(label)}</span></div>`;
+const crumbs = (label, key) => `<div class="crumbs">${stack.length ? `<button id="backbtn">← Back</button><span>·</span>` : ''}<span>${esc(label)}</span>${key ? `<span class="grow"></span>${doneHTML(key)}` : ''}</div>`;
+const pagebar = key => { const d = doneHTML(key); return d ? `<div class="crumbs"><span class="grow"></span>${d}</div>` : ''; };
 const banner = () => `<div class="banner" id="dbnote" ${note ? '' : 'hidden'}>${esc(note)}</div>`;
 function gameRow(g) { return `<button class="row" onclick="go('g_${g.rk}')"><span class="yr">${g.y} ${esc(g.g)}</span><span class="rn">${esc(g.d || 'Untitled game')}${g.gr ? ' <span class="badge gold">great</span>' : ''}<small>${g.o ? 'from your “Others” row' : `#${g.rk} on your list`}</small></span><span class="meta">${dotsHTML('g_' + g.rk)}</span></button>`; }
 function placeText(f) { return f ? [f.c, f.r && f.r !== '—' && f.n !== 'Puerto Rico' ? f.r : null, f.n !== 'United States' ? f.n : null].filter(Boolean).join(', ') : ''; }
@@ -478,9 +449,8 @@ function vDecade() {
   const years = []; for (let y = Math.max(y0, 1871); y <= y1 && !pre; y++) years.push(y);
   const yearRow = y => { const tms = Object.entries(D.teams).filter(([, t]) => t.y === y), ws = tms.find(([, t]) => t.ws), q = (NOTES.years[y] || {}).quick || [];
     return `<div class="yrow"><button class="yhead" onclick="go('y_${y}')"><b>${y}</b>${ws ? `<span>${esc(ws[1].n)} win the Series</span>` : `<span>${tms.length} teams</span>`}</button>${quickList(q.filter(x => !/^New leagues: *$/i.test(x)))}</div>`; };
-  return `${banner()}<div class="eyebrow">The decade</div>
+  return `${pagebar('d_' + d)}${banner()}<div class="eyebrow">The decade</div>
   <div style="display:flex;align-items:center;gap:10px">${prev ? `<button class="iconbtn" onclick="go('d_${prev}')" aria-label="Previous decade">‹</button>` : ''}<h1 class="name" style="margin:0">${decadeName(d)}</h1>${next ? `<button class="iconbtn" onclick="go('d_${next}')" aria-label="Next decade">›</button>` : ''}</div>
-  ${doneHTML('d_' + d)}
   ${eras.map(e => `<h2>Your era notes <small>${e[0]}–${e[1]}</small></h2><p style="margin:0">${esc(e[2])}</p>${e[3] ? `<p class="note" style="margin-top:4px">Black clubs and independents: ${esc(e[3])}</p>` : ''}`).join('')}
   ${pre ? `<h2>Your history <small>the game before the leagues</small></h2>${writeup(NOTES.pre, 4)}` : ''}
   ${years.length ? `<h2>Year by year <small>rule changes and your notes</small></h2><div class="years">${years.map(yearRow).join('')}</div>` : ''}
@@ -498,9 +468,8 @@ function vYear() {
   const gms = (yd.games || []).map(r => D.games[r]).sort((a, b) => b.gr - a.gr || a.rk - b.rk);
   const yn = NOTES.years[y] || {};
   const champ = ([tid, t]) => `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="rn">${esc(t.n)}<small>${t.ws ? 'won the World Series' : esc(t.lg) + ' pennant'}${t.w != null ? ` · ${t.w}–${t.l}` : ''}</small></span><span class="meta">${dotsHTML('t_' + tid)}</span></button>`;
-  return `${banner()}<div class="eyebrow">${y} · <a href="#" onclick="go('d_${decadeOf(y)}');return false">the ${decadeName(decadeOf(y))}</a></div>
+  return `${pagebar('y_' + y)}${banner()}<div class="eyebrow">${y} · <a href="#" onclick="go('d_${decadeOf(y)}');return false">the ${decadeName(decadeOf(y))}</a></div>
   <div class="sub" style="margin-top:4px"><span><b>${tms.length}</b> teams</span><span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> complete</span>${lgs.length ? `<span>${lgs.map(l => esc(l)).join(' · ')}</span>` : ''}</div>
-  ${doneHTML('y_' + y)}
   ${ws.length || pen.length ? `<h2>Champions</h2><div class="list">${[...ws, ...pen].map(champ).join('')}</div>` : ''}
   ${tms.some(([, t]) => t.tr) ? `<h2>Teams by your model <small>talent and results</small></h2><div class="list">${tms.filter(([, t]) => t.tr).sort((a, b) => a[1].tr.yr - b[1].tr.yr).slice(0, 8).map((e, i) => teamRankRow(e, i, false)).join('')}</div>` : ''}
   ${topH.length ? `<h2>Your top 5 <small>position players</small></h2><div class="list">${topH.map(entry).join('')}</div>` : ''}
@@ -525,24 +494,18 @@ function saveBox() {
 
 function vPlayer() {
   const k = view.id, p = D.players[k]; if (!p) return notFound();
-  const key = 'p_' + k, pitcher = POSP.has(p.pos), ph = PHOTOS[k], f = fromOf(k), ov = prog(key)?.from;
-  const rank = p.ovr ? `#${p.ovr} overall` : (typeof p.prk === 'string' ? `List group ${esc(p.prk)}` : 'On your list');
-  const prk = typeof p.prk === 'number' ? `#${p.prk} ${esc(p.pos)}` : esc(p.pos);
+  const key = 'p_' + k, pitcher = POSP.has(p.pos), ph = PHOTOS[k], f = fromOf(k), n = nameOf(p);
+  const rank = [p.ovr ? `#${p.ovr} overall` : typeof p.prk === 'string' ? `List group ${esc(p.prk)}` : '', typeof p.prk === 'number' ? `#${p.prk} ${esc(p.pos)}` : esc(p.pos),
+    `peak ${p.pk ? `<a href="#" onclick="go('y_${p.pk}');return false">${p.pk}</a>` : '?'}`].filter(Boolean).join(' · ');
   const ht = p.ht ? `${Math.floor(p.ht / 12)}′${p.ht % 12}″${p.wt ? ', ' + p.wt + ' lb' : ''}` : '';
-  const ranks = (p.ranks || []).filter(r => r[1] !== 'WPA');
-  const bat = p.bat, pit = p.pit, showBat = bat && (!pitcher || bat.AB > 1500), showPit = pit && (pitcher || parseFloat(pit.IP) > 300);
-  const cols = (o, hs) => `<table class="stats"><tr>${hs.map(h => `<th>${h}</th>`).join('')}</tr><tr>${hs.map(h => `<td>${o[h]}</td>`).join('')}</tr></table>`;
-  return `${crumbs('Player')}${banner()}
-   <div class="hero">${ph ? `<figure class="photo" style="margin:0"><img src="photos/${esc(ph.file)}" alt="${esc(nameOf(p))}" title="Photo: ${esc(ph.credit || 'unknown')}${ph.license ? ' · ' + esc(ph.license) : ''}"></figure>` : ''}
-   <div class="who"><div class="eyebrow">${esc(rank)} · ${prk} · peak ${p.pk ? `<a href="#" onclick="go('y_${p.pk}');return false">${p.pk}</a>` : '?'}</div>
-   <h1 class="name">${esc(nameOf(p))}</h1>
-   <div class="sub">${f ? `<span>From ${placeLink(f)} <button class="chip" id="editfrom" style="font-size:11px;padding:1px 8px">change</button></span>` : `<span><button class="chip" id="editfrom">Set where he’s from</button></span>`}${p.have ? `<span>In your collection: <b>${esc(p.have)}</b></span>` : ''}</div></div></div>
-   <form class="add" id="fromform" hidden>
-     <div class="r"><input class="t" id="from-c" placeholder="City" value="${esc(f?.c || '')}"><input class="t" id="from-r" placeholder="State / province" value="${esc(f?.r || '')}"><input class="t" id="from-n" placeholder="Country" value="${esc(f?.n || 'United States')}"></div>
-     <div class="r"><button class="btn" type="submit">Save</button>${ov ? '<button class="btn ghost" type="button" id="fromreset">Back to birthplace</button>' : ''}<span class="note">Wherever you think of him as being from. Birthplace is the default.</span></div>
-   </form>
-   ${doneHTML(key)}${lightsHTML(key)}
-   <h2>Doors</h2>${doorsHTML(key)}
+  const br = p.br ? `https://www.baseball-reference.com/players/${p.br[0]}/${p.br}.shtml` : `https://www.baseball-reference.com/search/search.fcgi?search=${enc(n)}`;
+  return `${crumbs('Player', key)}${banner()}
+   <div class="hero">${ph ? `<figure class="photo" style="margin:0"><img src="photos/${esc(ph.file)}" alt="${esc(n)}" title="Photo: ${esc(ph.credit || 'unknown')}${ph.license ? ' · ' + esc(ph.license) : ''}"></figure>` : ''}
+   <div class="who"><div class="eyebrow">${rank}</div><h1 class="name">${esc(n)}</h1>
+   ${f ? `<div class="sub"><span>From ${placeLink(f)}</span></div>` : ''}</div></div>
+   ${careerHTML(p, k)}
+   ${noteSection(key, 'career', 'Stories from the career', 'The 1934 strike, the trade, the slump he broke…', [['Baseball-Reference', br], ['Old newspapers', loc(n)]])}
+   ${playerNotes(k, (p.ss || []).length > 0)}
    <h2>The person</h2>
    <dl class="facts">
      ${p.born ? `<dt>Born</dt><dd>${esc(p.born)}${p.bplace ? ' · ' + esc(p.bplace) : ''}</dd>` : ''}
@@ -550,27 +513,58 @@ function vPlayer() {
      ${ht ? `<dt>Size</dt><dd>${ht}</dd>` : ''}
      ${p.bt && p.bt !== '?/?' ? `<dt>Bats/Throws</dt><dd>${esc(p.bt)}</dd>` : ''}
    </dl>
-   ${p.st && p.st.length ? `<h2>Teams</h2><div class="list">${p.st.map(s => `<button class="row" onclick="go('t_${s[5]}')"><span class="yr">${s[2]}${s[3] !== s[2] ? '–' + s[3] : ''}</span><span class="rn">${esc(s[1])}</span><span class="meta">${s[4]} G ${dotsHTML('t_' + s[5])}</span></button>`).join('')}</div>` : ''}
-   ${p.clubs && p.clubs.length ? `<h2>Clubs <small>outside the database</small></h2><div class="list">${p.clubs.map(c => `<div class="row" style="cursor:default"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></div>`).join('')}</div>` : ''}
-   ${ranks.length ? `<h2>In your top 5</h2><div class="chips">${ranks.map(r => `<button class="chip ${r[2] === 1 ? 'lit' : ''}" onclick="go('y_${r[0]}')"><span class="k">${r[0]}</span>#${r[2]} ${r[1] === 'P' ? 'pitcher' : r[1] === 'RP' ? 'reliever' : 'player'}</button>`).join('')}</div>` : ''}
-   ${modelHTML(p)}
-   ${showBat || showPit ? `<h2>Career numbers</h2><div class="statline">${showBat ? cols(bat, ['G', 'AB', 'H', 'HR', 'R', 'RBI', 'SB', 'BB', 'AVG', 'OBP', 'SLG']) : ''}${showPit ? `<div style="height:8px"></div>` + cols(pit, ['W', 'L', 'ERA', 'G', 'GS', 'SV', 'IP', 'SO', 'BB']) : ''}</div>` : ''}
-   ${seasonStats(p, showBat, showPit)}
-   ${playerNotes(k)}
+   ${noteSection(key, 'person', 'Stories about the person', 'Where he grew up, what teammates said, a quote…', [['SABR biography', sabr(n)], ['Wikipedia', wiki(n + ' baseball')], ['A biography', books(n + ' biography')]], { sub: true })}
+   ${noteSection(key, 'highlights', 'Highlights', 'Paste a video link', [['YouTube', yt(n + ((p.pk || 2000) < 1925 ? ' baseball footage' : ' highlights'))]], { link: true })}
+   ${noteSection(key, 'interview', 'Interview or voice', 'Paste a video or audio link', [['YouTube', yt(n + ' interview')]], { link: true })}
+   ${noteSection(key, 'photos', 'Photos', 'Paste an image link', [['Image search', img(n + ' baseball ' + (p.pk || ''))]], { link: true, img: true })}
    <h2>Scouting card <small>your grades, one click each${p.tools ? '; outlined ones are your model’s until you choose' : ''}</small></h2>${gradesHTML(key, pitcher, p.tools)}
-   <h2>Clippings <small>stories, quotes, personal details</small></h2>${clipsHTML(key)}`;
+   ${(prog(key)?.clips || []).length ? `<h2>Older clippings</h2>${clipsHTML(key)}` : ''}`;
 }
-const BATH = ['G', 'PA', 'AB', 'R', 'H', '2B', '3B', 'HR', 'RBI', 'SB', 'BB', 'SO', 'AVG', 'OBP', 'SLG'];
-const PITH = ['W', 'L', 'G', 'GS', 'SV', 'IP', 'H', 'BB', 'SO', 'HR', 'ERA'];
-function seasonStats(p, showBat, showPit) {
-  const ss = p.ss || []; if (!ss.length || !(showBat || showPit)) return '';
-  const tbl = (i, hs) => { const rows = ss.filter(r => r[i]); if (!rows.length) return '';
-    return `<table class="stats ss"><tr><th>Year</th><th>Team</th>${hs.map(h => `<th>${h}</th>`).join('')}</tr>${rows.map(r => `<tr><td><a href="#" onclick="go('y_${r[0]}');return false">${r[0]}</a></td><td>${r[1] ? `<a href="#" onclick="go('t_${r[1]}');return false">${esc(r[2])}</a>` : esc(r[2])}</td>${r[i].map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</table>`; };
-  return `<h2>Year by year</h2><div class="statline">${showBat ? tbl(3, BATH) : ''}${showBat && showPit ? '<div style="height:12px"></div>' : ''}${showPit ? tbl(4, PITH) : ''}</div>`;
+// one table for the whole career: a row per season and team, your model's rating and rank that year, your top 5,
+// career totals at the bottom
+function careerHTML(p, k) {
+  const pitcher = POSP.has(p.pos), rel = p.mr?.rel, ss = p.ss || [], bat = p.bat, pit = p.pit;
+  const showBat = bat && (!pitcher || bat.AB > 1500), showPit = pit && (pitcher || parseFloat(pit.IP) > 300);
+  const by = {}; for (const a of p.arc || []) if ((a[3] === 'R') === !!rel && (!by[a[0]] || a[1] > by[a[0]][1])) by[a[0]] = a;
+  const t5 = {}; for (const r of p.ranks || []) if (r[1] !== 'WPA') t5[r[0]] = `#${r[2]}${r[1] === 'P' ? ' P' : r[1] === 'RP' ? ' RP' : ''}`;
+  const by0 = p.born ? p.born.split('-').map(Number) : null, age = y => by0 ? y - by0[0] - ((by0[1] || 1) > 6 ? 1 : 0) : '';
+  const m = p.mr, best = Object.values(by).reduce((b, a) => !b || a[1] > b[1] ? a : b, null);
+  const head = m ? `<div class="sub" style="margin-top:0">${m.rel ? `<span><b>${fmtS(m.r)}</b> per-batter rating</span><span><b>#${m.rk}</b> among relievers</span>` : `<span><b>${fmtS(m.r)}</b> ${tierOf(m.r)}</span><span><b>#${m.rk}</b> overall</span><span><b>#${m.prk}</b> ${esc(m.pos)}</span>`}${m.war != null ? `<span><b>${m.war}</b> career WAR</span>` : ''}<span>${m.hof ? 'In the Hall' : m.rel ? '' : `<b>${Math.round(m.odds * 100)}%</b> Hall case`}</span>${best ? `<span>best: <a href="#" onclick="go('y_${best[0]}');return false">${best[0]}</a></span>` : ''}</div>` : '';
+  const clubs = p.clubs && p.clubs.length ? `<div class="list">${p.clubs.map(c => `<div class="row" style="cursor:default"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></div>`).join('')}</div>` : '';
+  if (!ss.length || !(showBat || showPit)) return `<h2>Career</h2>${head}${clubs}`;
+  const primP = !showBat || (pitcher && showPit);
+  const B = [['G', 0], ['PA', 1], ['R', 3], ['H', 4], ['2B', 5], ['3B', 6], ['HR', 7], ['RBI', 8], ['SB', 9], ['BB', 10], ['SO', 11], ['AVG', 12], ['OBP', 13], ['SLG', 14]];
+  const Pc = [['W', 0], ['L', 1], ['ERA', 10], ['G', 2], ['GS', 3], ['SV', 4], ['IP', 5], ['H', 6], ['BB', 7], ['SO', 8], ['HR', 9]];
+  const main = primP ? Pc : B, mi = primP ? 4 : 3, second = primP ? (showBat ? [['AVG', 12], ['OBP', 13], ['SLG', 14]] : []) : (showPit ? [['W–L', -1], ['IP', 5], ['ERA', 10]] : []), si = primP ? 3 : 4;
+  const cell = (line, c) => !line ? '' : c[1] === -1 ? `${line[0]}–${line[1]}` : esc(line[c[1]]);
+  const reads = seasonReads(k), ncol = 6 + main.length + second.length, yrs = [...new Set([...ss.map(r => r[0]), ...Object.keys(reads).map(Number)])].sort((a, b) => a - b);
+  const readRow = y => reads[y] && reads[y][0] ? `<tr class="read"><td></td><td colspan="${ncol - 1}">${md(reads[y][0])}</td></tr>` : '';
+  const rows = yrs.map(y => { const rs = ss.filter(r => r[0] === y), a = by[y];
+    if (!rs.length) return `<tr class="nostat"><td><a href="#" onclick="go('y_${y}');return false">${y}</a></td><td>${age(y)}</td><td colspan="${ncol - 2}">${esc(reads[y][1])}</td></tr>${readRow(y)}`;
+    return rs.map((r, i) => `<tr><td>${i ? '' : `<a href="#" onclick="go('y_${y}');return false">${y}</a>`}</td><td>${i ? '' : age(y)}</td><td>${r[1] ? `<a href="#" onclick="go('t_${r[1]}');return false">${esc(r[2])}</a>` : esc(r[2])}</td><td class="mdl">${!i && a ? fmtS(a[1]) : ''}</td><td class="mdl">${!i && a ? '#' + a[2] : ''}</td><td class="t5">${!i && t5[y] ? t5[y] : ''}</td>${main.map(c => `<td>${cell(r[mi], c)}</td>`).join('')}${second.map(c => `<td class="sec">${cell(r[si], c)}</td>`).join('')}</tr>`).join('') + readRow(y); }).join('');
+  const sum = (idx, i) => ss.reduce((t, r) => t + (r[idx] ? +r[idx][i] || 0 : 0), 0);
+  const tot = c => primP ? ({ ERA: pit.ERA, IP: pit.IP }[c[0]] ?? sum(4, c[1])) : ({ AVG: bat.AVG, OBP: bat.OBP, SLG: bat.SLG }[c[0]] ?? sum(3, c[1]));
+  const tot2 = c => c[1] === -1 ? `${pit.W}–${pit.L}` : primP ? bat[c[0]] : pit[c[0]];
+  return `<h2>Career <small>${rel ? 'Rating is per batter faced' : 'Rating is your model’s for the season, Rk where it ranked that year'}; your read from the doc under each season</small></h2>${head}
+   <div class="statline"><table class="stats career"><tr><th>Year</th><th>Age</th><th>Team</th><th class="mdl">Rating</th><th class="mdl">Rk</th><th class="t5" title="Your top 5 that year">Top 5</th>${main.map(c => `<th>${c[0]}</th>`).join('')}${second.map(c => `<th class="sec">${c[0]}</th>`).join('')}</tr>
+   ${rows}<tr class="tot"><td>Career</td><td></td><td></td><td class="mdl">${m ? fmtS(m.r) : ''}</td><td class="mdl">${m ? '#' + m.rk : ''}</td><td></td>${main.map(c => `<td>${tot(c)}</td>`).join('')}${second.map(c => `<td class="sec">${tot2(c)}</td>`).join('')}</tr></table></div>${clubs}`;
 }
-function playerNotes(k) {
+// a section you fill in, like clippings: a line of text and/or a link per entry
+function noteSection(key, sec, title, ph, links = [], o = {}) {
+  const list = prog(key)?.notes?.[sec] || [], isImg = u => /\.(png|jpe?g|gif|webp)(\?|$)/i.test(u) || /upload\.wikimedia\.org/.test(u);
+  const head = `${o.sub ? '<h3 class="sm">' : '<h2>'}${title}${links.length ? ` <small class="find">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join(' · ')}</small>` : ''}${o.sub ? '</h3>' : '</h2>'}`;
+  return `${head}${list.map((c, i) => `<div class="clip">${o.img && c.u && isImg(c.u) ? `<img class="clipimg" src="${esc(c.u)}" alt="" loading="lazy">` : ''}${c.t ? `<div>${esc(c.t)}</div>` : ''}${c.u ? `<div><a href="${esc(c.u)}" target="_blank" rel="noopener">${esc(c.u)}</a></div>` : ''}<button class="x" data-delnote="${sec}:${i}" aria-label="Remove">×</button></div>`).join('')}
+   <form class="add noteform" data-sec="${sec}">${o.link ? `<div class="r"><input class="t nu" type="url" placeholder="${esc(ph)}"><input class="t nt" placeholder="Note (optional)"><button class="btn" type="submit">Add</button></div>`
+     : `<textarea class="t nt" placeholder="${esc(ph)}"></textarea><div class="r"><input class="t nu" type="url" placeholder="Link (optional)"><button class="btn" type="submit">Add</button></div>`}</form>`;
+}
+// your doc's lines about a player that start with "YYYY (...)": year -> [what you wrote, the team/position bit]
+function seasonReads(k) {
+  const out = {}; for (const x of NOTES.players[k] || []) { const m = x.match(/^(\d{4}) \(([^)]*)\):?\s*(.*)$/); if (m) out[m[1]] = [m[3] || '', m[2]]; }
+  return out;
+}
+function playerNotes(k, seasonsInTable) {
   const ps = NOTES.players[k]; if (!ps || !ps.length) return '';
-  const season = /^\d{4} \(/, seasons = ps.filter(x => season.test(x)), text = ps.filter(x => !season.test(x));
+  const season = /^\d{4} \(/, seasons = seasonsInTable ? [] : ps.filter(x => season.test(x)), text = ps.filter(x => !season.test(x));
   return `${text.length ? `<h2>Your write-up</h2>${writeup(text, 3)}` : ''}
    ${seasons.length ? `<h2>Season by season <small>your read</small></h2><div class="list">${seasons.map(x => { const m = x.match(/^(\d{4}) \(([^)]*)\):?\s*(.*)$/) || [, x.slice(0, 4), '', x];
      return `<div class="row" style="cursor:default"><span class="yr">${m[1]}</span><span class="rn">${md(m[3] || '')}<small>${esc(m[2])}</small></span></div>`; }).join('')}</div>` : ''}`;
@@ -581,7 +575,7 @@ function vTeam() {
   const i = seasons.indexOf(tid), prev = seasons[i - 1], next = seasons[i + 1];
   const park = t.pk && D.parks[t.pk], ro = t.ro || [], gms = Object.values(D.games).filter(g => g.tid === tid);
   const eras = []; for (const s of seasons) { const x = D.teams[s], city = x.pl?.c || ''; const last = eras[eras.length - 1]; if (last && last.n === x.n && last.c === city) last.y1 = x.y; else eras.push({ n: x.n, c: city, y0: x.y, y1: x.y, tid: s }); }
-  return `${crumbs('Team season')}${banner()}
+  return `${crumbs('Team season', key)}${banner()}
    <div class="hero">${teamBadge(t)}<div class="who"><div class="eyebrow">${esc(LG[t.lg] || t.lg)}${t.dv ? ' · ' + esc(t.dv) + ' division' : ''}</div>
    <div style="display:flex;align-items:center;gap:8px">${prev ? `<button class="iconbtn" onclick="go('t_${prev}')" aria-label="Previous season">‹</button>` : ''}<h1 class="name" style="margin:0">${t.y} ${esc(t.n)}</h1>${next ? `<button class="iconbtn" onclick="go('t_${next}')" aria-label="Next season">›</button>` : ''}</div></div></div>
    <div class="sub" style="margin-top:8px"><span><b>${t.w ?? '?'}–${t.l ?? '?'}</b></span>${t.rk ? `<span>finished <b>${ordinal(t.rk)}</b></span>` : ''}${t.ws ? '<span class="badge gold">World Series champions</span>' : t.pen ? '<span class="badge gold">Pennant</span>' : ''}${t.pl ? `<span>${placeLink(t.pl)}</span>` : ''}<span><a href="#" onclick="go('y_${t.y}');return false">The ${t.y} season</a></span></div>
@@ -589,7 +583,7 @@ function vTeam() {
    <p class="note">Per 162 games: talent ${fmtS(t.tr.tal)} (80%), Pythagorean record ${fmtS(t.tr.py)} (15%), actual record ${fmtS(t.tr.wp)} (5%)${t.w + t.l < 150 ? ', records shrunk toward .500 for the short season' : ''}.</p>
    <p class="note">${t.tr.v} projected WAR per 162: ${t.tr.h} from position players, ${t.tr.p} from pitchers. Most of it from ${t.tr.top.map(e => e[1] ? `<a href="#" onclick="go('p_${e[1]}');return false">${esc(e[0])}</a> (${e[2]})` : `${esc(e[0])} (${e[2]})`).join(', ')}.</p>` : ''}
    ${park || t.park ? `<h2>Ballpark</h2><div class="parkbox"><b>${esc(park ? park.n : t.park)}</b>${park ? ` · ${esc(park.c)} · used ${park.y0}–${park.y1}${park.al ? `<div class="note">Also called ${esc(park.al)}</div>` : ''}${park.note ? `<div class="note">Your note: ${esc(park.note)}</div>` : ''}` : (t.ap ? ' <span class="note">(map pin at the city)</span>' : '')}</div>` : ''}
-   ${doneHTML(key)}${lightsHTML(key)}
+   ${lightsHTML(key)}
    <h2>Doors</h2>${doorsHTML(key)}
    <h2>From your list <small>${ro.length} on this roster${t.ros ? ', most model WAR first' : ''}</small></h2>${ro.length ? `<div class="chips">${ro.map(k => t.ros && k in t.ros ? playerChip(k).replace('</button>', ` <span class="k">${t.ros[k].toFixed(1)} WAR</span></button>`) : playerChip(k)).join('')}</div>` : '<p class="empty">Nobody from your list played here this year.</p>'}
    ${rosterHTML(tid)}
@@ -606,10 +600,10 @@ function vFranchise() {
   const rated = ts.filter(([, x]) => x.tr).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
   const mine = Object.entries(D.players).filter(([, p]) => (p.st || []).some(st => st[0] === fid)).sort((a, b) => (a[1].ovr || 999) - (b[1].ovr || 999)).map(([k]) => k);
   const season = ([tid, x]) => `<tr><td><a href="#" onclick="go('t_${tid}');return false">${x.y}</a></td><td class="nm">${esc(x.n)}</td><td>${x.w ?? ''}–${x.l ?? ''}</td><td>${x.rk ? ordinal(x.rk) : ''}</td><td>${x.ws ? 'WS' : x.pen ? 'Pennant' : ''}</td><td>${x.tr ? fmtS(x.tr.a) : ''}</td><td>${x.tr ? '#' + x.tr.ar : ''}</td><td>${x.top ? '★' : ''}</td></tr>`;
-  return `${crumbs('Franchise')}${banner()}
+  return `${crumbs('Franchise', key)}${banner()}
    <div class="hero">${teamBadge(last)}<div class="who"><div class="eyebrow">Franchise · ${first.y}${last.y !== first.y ? '–' + last.y : ''}</div><h1 class="name">${esc(fr.n)}</h1></div></div>
    <div class="sub" style="margin-top:8px"><span><b>${ts.length}</b> season${ts.length > 1 ? 's' : ''}</span>${W + Lo ? `<span><b>${W}–${Lo}</b> all-time</span>` : ''}${pens ? `<span><b>${pens}</b> pennant${pens > 1 ? 's' : ''}</span>` : ''}${wss ? `<span><b>${wss}</b> World Series</span>` : ''}</div>
-   ${doneHTML(key)}${lightsHTML(key)}
+   ${lightsHTML(key)}
    <h2>Doors</h2>${doorsHTML(key)}
    <h2>Names and homes</h2><div class="list">${eras.map(e => `<button class="row" onclick="go('t_${e.tid}')"><span class="yr">${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}</span><span class="rn">${esc(e.n)}${e.c ? `<small>${esc(e.c)}</small>` : ''}</span></button>`).join('')}</div>
    ${rated.length ? `<h2>Best seasons <small>by your model</small></h2><div class="list">${rated.slice(0, 8).map(teamRankRow).join('')}</div>` : ''}
@@ -619,10 +613,10 @@ function vFranchise() {
 }
 function vGame() {
   const g = D.games[view.id]; if (!g) return notFound(); const key = 'g_' + g.rk;
-  return `${crumbs('Game')}${banner()}<div class="eyebrow">${g.o ? 'From the “Others” row of your games list' : `#${g.rk} on your greatest-games list`}${g.gr ? ' · marked great' : ''}</div>
+  return `${crumbs('Game', key)}${banner()}<div class="eyebrow">${g.o ? 'From the “Others” row of your games list' : `#${g.rk} on your greatest-games list`}${g.gr ? ' · marked great' : ''}</div>
    <h1 class="name">${g.y} ${esc(g.g)}</h1><p style="font-size:17px;margin:0">${esc(g.d || 'No description yet.')}</p>
    <div class="sub" style="margin-top:8px">${g.tid ? `<span>${esc(D.teams[g.tid].n)}: <a href="#" onclick="go('t_${g.tid}');return false">${g.y} season</a></span>` : ''}<span><a href="#" onclick="go('y_${g.y}');return false">More from ${g.y}</a></span></div>
-   ${doneHTML(key)}${lightsHTML(key)}<h2>Doors</h2>${doorsHTML(key)}
+   ${lightsHTML(key)}<h2>Doors</h2>${doorsHTML(key)}
    ${g.o ? '' : `<h2>Your numbers</h2>`}<dl class="facts">${g.sc != null ? `<dt>Your score</dt><dd>${g.sc}</dd>` : ''}${g.cw != null ? `<dt>Top cWPA play</dt><dd>${g.cw}</dd>` : ''}${g.wpa != null ? `<dt>Top WPA play</dt><dd>${g.wpa}</dd>` : ''}${g.li != null ? `<dt>Game leverage</dt><dd>${g.li}</dd>` : ''}${g.inn ? `<dt>Innings</dt><dd>${g.inn}</dd>` : ''}</dl>
    <h2>Clippings</h2>${clipsHTML(key)}`;
 }
@@ -706,7 +700,7 @@ function vPlace() {
   const nWS = nd.teams.filter(t => D.teams[t].ws).length, nPen = nd.teams.filter(t => D.teams[t].pen).length;
   const prow = (pk, extra) => { const p = D.players[pk]; return `<button class="row" onclick="go('p_${pk}')">${avatar(pk)}<span class="yr">${esc(rankLabel(p))}</span><span class="rn">${esc(nameOf(p))}<small>${extra}</small></span><span class="meta">${dotsHTML('p_' + pk)}</span></button>`; };
   const LIM = 25;
-  return `${banner()}<div class="placecrumbs">${trail.join('')}</div><div class="eyebrow">${['Country', 'State / region', 'City'][nd.lvl]}</div><h1 class="name">${esc(placeLabel(nd))}</h1>${doneHTML('l_' + k)}
+  return `${pagebar('l_' + k)}${banner()}<div class="placecrumbs">${trail.join('')}</div><div class="eyebrow">${['Country', 'State / region', 'City'][nd.lvl]}</div><h1 class="name">${esc(placeLabel(nd))}</h1>
    <div class="sub"><span><b>${nd.from.length}</b> of your players from here</span><span><b>${nd.played.size}</b> played here</span><span><b>${nd.teams.length}</b> team seasons</span>${nWS ? `<span><b>${nWS}</b> World Series</span>` : ''}${nPen ? `<span><b>${nPen}</b> pennants</span>` : ''}</div>
    <h2>Best players from here</h2>${from.length ? `<div class="list">${from.slice(0, LIM).map(pk => prow(pk, `peak ${D.players[pk].pk || '?'}${nd.lvl < 2 ? ' · ' + esc(fromOf(pk).c || '') : ''}`)).join('')}</div>${from.length > LIM ? `<p class="note">and ${from.length - LIM} more</p>` : ''}` : '<p class="empty">Nobody on your list is from here.</p>'}
    <h2>Best players to play here</h2>${played.length ? `<div class="list">${played.slice(0, LIM).map(([pk, x]) => prow(pk, `${x.y0}${x.y1 !== x.y0 ? '–' + x.y1 : ''} · ${esc([...x.tm].join(', '))}`)).join('')}</div>${played.length > LIM ? `<p class="note">and ${played.length - LIM} more</p>` : ''}` : '<p class="empty">No one from your list played for a team based here.</p>'}
@@ -771,12 +765,6 @@ function wire() {
     $('#clip-t').value = ''; $('#clip-u').value = ''; mutate(key, cur => { (cur.clips = cur.clips || []).push({ t, u, k, at: Date.now() }); }); });
   document.querySelectorAll('[data-delclip]').forEach(b => b.addEventListener('click', () => mutate(key, cur => { cur.clips.splice(+b.dataset.delclip, 1); })));
   // from place
-  $('#editfrom')?.addEventListener('click', () => { $('#fromform').hidden = !$('#fromform').hidden; });
-  $('#fromform')?.addEventListener('submit', e => { e.preventDefault();
-    const c = $('#from-c').value.trim(), r = $('#from-r').value.trim(), n = $('#from-n').value.trim() || 'United States'; if (!c && !r) return;
-    const known = Object.values(PL).find(nd => nd.lvl === 2 && nd.n.toLowerCase() === n.toLowerCase() && (nd.c || '').toLowerCase() === c.toLowerCase() && (!r || (nd.r || '').toLowerCase() === r.toLowerCase()) && nd.lls.length);
-    mutate(key, cur => { cur.from = { c: c || null, r: r || null, n, ll: known ? known.lls[0] : null }; }); buildPlaces(); PLACE_OPTS = null; render(true); });
-  $('#fromreset')?.addEventListener('click', () => { mutate(key, cur => { delete cur.from; }); buildPlaces(); PLACE_OPTS = null; render(true); });
   // home lists
   const st = view.type === 'r' ? RK[view.id] : null;
   document.querySelectorAll('[data-pos]').forEach(b => b.addEventListener('click', () => { st.pos = b.dataset.pos; render(false); }));
@@ -785,6 +773,9 @@ function wire() {
   $('#tmore')?.addEventListener('click', () => { st.n += 200; render(false); });
   $('#rksort')?.addEventListener('change', e => { st.sort = e.target.value; render(false); });
   $('#rkfilter')?.addEventListener('input', e => { st.f = e.target.value; clearTimeout(window.__rf); window.__rf = setTimeout(() => render(false), 150); });
+  document.querySelectorAll('.noteform').forEach(f => f.addEventListener('submit', e => { e.preventDefault(); const t = f.querySelector('.nt').value.trim(), u = f.querySelector('.nu').value.trim(); if (!t && !u) return;
+    mutate(key, cur => { cur.notes = cur.notes || {}; (cur.notes[f.dataset.sec] = cur.notes[f.dataset.sec] || []).push({ t, u, at: Date.now() }); }); }));
+  document.querySelectorAll('[data-delnote]').forEach(b => b.addEventListener('click', () => { const [sec, i] = b.dataset.delnote.split(':'); mutate(key, cur => { cur.notes[sec].splice(+i, 1); }); }));
   // mark a tracked page complete (or not)
   document.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => mutate(b.dataset.done, cur => { if (cur.done) delete cur.done; else cur.done = Date.now(); })));
   // export/import
@@ -858,7 +849,7 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
   $('#searchbtn').addEventListener('click', () => { const on = $('#top').classList.toggle('searching'); if (on) $('#q').focus(); });
   $('#q').addEventListener('blur', () => setTimeout(() => { if (!$('#q').value) $('#top').classList.remove('searching'); }, 200));
   const m = (location.hash || '').slice(1).match(/^([ptgfyarld])-(.+)$/);
-  if (m) { view = { type: m[1], id: m[1] === 'r' && !HOMES.includes(m[2]) ? 'players' : m[2] }; if (m[1] === 'y') YEAR = +m[2]; }
+  if (m) { const pk = pageKey(m[1] + '_' + m[2]); view = { type: pk[0], id: pk[0] === 'r' && !HOMES.includes(pk.slice(2)) ? 'players' : pk.slice(2) }; if (m[1] === 'y') YEAR = +m[2]; }
   if (homeOf(view) === 'map') lastMap = view;
   $('#yr').value = YEAR; $('#bigyear').textContent = YEAR;
   render(true);

@@ -286,20 +286,6 @@ details.allteams summary{cursor:pointer;font-family:var(--f-display);font-weight
   .maphint{display:none}
 }
 /* your rating model */
-.arc{margin:6px 0 0}
-.arc .plot{position:relative;padding-right:76px}
-.arc svg{width:100%;height:150px;display:block;overflow:visible}
-.arc .bar rect:not(.hit){fill:var(--ghost)}
-.arc .bar.up rect:not(.hit){fill:var(--lit)}
-.arc .bar.mine rect:not(.hit){stroke:var(--ink);stroke-width:1.5;vector-effect:non-scaling-stroke}
-.arc .bar .hit{fill:transparent}
-.arc .bar{cursor:pointer}
-.arc .bar:hover rect:not(.hit){opacity:.75}
-.arc line.zero{stroke:var(--muted);stroke-width:1;vector-effect:non-scaling-stroke}
-.arc line.ref{stroke:var(--line);stroke-width:1;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}
-.arc .lab{position:absolute;right:0;transform:translateY(-110%);font-family:var(--f-mono);font-size:10px;color:var(--muted);pointer-events:none}
-.arc figcaption{padding-right:76px;display:flex;justify-content:space-between;gap:8px;font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-top:2px}
-.arc figcaption span:nth-child(2){text-align:center}
 h3.sm{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:12px 0 2px}
 .scale button.sugg{border:1.5px dashed var(--lit);color:var(--ink)}
 .grade .m80{font-family:var(--f-mono);font-weight:500;font-size:11px;color:var(--lit);margin-left:2px}
@@ -342,7 +328,7 @@ table.track.lights3 .tbar{display:inline-block;width:calc(100% - 44px);vertical-
 .yg.s4{background:var(--lit);color:var(--bg)}
 .yg:hover{outline:2px solid var(--ink);outline-offset:1px}
 .tlegend i.yg{height:12px;width:12px}
-.donebtn{display:inline-flex;align-items:center;gap:8px;margin:12px 0 2px;padding:6px 14px 6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--raise);cursor:pointer;font-weight:600;font-size:14px;color:var(--ink)}
+.donebtn{display:inline-flex;align-items:center;gap:7px;margin:0;padding:3px 11px 3px 8px;border:1px solid var(--line);border-radius:999px;background:var(--raise);cursor:pointer;font-weight:600;font-size:12.5px;color:var(--ink)}
 .donebtn .box{width:16px;height:16px;border:1.5px solid var(--muted);border-radius:4px;display:inline-grid;place-items:center}
 .donebtn[aria-pressed="true"]{border-color:var(--lit);background:var(--lit-soft)}
 .donebtn[aria-pressed="true"] .box{background:var(--lit);border-color:var(--lit)}
@@ -354,3 +340,17 @@ table.track.lights3 .tbar{display:inline-block;width:calc(100% - 44px);vertical-
 .overall .sub{margin-top:10px}
 table.stats.fr td:first-child a{color:inherit}
 table.stats.fr td:nth-child(5){font-family:var(--f-body);font-size:12px;color:var(--lit);text-align:left}
+.crumbs .grow{flex:1}
+.crumbs .donebtn{text-decoration:none}
+table.stats.career td:nth-child(-n+3),table.stats.career th:nth-child(-n+3){text-align:left}
+table.stats.career td a{color:inherit;text-underline-offset:2px}
+table.stats.career .sec,table.stats.career .mdl{color:var(--muted)}
+table.stats.career th.mdl,table.stats.career td.mdl:first-of-type{padding-left:10px}
+table.stats.career td.t5{color:var(--lit);font-weight:600;text-align:left}
+table.stats.career tr.tot td{border-top:1px solid var(--line);font-weight:600;padding-top:5px}
+h2 small.find a,h3 small.find a{color:var(--muted);text-underline-offset:2px;font-family:var(--f-body);text-transform:none;letter-spacing:0}
+h3.sm small.find{margin-left:6px}
+.clip .clipimg{display:block;max-width:220px;max-height:220px;border-radius:6px;margin:4px 0}
+table.stats.career td,table.stats.career th{white-space:nowrap}
+table.stats.career tr.read td{white-space:normal;font-family:var(--f-body);font-size:13px;color:var(--muted);text-align:left;padding:0 0 6px;max-width:0}
+table.stats.career tr.nostat td:nth-child(3){font-family:var(--f-body);color:var(--muted);text-align:left}

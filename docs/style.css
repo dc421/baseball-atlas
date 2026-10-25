@@ -173,6 +173,15 @@ textarea.t{min-height:64px;resize:vertical}
 .cols3{display:grid;gap:4px}
 .savebox{margin-top:30px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px;font-size:13px;color:var(--muted);display:grid;gap:8px}
 .savebox .r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.savebox .bad{color:var(--stitch)}
+.savebox .ghconnect summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.savebox .ghconnect p{margin:8px 0}
+.savebox #ghtoken{flex:1;min-width:180px}
+#syncbtn .sdot{width:8px;height:8px;border-radius:50%;background:var(--ghost);flex:none}
+#syncbtn[data-st=saved] .sdot{background:#3f9a5c}
+#syncbtn[data-st=pending] .sdot,#syncbtn[data-st=saving] .sdot{background:var(--lit)}
+#syncbtn[data-st=error],#syncbtn[data-st=unsaved]{border-color:var(--stitch);color:var(--stitch)}
+#syncbtn[data-st=error] .sdot,#syncbtn[data-st=unsaved] .sdot{background:var(--stitch)}
 .parkbox{background:var(--raise);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
 
 /* v3: four homes. Map home = map + panel; pages = reading column + corner map; list homes = reading column only. */

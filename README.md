@@ -48,7 +48,9 @@ python scripts/build_data.py                                            # rebuil
 
 ## Your progress
 
-Check-offs, grades, clippings, pins and "from" changes save in the browser you use. To keep them safe or share them across devices, use **Export progress** (bottom of the Teams view) and commit the file as `docs/data/progress.json`. Every browser that opens the site starts from that file, and newer local changes win.
+Check-offs, grades, notes and "from" changes save in the browser you use. To keep them safe and the same on every device, open **Save to GitHub automatically** (bottom of the Tracker) and paste a fine-grained token with access to only this repo and *Contents: Read and write*. Do it once per browser. From then on, marking a page complete saves at once, and any other change about 2 seconds later, to `progress.json` on the repo's `progress` branch (a branch holding only that file, so `main` and Pages are left alone), and every browser that opens the site starts from it. Newer changes win, page by page. The header shows **Saved** or **Saving…**, or **Back up** in red when changes exist only in this browser.
+
+Without a token, **Export a copy** still gives you a file. An older export committed as `docs/data/progress.json` is still read too.
 
 ## Layout
 

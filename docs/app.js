@@ -20,24 +20,112 @@ const rankLabel = p => p.ovr ? `#${p.ovr} ${p.pos}` : typeof p.prk === 'number' 
 const wpct = t => (t.w + t.l) ? t.w / (t.w + t.l) : 0;
 
 /* ================================================================ saving
-   Everything you do is kept in this browser. "Export" gives you a file; commit it as
-   docs/data/progress.json and every device that opens the site starts from it. */
-const LS = 'atlas-progress-v1';
+   Everything you do is kept in this browser, and (once you connect GitHub) saved right away to
+   progress.json on the repo's `progress` branch, which every browser reads when it opens the site.
+   Without a token, Export gives you a file to keep. Entries merge per page: the newer one wins. */
+const LS = 'atlas-progress-v1', GHK = 'atlas-gh-token', BAK = 'atlas-backed-up';
+const GH = { repo: 'dc421/baseball-atlas', branch: 'progress', path: 'progress.json' };
 const STORE = { progress: {} };
-function loadStore(committed) {
-  const merge = src => {
-    for (const [k, v] of Object.entries(src.progress || {})) if (!STORE.progress[k] || (v.at || 0) >= (STORE.progress[k].at || 0)) STORE.progress[k] = v;
-  };
-  merge(committed || {});
-  try { const local = JSON.parse(localStorage.getItem(LS) || 'null'); if (local) merge(local); } catch (e) { /* private mode */ }
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } };
+function mergeIn(src) {  // -> how many pages changed
+  let n = 0;
+  for (const [k, v] of Object.entries(src?.progress || {})) if (!STORE.progress[k] || (v.at || 0) > (STORE.progress[k].at || 0)) { STORE.progress[k] = v; n++; }
+  return n;
 }
-let saveT = null;
-function persist() {
-  clearTimeout(saveT);
+const latest = src => Math.max(0, ...Object.values(src?.progress || {}).map(v => v.at || 0));
+function loadStore(...saved) {  // committed and synced copies, then this browser's
+  for (const src of saved) mergeIn(src);
+  if (!lsGet(BAK)) lsSet(BAK, String(Math.max(...saved.map(latest), 0)));  // what came from a saved copy is already safe
+  try { const local = JSON.parse(lsGet(LS) || 'null'); if (local) mergeIn(local); } catch (e) { }
+}
+let saveT = null, rev = 0;
+function persist(sync = true) {
+  clearTimeout(saveT); if (sync) rev++;
   saveT = setTimeout(() => {
     try { localStorage.setItem(LS, JSON.stringify({ ...STORE, savedAt: Date.now() })); }
     catch (e) { setNote('This browser isn’t letting the atlas save. Use Export to keep a copy.'); }
   }, 250);
+  if (sync) scheduleSync(); syncUI();
+}
+const unbacked = () => { const t = +(lsGet(BAK) || 0); return Object.values(STORE.progress).filter(v => (v.at || 0) > t).length; };
+
+/* ---------------------------------------------------------------- GitHub sync */
+const ghToken = () => lsGet(GHK);
+const ghAPI = (path, o = {}) => fetch(`https://api.github.com/repos/${GH.repo}${path ? '/' + path : ''}`, { cache: 'no-store', ...o,
+  headers: { Authorization: `Bearer ${ghToken()}`, Accept: 'application/vnd.github+json', ...(o.headers || {}) } });
+const b64 = str => { const b = new TextEncoder().encode(str); let t = ''; for (let i = 0; i < b.length; i += 0x8000) t += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(t); };
+const ghFail = r => { const e = new Error(r.status === 401 ? 'GitHub didn’t accept the token' : r.status === 403 || r.status === 404 ? 'The token can’t write to the repo' : 'GitHub said ' + r.status); e.status = r.status; return e; };
+const SYNC = { state: 'idle', at: 0, err: '' };
+let syncT = null, syncing = false, ghSha = null;  // ghSha: the file as this browser last read or wrote it
+async function ghRead() {  // -> { sha, data }; sha is null before the first save
+  const url = `contents/${GH.path}?ref=${GH.branch}`, r = await ghAPI(url);
+  if (r.status === 404) return { sha: null, data: {} };
+  if (!r.ok) throw ghFail(r);
+  const j = await r.json(), raw = await ghAPI(url, { headers: { Accept: 'application/vnd.github.raw' } });
+  if (!raw.ok) throw ghFail(raw);
+  ghSha = j.sha;
+  return { sha: j.sha, data: await raw.json() };
+}
+async function ghCreate(body, message) {  // first save: a branch of its own holding just progress.json
+  const post = async (path, data) => { const r = await ghAPI(path, { method: 'POST', body: JSON.stringify(data) }); if (!r.ok) throw ghFail(r); return r.json(); };
+  const tree = await post('git/trees', { tree: [{ path: GH.path, mode: '100644', type: 'blob', content: body }] });
+  const commit = await post('git/commits', { message, tree: tree.sha, parents: [] });
+  await post('git/refs', { ref: 'refs/heads/' + GH.branch, sha: commit.sha });
+}
+function scheduleSync(ms = 2000) {
+  if (!ghToken()) return;
+  clearTimeout(syncT); SYNC.state = 'pending'; syncT = setTimeout(ghSave, ms);
+}
+async function ghSave() {
+  if (!ghToken()) return;
+  if (syncing) return scheduleSync();
+  clearTimeout(syncT); syncing = true; SYNC.state = 'saving'; syncUI();
+  const r0 = rev;
+  try {
+    for (let tries = 0; ; tries++) {
+      // write straight over the copy we last saw; only read first when we haven't seen it or another device has saved since
+      if (!ghSha) {
+        const remote = await ghRead();
+        if (mergeIn(remote.data)) { persist(false); refreshMap(); if (!document.activeElement?.matches('input,textarea')) render(false); }
+        if (remote.sha && JSON.stringify(remote.data.progress || {}) === JSON.stringify(STORE.progress)) break;  // nothing new to save
+      }
+      const body = JSON.stringify({ progress: STORE.progress, savedAt: new Date().toISOString() }, null, 1);
+      const message = `Progress: ${Object.values(STORE.progress).filter(v => v.done).length} pages complete`;
+      if (!ghSha) { await ghCreate(body, message); break; }  // first save ever (the next one reads the new file's sha)
+      const r = await ghAPI(`contents/${GH.path}`, { method: 'PUT', keepalive: body.length < 60000,
+        body: JSON.stringify({ message, content: b64(body), sha: ghSha, branch: GH.branch }) });
+      if (r.ok) { ghSha = (await r.json()).content?.sha || null; break; }
+      if ((r.status === 409 || r.status === 422) && tries < 3) { ghSha = null; continue; }  // another device saved in between: read, merge, write again
+      throw ghFail(r);
+    }
+    lsSet(BAK, String(Date.now())); Object.assign(SYNC, { state: 'saved', at: Date.now(), err: '' });
+  } catch (e) {
+    Object.assign(SYNC, { state: 'error', err: e.message || 'Couldn’t reach GitHub' });
+    if (e.status !== 401 && e.status !== 403) scheduleSync(60000);  // offline or GitHub hiccup: try again in a minute
+  }
+  syncing = false; syncUI(); refreshSaveBox();
+  if (rev !== r0 && SYNC.state === 'saved') scheduleSync();
+}
+async function ghPull() {  // on load: the synced copy (fresh with a token, otherwise the public file, which can lag a few minutes)
+  if (!ghToken()) return getJSON(`https://raw.githubusercontent.com/${GH.repo}/${GH.branch}/${GH.path}`, {});
+  try { const r = await ghRead(); SYNC.state = 'saved'; SYNC.at = Date.now(); return r.data; }
+  catch (e) { Object.assign(SYNC, { state: 'error', err: e.message }); return {}; }
+}
+async function ghConnect(token) {
+  lsSet(GHK, token);
+  const r = await ghAPI('').catch(() => null);
+  if (!r || !r.ok || !(await r.json()).permissions?.push) { lsSet(GHK, null); throw new Error(r && r.status === 401 ? 'GitHub didn’t accept that token.' : 'That token can’t write to ' + GH.repo + '.'); }
+  await ghSave();
+}
+const ago = t => { const s = (Date.now() - t) / 1000; return s < 60 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' hr ago' : Math.round(s / 86400) + ' days ago'; };
+function syncUI() {  // the header pill: whether your progress is safe
+  const b = $('#syncbtn'); if (!b) return;
+  const n = unbacked(), tok = ghToken(), st = tok ? SYNC.state : n ? 'unsaved' : 'idle';
+  const label = { pending: 'Saving…', saving: 'Saving…', saved: 'Saved', error: 'Not saved', unsaved: 'Back up', idle: '' }[st];
+  b.hidden = !label; b.dataset.st = st; b.querySelector('span').textContent = label;
+  b.title = st === 'error' ? SYNC.err + '. Open the save settings.' : st === 'unsaved' ? `${n} page${n === 1 ? '' : 's'} changed and only saved in this browser. Connect GitHub or export a copy.`
+    : st === 'saved' ? 'Progress saved to GitHub' + (SYNC.at ? ' ' + ago(SYNC.at) : '') : 'Saving progress to GitHub';
 }
 const prog = key => STORE.progress[key];
 function mutate(key, fn) {
@@ -282,14 +370,23 @@ function setYear(y) {
 }
 
 /* ================================================================ routing
-   Four homes (map, teams, players, games) each remember where you left them; every other view is a page. */
-let view = { type: 'y', id: '1897' }; const stack = [];
+   Four homes (map, teams, players, games) each remember where you left them; every other view is a page.
+   Each page you open is a browser history entry (state.d = how deep you are, state.sc = where you'd scrolled),
+   so the browser's back and forward buttons and swipes work like the ← Back button. */
+let view = { type: 'y', id: '1897' };
 const HOMES = ['map', 'teams', 'players', 'games', 'tracker'];
 const homeOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' ? v.id : null;
 const layoutOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' ? 'list' : 'page';
 let lastHome = 'map', lastMap = { type: 'y', id: '1897' }, mapT = null, FULL = false, sizedFor = '';
 const homeScroll = {};
-const setHash = () => { try { history.replaceState(null, '', '#' + view.type + '-' + view.id); } catch (e) { } };
+const hashOf = v => '#' + v.type + '-' + v.id;
+const setHash = () => { try { history.replaceState(history.state, '', hashOf(view)); } catch (e) { } };
+const depth = () => history.state?.d || 0;
+function viewFromHash() {
+  const m = (location.hash || '').slice(1).match(/^([ptgfcyarld])-(.+)$/); if (!m) return null;
+  const pk = pageKey(m[1] + '_' + m[2]);
+  return { type: pk[0], id: pk[0] === 'r' && !HOMES.includes(pk.slice(2)) ? 'players' : pk.slice(2) };
+}
 const scroller = () => innerWidth <= 820 ? document.scrollingElement : $('#panel');
 function leave() {  // remember the home we're leaving
   const h = homeOf(view); if (!h) return;
@@ -300,9 +397,11 @@ const pageKey = key => { if (key.startsWith('t_')) { const t = D.teams[key.slice
 function go(key, push = true) {
   key = pageKey(key);
   stopPlay(); leave(); setFull(false, false);
-  if (push) { stack.push(view); if (stack.length > 40) stack.shift(); }
+  const d = depth();
+  try { history.replaceState({ d, sc: scroller().scrollTop }, ''); } catch (e) { }
   view = { type: key[0], id: key.slice(2) };
-  setHash(); render(true);
+  try { history[push ? 'pushState' : 'replaceState']({ d: push ? d + 1 : d }, '', hashOf(view)); } catch (e) { }
+  render(true);
   scroller().scrollTop = 0;
 }
 function goHome(h) {
@@ -310,7 +409,14 @@ function goHome(h) {
   go('r_' + h);
   if (homeScroll[h]) scroller().scrollTop = homeScroll[h];
 }
-function back() { const v = stack.pop(); if (v) { leave(); setFull(false, false); view = v; setHash(); render(true); } }
+const back = () => history.back();
+function onPop(e) {  // the browser moved through history: show that page, scrolled where you left it
+  const v = viewFromHash(); if (!v) return;
+  stopPlay(); leave(); setFull(false, false);
+  view = v; if (v.type === 'y') { YEAR = +v.id; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; }
+  render(true, { restore: homeOf(v) === 'map' });
+  const sc = e.state?.sc; scroller().scrollTop = sc != null ? sc : homeOf(v) && homeOf(v) !== 'map' ? homeScroll[homeOf(v)] || 0 : 0;
+}
 function setFull(on, redraw = true) {
   if (FULL === on) return; FULL = on; document.body.classList.toggle('mapfull', on);
   if (redraw) placeMap(false);
@@ -422,7 +528,7 @@ function teamBadge(t) {
   const logo = logoFor(t), [bg, fg] = teamColors(t);
   return logo ? `<span class="teambadge"><img src="logos/${esc(logo)}" alt=""></span>` : `<span class="teambadge" style="background:${bg};color:${fg}">${esc(t.br || t.tm)}</span>`;
 }
-const crumbs = (label, key) => `<div class="crumbs">${stack.length ? `<button id="backbtn">← Back</button><span>·</span>` : ''}<span>${esc(label)}</span>${key ? `<span class="grow"></span>${doneHTML(key)}` : ''}</div>`;
+const crumbs = (label, key) => `<div class="crumbs">${depth() ? `<button id="backbtn">← Back</button><span>·</span>` : ''}<span>${esc(label)}</span>${key ? `<span class="grow"></span>${doneHTML(key)}` : ''}</div>`;
 const pagebar = key => { const d = doneHTML(key); return d ? `<div class="crumbs"><span class="grow"></span>${d}</div>` : ''; };
 const banner = () => `<div class="banner" id="dbnote" ${note ? '' : 'hidden'}>${esc(note)}</div>`;
 function gameRow(g) { return `<button class="row" onclick="go('g_${g.rk}')"><span class="yr">${g.y}</span><span class="rn">${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}<small>${g.o ? 'from your “Others” row' : `#${g.rk} on your list`}</small></span><span class="meta">${dotsHTML('g_' + g.rk)}</span></button>`; }
@@ -518,10 +624,18 @@ function vYear() {
   ${saveBox()}`;
 }
 function saveBox() {
-  const n = Object.keys(STORE.progress).length;
-  return `<div class="savebox"><div>Your check-offs, grades and clippings are saved in this browser (${n} things touched). Export a copy to back up, or commit it as <code>docs/data/progress.json</code> so every device starts from it.</div>
-  <div class="r"><button class="btn ghost" id="exportbtn">Export progress</button><label class="btn ghost" style="cursor:pointer">Import…<input type="file" id="importfile" accept="application/json" hidden></label><span id="savemsg"></span></div></div>`;
+  const n = Object.keys(STORE.progress).length, u = unbacked(), tok = ghToken();
+  const status = tok ? (SYNC.state === 'error' ? `<b class="bad">Not saved: ${esc(SYNC.err)}.</b> It’ll keep trying; your changes are safe in this browser meanwhile.`
+      : `Saving to GitHub (<code>progress.json</code> on the <code>${GH.branch}</code> branch) as you go. ${SYNC.at ? 'Last saved ' + ago(SYNC.at) + '.' : ''}`)
+    : `Your check-offs, grades and notes (${n} page${n === 1 ? '' : 's'}) are saved only in this browser${u ? `, <b class="bad">${u} not backed up</b>` : ''}. Clearing site data would lose them.`;
+  const connect = tok ? `<button class="btn ghost" id="ghsave">Save now</button><button class="btn ghost" id="ghoff">Disconnect GitHub</button>`
+    : `<details class="ghconnect"><summary>Save to GitHub automatically</summary>
+       <p>Make a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token ↗</a> with access to only <code>${GH.repo}</code> and <b>Contents: Read and write</b>, then paste it here. Do this once in each browser you use. The token stays in this browser; the repo is public, so your progress file is too.</p>
+       <form id="ghform" class="r"><input class="t" id="ghtoken" type="password" placeholder="github_pat_…" autocomplete="off"><button class="btn" type="submit">Connect</button></form></details>`;
+  return `<div class="savebox" id="savebox"><div>${status}</div>${connect ? `<div class="r">${connect}</div>` : ''}
+  <div class="r"><button class="btn ghost" id="exportbtn">Export a copy</button><label class="btn ghost" style="cursor:pointer">Import…<input type="file" id="importfile" accept="application/json" hidden></label><span id="savemsg"></span></div></div>`;
 }
+function refreshSaveBox() { const b = $('#savebox'); if (b && !b.contains(document.activeElement)) { b.outerHTML = saveBox(); wireSave(); } }
 
 function vPlayer() {
   const k = view.id, p = D.players[k]; if (!p) return notFound();
@@ -833,16 +947,24 @@ function wire() {
     mutate(key, cur => { cur.notes = cur.notes || {}; (cur.notes[f.dataset.sec] = cur.notes[f.dataset.sec] || []).push({ t, u, at: Date.now() }); }); }));
   document.querySelectorAll('[data-delnote]').forEach(b => b.addEventListener('click', () => { const [sec, i] = b.dataset.delnote.split(':'); mutate(key, cur => { cur.notes[sec].splice(+i, 1); }); }));
   // mark a tracked page complete (or not)
-  document.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => mutate(b.dataset.done, cur => { if (cur.done) delete cur.done; else cur.done = Date.now(); })));
-  // export/import
+  document.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => { mutate(b.dataset.done, cur => { if (cur.done) delete cur.done; else cur.done = Date.now(); }); scheduleSync(0); }));  // completing a page saves at once
+  wireSave();
+}
+function wireSave() {  // export/import, GitHub
   $('#exportbtn')?.addEventListener('click', () => {
     const blob = new Blob([JSON.stringify({ progress: STORE.progress, exportedAt: new Date().toISOString() }, null, 1)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'progress.json'; document.body.appendChild(a); a.click(); a.remove();
+    if (!ghToken()) { lsSet(BAK, String(Date.now())); syncUI(); }
     $('#savemsg').textContent = 'Saved progress.json to your downloads.';
   });
   $('#importfile')?.addEventListener('change', async e => { const f = e.target.files[0]; if (!f) return;
-    try { const j = JSON.parse(await f.text()); loadStore(j); persist(); buildPlaces(); render(true); setTimeout(() => { const m = $('#savemsg'); if (m) m.textContent = 'Imported.'; }, 0); }
+    try { const j = JSON.parse(await f.text()); mergeIn(j); persist(); buildPlaces(); render(true); setTimeout(() => { const m = $('#savemsg'); if (m) m.textContent = 'Imported.'; }, 0); }
     catch (err) { $('#savemsg').textContent = 'That file isn’t an atlas progress export.'; } });
+  $('#ghform')?.addEventListener('submit', async e => { e.preventDefault(); const t = $('#ghtoken').value.trim(); if (!t) return;
+    $('#savemsg').textContent = 'Checking the token…';
+    try { await ghConnect(t); render(false); } catch (err) { $('#savemsg').textContent = err.message; } });
+  $('#ghsave')?.addEventListener('click', () => ghSave());
+  $('#ghoff')?.addEventListener('click', () => { lsSet(GHK, null); clearTimeout(syncT); SYNC.state = 'idle'; syncUI(); render(false); });
 }
 function spin() {  // a random tracked page you haven't marked complete
   const pool = [...trackKeys().all].filter(k => !isDone(k));
@@ -883,7 +1005,9 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
 (async function boot() {
   [D, WORLD, STATES, PHOTOS] = await Promise.all([getJSON('data/atlas.json'), getJSON('data/world.json'), getJSON('data/states.json'), getJSON('data/photos.json', {})]);
   NOTES = { ...NOTES, ...(await getJSON('data/notes.json', {})) };
-  loadStore(await getJSON('data/progress.json', {}));
+  const [committed, synced] = await Promise.all([getJSON('data/progress.json', {}), ghPull()]);
+  loadStore(committed, synced);
+  if (ghToken() && unbacked()) scheduleSync(1000);  // changes made here while offline or before connecting
   buildPlaces(); buildIndex();
   setupMap();
   addEventListener('resize', () => { clearTimeout(window.__rs); window.__rs = setTimeout(() => placeMap(false), 200); });
@@ -901,12 +1025,19 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
   $('#mapclose').addEventListener('click', () => setFull(false));
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && FULL) setFull(false); });
   $('#spin').addEventListener('click', spin);
+  $('#syncbtn').addEventListener('click', () => { goHome('tracker'); setTimeout(() => $('#savebox')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); });
+  addEventListener('visibilitychange', () => { if (document.hidden && SYNC.state === 'pending') ghSave(); });  // leaving: save now
+  addEventListener('beforeunload', e => { if (SYNC.state === 'pending' || SYNC.state === 'saving') { ghSave(); e.preventDefault(); } });  // still saving: ask before closing
+  syncUI();
   $('#yprev').addEventListener('click', () => { stopPlay(); setYear(YEAR - 1); });
   $('#ynext').addEventListener('click', () => { stopPlay(); setYear(YEAR + 1); });
   $('#searchbtn').addEventListener('click', () => { const on = $('#top').classList.toggle('searching'); if (on) $('#q').focus(); });
   $('#q').addEventListener('blur', () => setTimeout(() => { if (!$('#q').value) $('#top').classList.remove('searching'); }, 200));
-  const m = (location.hash || '').slice(1).match(/^([ptgfcyarld])-(.+)$/);
-  if (m) { const pk = pageKey(m[1] + '_' + m[2]); view = { type: pk[0], id: pk[0] === 'r' && !HOMES.includes(pk.slice(2)) ? 'players' : pk.slice(2) }; if (m[1] === 'y') YEAR = +m[2]; }
+  const hv = viewFromHash();
+  if (hv) { view = hv; if (hv.type === 'y') YEAR = +hv.id; }
+  history.scrollRestoration = 'manual';
+  try { history.replaceState({ d: history.state?.d || 0 }, '', hashOf(view)); } catch (e) { }
+  addEventListener('popstate', onPop);
   if (homeOf(view) === 'map') lastMap = view;
   $('#yr').value = YEAR; $('#bigyear').textContent = YEAR;
   render(true);

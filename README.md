@@ -39,7 +39,7 @@ python scripts/fetch_execs.py                                           # owners
 python scripts/build_data.py                                            # rebuild with all of the above
 ```
 
-- **Your list** comes from the IN, Year-by-Year Top 5, Games, Parks R/L and Checklist tabs. Only the IN columns the site uses are exported.
+- **Your list** comes from the IN, Year-by-Year Top 5, Games, Parks R/L and Checklist tabs. Only the IN columns the site uses are exported. Season rankings come from the rating model; the Year-by-Year tab now supplies only the cWPA leader.
 - **Your rating model** comes from `~/Documents/Baseball Ratings 2023.R` (pass another path to use a different version). `export_ratings.R` runs it unchanged up to the Hall of Fame models and saves every player-season's rating, year rank and tools, plus each player's peak-weighted rating and Hall odds. The site shows them as a career arc, 20-80 tools and the model's rank on player pages, the model's best five on team pages, and its top 10 on year pages. Skip this step and the site builds without them.
 - **Franchise pages** list every home park (a park counts in a season when it held a quarter of the home games) with a Wikipedia photo and its dimensions diagram, or a field drawn from the infobox distances when there is no diagram; every manager (Lahman); and, for today's 30 clubs, the principal owners and general managers from Wikipedia's navigation boxes.
 - **Everything else** (careers, birthplaces, teams, parks, managers, stats through 2025) comes from the Lahman database (SABR's 2025 release, fetched by `fetch_lahman.py`).
@@ -52,6 +52,7 @@ python scripts/build_data.py                                            # rebuil
   - `photo_titles.csv`: the Wikipedia article to use when the photo script picks the wrong person (`NONE` to skip)
   - `game_videos.csv`: pin a game’s YouTube video by rank (`rk,video,note`); an empty video hides the automatic pick
   - `park_names.csv`: historical park names by Retrosheet park ID and season range (`park,y0,y1,name`)
+  - `rating_drops.csv`: a player-season to leave out of the model's ratings and rankings when bad source data broke it (`playerID,yearID,kind,note`, kind `H` or `P`)
   - `park_titles.csv`: the Wikipedia article (or a specific photo / diagram file) for a park the park script gets wrong; check `data/park_review.csv`
 - **Logos**: see `docs/logos/README.md`.
 

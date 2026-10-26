@@ -240,7 +240,7 @@ for j, r in IN.iterrows():
     if str(r.Bio).strip() == 'Y': base['book'] = 1
     o = dict(f=first, l=last, pos=str(r.POS), pk=peak or None, ovr=int(r.OVR) if r.OVR == r.OVR else None,
              prk=int(float(prk)) if re.match(r'^[0-9.]+$', str(prk)) else prk, base=base,
-             have=None if str(r.Have) == 'nan' else r.Have, ranks=[])
+             have=None if str(r.Have) == 'nan' else r.Have)
     if pid:
         p = Pi.loc[pid]
         o['id'] = pid; o['br'] = nz(p.bbrefID)
@@ -285,7 +285,7 @@ for j, r in IN.iterrows():
 
 print('players', len(players), '| no "from" location:', [f"{o['f']} {o['l']}" for o in players.values() if not o.get('ll')])
 
-# ---------------------------------------------------------------- top 5 by year
+# ---------------------------------------------------------------- cWPA leader by year (Year-by-Year Top 5 tab)
 top = pd.read_csv(SRC / 'Year-by-Year_Top_5.csv').fillna('')
 cellre = re.compile(r'^(?:(C|1B|2B|3B|SS|LF|CF|RF|DH|OF|P|UT)\s+)?(.+?)\s*\(([^)]*)\)\s*$')
 by_name = {norm(o['f'] + o['l']): k for k, o in players.items()}
@@ -294,15 +294,11 @@ for r in top.itertuples(index=False):
     try: y = int(float(r[0]))
     except ValueError: continue
     ent = []
-    for ci, cell in enumerate(r[1:13]):
-        cell = str(cell).strip()
-        if not cell: continue
+    cell = str(r[12]).strip()  # the cWPA leader; the year's top 5s come from the model below
+    if cell:
         m = cellre.match(cell)
         pos, nm, tm = (m.group(1), m.group(2), m.group(3)) if m else (None, cell, '')
-        kind = 'H' if ci < 5 else ('P' if ci < 10 else ('RP' if ci == 10 else 'WPA'))
-        k = by_name.get(norm(nm))
-        ent.append([kind, (ci % 5) + 1 if ci < 10 else 1, pos, nm, tm, k])
-        if k: players[k]['ranks'].append([y, kind, (ci % 5) + 1 if ci < 10 else 1])
+        ent.append(['WPA', 1, pos, nm, tm, by_name.get(norm(nm))])
     years[y] = dict(top=ent)
 
 # ---------------------------------------------------------------- era notes (Checklist tab)
@@ -341,14 +337,25 @@ for r in gm.itertuples(index=False):
     years.setdefault(y, {}).setdefault('games', []).append(str(rk))
 
 # ---------------------------------------------------------------- your rating model (scripts/export_ratings.R)
-# Season and career scores are WAR/G above the era's comparison line, x1000 for display.
-# Your thresholds: all-timer > 6.9, safely in > 3, borderline in > 0, borderline out > -3.
-season_score = {}  # (key, year) -> score, for sorting rosters
+# One rating everywhere: projected WAR per 150 games. The model's score is WAR/G above its era line (pitchers on the
+# hitter scale); adding back today's line (.0346) makes it plain projected WAR per 150 for anyone since the war, while
+# earlier seasons keep the model's era adjustment. Hall thresholds on this scale: all-timer > 6.2, safely in > 5.6,
+# borderline in > 5.2, borderline out > 4.7.
+W150 = lambda s: np.round((s + .0346) * 150, 1)
+season_score = {}  # (key, year) -> rating, for sorting rosters
+rating_of = {}  # (playerID, year) -> rating, shown on team pages
 if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exists():
     RS = pd.read_csv(SRC / 'ratings_seasons.csv')
     RP = pd.read_csv(SRC / 'ratings_players.csv')
-    RS = RS[np.isfinite(RS.score)].copy()
-    RS['s'] = (RS.score * 1000).round(2)
+    RS = RS[np.isfinite(RS.score)].sort_values('score', ascending=False).drop_duplicates(['playerID', 'yearID', 'kind']).copy()
+    # hand-dropped seasons where bad source data broke the model (data/overrides/rating_drops.csv); the rest of
+    # that year's ranks close up behind them
+    if (OVR / 'rating_drops.csv').exists():
+        drop = {(r.playerID, int(r.yearID), r.kind) for r in pd.read_csv(OVR / 'rating_drops.csv').itertuples()}
+        RS = RS[[(p, y, kd) not in drop for p, y, kd in zip(RS.playerID, RS.yearID, RS.kind)]].copy()
+        RS['year_rank'] = RS.groupby(['yearID', 'kind']).year_rank.rank(method='first').astype(int)
+    RS['s'] = W150(RS.score)
+    rating_of = RS.groupby(['playerID', 'yearID']).s.max().to_dict()
     # list players: by Lahman id, else by name for the ones outside the database
     pid2key = {o['id']: k for k, o in players.items() if o.get('id')}
     nm = RS.groupby('playerID').name.first().dropna()
@@ -383,7 +390,7 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
     for r in RP.itertuples():
         k = pid2key.get(r.playerID)
         if not k: continue
-        players[k]['mr'] = dict(r=round(r.rating * 1000, 2), rk=int(r.rk_ovr), prk=int(r.pos_rk), pos=r.POS, pk=int(r.peak_year),
+        players[k]["mr"] = dict(r=float(np.round((r.rating + .0346) * 150, 2)), rk=int(r.rk_ovr), prk=int(r.pos_rk), pos=r.POS, pk=int(r.peak_year),
                                 war=nz(r.WAR), hof=1 if str(r.hof).upper() == 'TRUE' else 0, odds=round(r.should_hof_pred, 3))
     # relievers are rated by rate, as in your script's RP list: proj_WAR_BFP_net, best four seasons weighted 2/1.5/1/.5
     rel = RS[(RS.kind == 'P') & (RS.POS == 'RP') & RS.rp_score.notna()].copy()
@@ -406,11 +413,11 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
         tid = tkey.get((r.teamID, int(r.yearID)))
         if tid: app_t.setdefault((r.playerID, int(r.yearID)), []).append(tid)
 
-    # each year's model top 10 hitters and pitchers, plus the top reliever by rate
+    # each year's top 10 hitters and pitchers, plus the top reliever by rate
     for (y, kind), g in RS.groupby(['yearID', 'kind']):
         g = g.nsmallest(10, 'year_rank')
         years.setdefault(int(y), {})['m' + kind] = [[r.name, r.key if isinstance(r.key, str) else None, float(r.s), r.POS,
-                                                     (app_t.get((r.playerID, int(y))) or [None])[0]] for r in g.itertuples()]
+                                                     (app_t.get((r.playerID, int(y))) or [None])[0], 'war' if r.G < 1 else ''] for r in g.itertuples()]
     for y, g in RS[(RS.kind == 'P') & (RS.POS == 'RP')].groupby('yearID'):
         r = g.nlargest(1, 'rp_score').iloc[0]
         years[int(y)]['mRP'] = [r['name'], r.key if isinstance(r.key, str) else None, round(r.rp_score * 1000, 2), 'RP',
@@ -427,8 +434,6 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
     reg = RS[np.where(RS.kind == 'P', RS.BFP >= 100, RS.G >= 10)].groupby('kind').proj_WAR_G.agg(['min', 'max'])
     tw['proj_WAR_G'] = tw.proj_WAR_G.clip(tw.kind.map(reg['min']), tw.kind.map(reg['max']))
     tw['war'] = tw.proj_WAR_G * tw.g
-    gp_of = {t: (teams[t]['w'] or 0) + (teams[t]['l'] or 0) for t in tw.tid.unique()}
-    contrib = {(p, t): w * 162 / gp_of[t] for p, t, w in zip(tw.playerID, tw.tid, tw.war) if gp_of[t]}  # shown in lineups
     tr = {}
     for tid, g in tw.groupby('tid'):
         t = teams[tid]; gp = (t['w'] or 0) + (t['l'] or 0)
@@ -436,7 +441,7 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
         k = 162 / gp
         top = g.nlargest(3, 'war')
         tr[tid] = dict(v=round(g.war.sum() * k, 1), h=round(g[g.kind == 'H'].war.sum() * k, 1), p=round(g[g.kind == 'P'].war.sum() * k, 1),
-                       top=[[r.name, r.key if isinstance(r.key, str) else None, round(r.war * k, 1)] for r in top.itertuples()])
+                       top=[[r.name, r.key if isinstance(r.key, str) else None, rating_of.get((r.playerID, r.yearID))] for r in top.itertuples()])
     TR = pd.DataFrame([dict(tid=tid, y=teams[tid]['y'], lg=teams[tid]['lg'], v=o['v'], w=teams[tid]['w'], l=teams[tid]['l'],
                             rs=teams[tid]['rs'], ra=teams[tid]['ra']) for tid, o in tr.items()]).astype({'rs': float, 'ra': float})
     # score, in wins above an average team per 162: 80% talent (WAR sum vs. a cubic curve of typical team WAR over
@@ -479,6 +484,7 @@ if (SRC / 'player_media.json').exists():
         full = norm(o['f'] + o['l'])
         ok = lambda v, x: v and ((o.get('pk') or 2000) >= 1960 or any(c in v[1].lower() for c in ctx) or (x == 'hl' and full in norm(v[1])))
         md = {x: m[x] for x in ('hl', 'iv') if ok(m.get(x), x)}
+        if md.get('iv') and md.get('hl') and md['iv'][0] == md['hl'][0]: del md['iv']  # one search can find the same video twice
         if m.get('ph'): md['ph'] = [[x['u'], x['credit'], x['license'], x['page'], x.get('cap', '')] for x in m['ph']]
         if md: players[k]['md'] = md
 
@@ -491,7 +497,6 @@ if (SRC / 'player_stories.json').exists():
 # ---------------------------------------------------------------- season stats and team rosters
 # players get year-by-year lines (per team); every team season gets a lineup, rotation, bullpen and bench,
 # written to docs/data/rosters.json, which the site loads the first time a team page opens
-contrib = globals().get('contrib', {})
 key_of = {o['id']: k for k, o in players.items() if o.get('id')}
 f3n = lambda x: f3(x) if x == x else ''
 BC = ['G', 'AB', 'R', 'H', '2B', '3B', 'HR', 'RBI', 'SB', 'BB', 'SO', 'HBP', 'SF']
@@ -575,16 +580,16 @@ print(f"other leagues: season lines for {len(other)} players; {len(clubs_out)} c
 # team pages: lineup by position (most games there, each player once), rotation, bullpen, bench
 PN = {p: f"{f or ''} {l or ''}".strip() for p, f, l in zip(P.playerID, P.nameFirst, P.nameLast)}
 POSC = [('C', 'G_c'), ('1B', 'G_1b'), ('2B', 'G_2b'), ('3B', 'G_3b'), ('SS', 'G_ss'), ('LF', 'G_lf'), ('CF', 'G_cf'), ('RF', 'G_rf'), ('DH', 'G_dh')]
-AP2 = A.fillna(0)
+AP2 = A.assign(st=A.GS.fillna(A.G_defense.fillna(0) + A.G_dh.fillna(0))).fillna(0)  # starts; games played where GS is unrecorded
 bl = {(r.playerID, int(r.yearID), r.teamID): r for r in B1.itertuples(index=False)}
 pl = {(r.playerID, int(r.yearID), r.teamID): r for r in P1.itertuples(index=False)}
-who = lambda p, tid: [PN.get(p, p), key_of.get(p), round(contrib[(p, tid)], 1) if (p, tid) in contrib else None]
+who = lambda p, y: [PN.get(p, p), key_of.get(p), rating_of.get((p, y))]
 def hit_row(pos, p, y, tm, g):
     b = bl.get((p, y, tm))
-    return [pos, *who(p, tkey.get((tm, y))), int(g), int(b.HR) if b else 0, f3n(b.AVG) if b else '', f3n(b.OBP) if b else '', f3n(b.SLG) if b else '']
+    return [pos, *who(p, y), int(g), int(b.HR) if b else 0, f3n(b.AVG) if b else '', f3n(b.OBP) if b else '', f3n(b.SLG) if b else '']
 def pit_row(p, y, tm):
     q = pl[(p, y, tm)]
-    return [*who(p, tkey.get((tm, y))), int(q.G), int(q.GS), int(q.W), int(q.L), int(q.SV), ipf(q.IPOuts), '%.2f' % q.ERA if q.ERA == q.ERA else '']
+    return [*who(p, y), int(q.G), int(q.GS), int(q.W), int(q.L), int(q.SV), ipf(q.IPOuts), '%.2f' % q.ERA if q.ERA == q.ERA else '']
 def assign(w):  # max-weight assignment of rows (positions) to columns (players): Hungarian method on -w
     n, m = len(w), len(w[0]); INF = float('inf'); big = max(max(r) for r in w) + 1
     cost = [[big - x for x in r] for r in w]; u, v, p, way = [0] * (n + 1), [0] * (m + 1), [0] * (m + 1), [0] * (m + 1)
@@ -606,12 +611,13 @@ def assign(w):  # max-weight assignment of rows (positions) to columns (players)
     return {p[j] - 1: j - 1 for j in range(1, m + 1) if p[j]}
 def best_lineup(g):
     """Lineup = the assignment of players to positions with the most games, each player once; a player's games count
-    in proportion to how many he started, so a late-inning defensive sub doesn't beat a regular who moved around."""
+    in proportion to how many he started, so a late-inning defensive sub doesn't beat a regular who moved around.
+    Half his starts anywhere count too, so a regular split across 1B, LF and DH isn't benched for part-timers."""
     g = g[g[[c for _, c in POSC]].sum(axis=1) > 0]
     if g.empty: return {}
     ps = list(g.playerID); share = [min(1, (r.GS or 0) / r.G_all) if r.G_all else 0 for r in g.itertuples()]
     pos = [(p, c) for p, c in POSC if p != 'DH' or g[c].max() >= 15]
-    w = [[g.iloc[j][c] * (.5 + .5 * share[j]) for j in range(len(ps))] for _, c in pos]
+    w = [[g.iloc[j][c] * (.5 + .5 * share[j]) + .5 * g.iloc[j].st if g.iloc[j][c] > 0 else 0 for j in range(len(ps))] for _, c in pos]
     pad = max(0, len(pos) - len(ps)); w = [row + [0] * pad for row in w]
     return {pos[i][0]: (ps[j], int(g.iloc[j][pos[i][1]])) for i, j in assign(w).items() if j < len(ps) and g.iloc[j][pos[i][1]] > 0}
 rosters = {}
@@ -619,7 +625,8 @@ for (y, tm), g in AP2.groupby(['yearID', 'teamID']):
     y = int(y); tid = tkey.get((tm, y))
     if not tid or not teams[tid].get('top'): continue
     lineup = best_lineup(g); used = {p for p, _ in lineup.values()}
-    L = [hit_row(pos, lineup[pos][0], y, tm, lineup[pos][1]) for pos, _ in POSC if pos in lineup]
+    gall = dict(zip(g.playerID, g.G_all))
+    L = [hit_row(pos, lineup[pos][0], y, tm, gall[lineup[pos][0]]) for pos, _ in POSC if pos in lineup]
     bench = g[~g.playerID.isin(used) & (g.G_batting > g.G_p)].assign(pa=lambda d: [bl[(p, y, tm)].PA if (p, y, tm) in bl else 0 for p in d.playerID])
     Bn = [hit_row(next((pos for pos, c in POSC if r[c] == max(r[c2] for _, c2 in POSC) and r[c] > 0), 'PH'), r.playerID, y, tm, r.G_all)
           for _, r in bench.nlargest(5, 'pa').iterrows() if r.pa > 0]
@@ -836,9 +843,9 @@ if (SRC / 'game_stories.json').exists():
 (OUT / 'games.json').write_text(json.dumps(boxes, separators=(',', ':'), ensure_ascii=False))
 print(f'games: {matched} of {len(games)} matched to Retrosheet line scores, {nbox // 2} with full box scores' + ('' if POST['glws.zip'] else ' (run scripts/fetch_retrosheet.py)'))
 
-for tid, ks in roster.items():  # your list's players on each team, by their model WAR for this team (as in the lineup)
-    cw = {k: round(contrib[(players[k]['id'], tid)], 1) for k in set(ks) if (players[k].get('id'), tid) in contrib}
-    teams[tid]['ro'] = sorted(set(ks), key=lambda k: (-cw.get(k, -99), players[k]['ovr'] or 999))
+for tid, ks in roster.items():  # the list's players on each team, best season rating first (as in the lineup)
+    cw = {k: rating_of[(players[k]['id'], teams[tid]['y'])] for k in set(ks) if (players[k].get('id'), teams[tid]['y']) in rating_of}
+    teams[tid]['ro'] = sorted(set(ks), key=lambda k: (-cw.get(k, -99), players[k]['ovr'] or 999, k))
     if cw: teams[tid]['ros'] = cw
 
 # ---------------------------------------------------------------- managers and executives (franchise pages)

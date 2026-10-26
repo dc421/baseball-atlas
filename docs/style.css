@@ -87,9 +87,6 @@ h2 small{font-family:var(--f-body);font-size:12px;letter-spacing:0;text-transfor
 .door label small{display:block;color:var(--muted);font-size:11px;font-family:var(--f-mono)}
 .door a{font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:2px 7px;white-space:nowrap}
 .door a:hover{color:var(--ink);border-color:var(--ink)}
-.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:14px}
-.facts dt{color:var(--muted)}
-.facts dd{margin:0;min-width:0}
 .statline{overflow-x:auto}
 table.stats{border-collapse:collapse;font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
 table.stats th{color:var(--muted);font-weight:500;text-align:right;padding:2px 9px 2px 0;border-bottom:1px solid var(--line)}
@@ -356,7 +353,7 @@ table.stats.career td:nth-child(-n+3),table.stats.career th:nth-child(-n+3){text
 table.stats.career td a{color:inherit;text-underline-offset:2px}
 table.stats.career .sec,table.stats.career .mdl{color:var(--muted)}
 table.stats.career th.mdl,table.stats.career td.mdl:first-of-type{padding-left:10px}
-table.stats.career td.t5{color:var(--lit);font-weight:600;text-align:left}
+table.stats.career .t5{color:var(--lit);font-weight:600}
 table.stats.career tr.tot td{border-top:1px solid var(--line);font-weight:600;padding-top:5px}
 h2 small.find a,h3 small.find a{color:var(--muted);text-underline-offset:2px;font-family:var(--f-body);text-transform:none;letter-spacing:0}
 h3.sm small.find{margin-left:6px}
@@ -416,3 +413,5 @@ svg.field text{font:600 36px var(--f-mono);fill:var(--ink)}
 .exr{display:flex;gap:10px;padding:3px 0;border-bottom:1px solid var(--line);font-size:14px}
 .exr .yr{flex:0 0 92px;color:var(--muted);font-family:var(--f-mono);font-size:12px;padding-top:2px}
 .exr a{color:inherit;text-underline-offset:2px}
+table.stats.career tr.story td{white-space:normal;text-align:left;font-family:var(--f-body);padding:0;max-width:0}
+table.stats.career tr.story .clip{position:sticky;left:0;max-width:min(100%,calc(100vw - 32px));box-sizing:border-box;margin:4px 0 6px}

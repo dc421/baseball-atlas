@@ -1,7 +1,7 @@
 "use strict";
 /* Living Atlas of Baseball
    Data: data/atlas.json (built by scripts/build_data.py), data/photos.json (scripts/fetch_photos.py), data/parks.json (scripts/fetch_parks.py),
-   data/progress.json (your exported check-offs, committed), plus whatever this browser has saved. */
+   data/pages.json (each edited page's own copy and whether it's locked). */
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -19,39 +19,37 @@ const ordinal = n => { n = +n; const s = ['th', 'st', 'nd', 'rd'], v = n % 100; 
 const rankLabel = p => p.ovr ? `#${p.ovr} ${p.pos}` : typeof p.prk === 'number' ? `${p.pos} #${p.prk}` : `${p.prk || ''} ${p.pos}`;
 const wpct = t => (t.w + t.l) ? t.w / (t.w + t.l) : 0;
 
-/* ================================================================ saving
-   Everything you do is kept in this browser, and (once you connect GitHub) saved right away to
-   progress.json on the repo's `progress` branch, which every browser reads when it opens the site.
-   Without a token, Export gives you a file to keep. Entries merge per page: the newer one wins. */
-const LS = 'atlas-progress-v1', GHK = 'atlas-gh-token', BAK = 'atlas-backed-up';
-const GH = { repo: 'dc421/baseball-atlas', branch: 'progress', path: 'progress.json' };
-const STORE = { progress: {} };
+/* ================================================================ pages
+   Every page starts as a draft built from the data. The first edit (moving, rewriting, adding or removing something) gives
+   the page its own copy in data/pages.json, which wins over the data from then on; locking it hides the editing tools.
+   Editing needs a GitHub token in this browser (open #r-tracker); edits save straight to docs/data/pages.json on main, so the
+   live site follows a minute or so later. Without a token the site is read-only and every page shows clean.
+   Entries merge per page: the newer one wins. */
+const LS = 'atlas-pages-v1', GHK = 'atlas-gh-token';
+const GH = { repo: 'dc421/baseball-atlas', branch: 'main', path: 'docs/data/pages.json' };
+const STORE = { pages: {} };
 const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 const lsSet = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { } };
 function mergeIn(src) {  // -> how many pages changed
   let n = 0;
-  for (const [k, v] of Object.entries(src?.progress || {})) if (!STORE.progress[k] || (v.at || 0) > (STORE.progress[k].at || 0)) { STORE.progress[k] = v; n++; }
+  for (const [k, v] of Object.entries(src?.pages || {})) if (!STORE.pages[k] || (v.at || 0) > (STORE.pages[k].at || 0)) { STORE.pages[k] = v; n++; }
   return n;
 }
-const latest = src => Math.max(0, ...Object.values(src?.progress || {}).map(v => v.at || 0));
-function loadStore(...saved) {  // committed and synced copies, then this browser's
+function loadStore(...saved) {  // the published and fresh copies, then this browser's unsaved edits
   for (const src of saved) mergeIn(src);
-  if (!lsGet(BAK)) lsSet(BAK, String(Math.max(...saved.map(latest), 0)));  // what came from a saved copy is already safe
   try { const local = JSON.parse(lsGet(LS) || 'null'); if (local) mergeIn(local); } catch (e) { }
 }
 let saveT = null, rev = 0;
+const dirty = new Set();  // pages edited since the last save, for the commit message
 function persist(sync = true) {
   clearTimeout(saveT); if (sync) rev++;
-  saveT = setTimeout(() => {
-    try { localStorage.setItem(LS, JSON.stringify({ ...STORE, savedAt: Date.now() })); }
-    catch (e) { setNote('This browser isn’t letting the atlas save. Use Export to keep a copy.'); }
-  }, 250);
+  saveT = setTimeout(() => { try { localStorage.setItem(LS, JSON.stringify({ ...STORE, savedAt: Date.now() })); } catch (e) { } }, 250);
   if (sync) scheduleSync(); syncUI();
 }
-const unbacked = () => { const t = +(lsGet(BAK) || 0); return Object.values(STORE.progress).filter(v => (v.at || 0) > t).length; };
 
-/* ---------------------------------------------------------------- GitHub sync */
+/* ---------------------------------------------------------------- GitHub */
 const ghToken = () => lsGet(GHK);
+const editing = () => !!ghToken();
 const ghAPI = (path, o = {}) => fetch(`https://api.github.com/repos/${GH.repo}${path ? '/' + path : ''}`, { cache: 'no-store', ...o,
   headers: { Authorization: `Bearer ${ghToken()}`, Accept: 'application/vnd.github+json', ...(o.headers || {}) } });
 const b64 = str => { const b = new TextEncoder().encode(str); let t = ''; for (let i = 0; i < b.length; i += 0x8000) t += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(t); };
@@ -67,39 +65,35 @@ async function ghRead() {  // -> { sha, data }; sha is null before the first sav
   ghSha = j.sha;
   return { sha: j.sha, data: await raw.json() };
 }
-async function ghCreate(body, message) {  // first save: a branch of its own holding just progress.json
-  const post = async (path, data) => { const r = await ghAPI(path, { method: 'POST', body: JSON.stringify(data) }); if (!r.ok) throw ghFail(r); return r.json(); };
-  const tree = await post('git/trees', { tree: [{ path: GH.path, mode: '100644', type: 'blob', content: body }] });
-  const commit = await post('git/commits', { message, tree: tree.sha, parents: [] });
-  await post('git/refs', { ref: 'refs/heads/' + GH.branch, sha: commit.sha });
-}
 function scheduleSync(ms = 2000) {
   if (!ghToken()) return;
   clearTimeout(syncT); SYNC.state = 'pending'; syncT = setTimeout(ghSave, ms);
 }
+const keyName = k => { const e = ent(k); return e ? e.type === 'p' ? nameOf(e.o) : e.type === 't' ? `${e.o.y} ${e.o.n}` : e.type === 'g' ? `${e.o.y} ${e.o.gt || e.o.g}` : e.o.n || k : k; };
 async function ghSave() {
   if (!ghToken()) return;
   if (syncing) return scheduleSync();
   clearTimeout(syncT); syncing = true; SYNC.state = 'saving'; syncUI();
-  const r0 = rev;
+  const r0 = rev, keys = [...dirty];
   try {
     for (let tries = 0; ; tries++) {
       // write straight over the copy we last saw; only read first when we haven't seen it or another device has saved since
       if (!ghSha) {
         const remote = await ghRead();
-        if (mergeIn(remote.data)) { persist(false); refreshMap(); if (!document.activeElement?.matches('input,textarea')) render(false); }
-        if (remote.sha && JSON.stringify(remote.data.progress || {}) === JSON.stringify(STORE.progress)) break;  // nothing new to save
+        if (mergeIn(remote.data)) { persist(false); refreshMap(); if (!document.activeElement?.matches('input,textarea,select')) render(false); }
+        if (remote.sha && JSON.stringify(remote.data.pages || {}) === JSON.stringify(STORE.pages)) break;  // nothing new to save
       }
-      const body = JSON.stringify({ progress: STORE.progress, savedAt: new Date().toISOString() }, null, 1);
-      const message = `Progress: ${Object.values(STORE.progress).filter(v => v.done).length} pages complete`;
-      if (!ghSha) { await ghCreate(body, message); break; }  // first save ever (the next one reads the new file's sha)
+      const body = JSON.stringify({ pages: STORE.pages }, null, 1) + '\n';
+      const what = keys.map(k => `${STORE.pages[k]?.locked ? 'lock' : 'edit'} ${keyName(k)}`);
+      const message = what.length ? what.slice(0, 3).join(', ').replace(/^./, c => c.toUpperCase()) + (what.length > 3 ? ` and ${what.length - 3} more` : '') : 'Save page edits';
       const r = await ghAPI(`contents/${GH.path}`, { method: 'PUT', keepalive: body.length < 60000,
-        body: JSON.stringify({ message, content: b64(body), sha: ghSha, branch: GH.branch }) });
+        body: JSON.stringify({ message, content: b64(body), branch: GH.branch, ...(ghSha ? { sha: ghSha } : {}) }) });
       if (r.ok) { ghSha = (await r.json()).content?.sha || null; break; }
       if ((r.status === 409 || r.status === 422) && tries < 3) { ghSha = null; continue; }  // another device saved in between: read, merge, write again
       throw ghFail(r);
     }
-    lsSet(BAK, String(Date.now())); Object.assign(SYNC, { state: 'saved', at: Date.now(), err: '' });
+    for (const k of keys) dirty.delete(k);
+    Object.assign(SYNC, { state: 'saved', at: Date.now(), err: '' });
   } catch (e) {
     Object.assign(SYNC, { state: 'error', err: e.message || 'Couldn’t reach GitHub' });
     if (e.status !== 401 && e.status !== 403) scheduleSync(60000);  // offline or GitHub hiccup: try again in a minute
@@ -107,8 +101,8 @@ async function ghSave() {
   syncing = false; syncUI(); refreshSaveBox();
   if (rev !== r0 && SYNC.state === 'saved') scheduleSync();
 }
-async function ghPull() {  // on load: the synced copy (fresh with a token, otherwise the public file, which can lag a few minutes)
-  if (!ghToken()) return getJSON(`https://raw.githubusercontent.com/${GH.repo}/${GH.branch}/${GH.path}`, {});
+async function ghPull() {  // on load, with a token: the current file (the published copy can lag a minute behind a save)
+  if (!ghToken()) return {};
   try { const r = await ghRead(); SYNC.state = 'saved'; SYNC.at = Date.now(); return r.data; }
   catch (e) { Object.assign(SYNC, { state: 'error', err: e.message }); return {}; }
 }
@@ -116,21 +110,24 @@ async function ghConnect(token) {
   lsSet(GHK, token);
   const r = await ghAPI('').catch(() => null);
   if (!r || !r.ok || !(await r.json()).permissions?.push) { lsSet(GHK, null); throw new Error(r && r.status === 401 ? 'GitHub didn’t accept that token.' : 'That token can’t write to ' + GH.repo + '.'); }
-  await ghSave();
+  mergeIn(await ghPull()); editUI();
 }
 const ago = t => { const s = (Date.now() - t) / 1000; return s < 60 ? 'just now' : s < 3600 ? Math.round(s / 60) + ' min ago' : s < 86400 ? Math.round(s / 3600) + ' hr ago' : Math.round(s / 86400) + ' days ago'; };
-function syncUI() {  // the header pill: whether your progress is safe
+function syncUI() {  // the header pill: whether the latest edits are on GitHub
   const b = $('#syncbtn'); if (!b) return;
-  const n = unbacked(), tok = ghToken(), st = tok ? SYNC.state : n ? 'unsaved' : 'idle';
-  const label = { pending: 'Saving…', saving: 'Saving…', saved: 'Saved', error: 'Not saved', unsaved: 'Back up', idle: '' }[st];
+  const st = ghToken() ? SYNC.state : 'idle';
+  const label = { pending: 'Saving…', saving: 'Saving…', saved: 'Saved', error: 'Not saved', idle: '' }[st];
   b.hidden = !label; b.dataset.st = st; b.querySelector('span').textContent = label;
-  b.title = st === 'error' ? SYNC.err + '. Open the save settings.' : st === 'unsaved' ? `${n} page${n === 1 ? '' : 's'} changed and only saved in this browser. Connect GitHub or export a copy.`
-    : st === 'saved' ? 'Progress saved to GitHub' + (SYNC.at ? ' ' + ago(SYNC.at) : '') : 'Saving progress to GitHub';
+  b.title = st === 'error' ? SYNC.err + '. Open the save settings.' : st === 'saved' ? 'Edits saved to GitHub' + (SYNC.at ? ' ' + ago(SYNC.at) : '') : 'Saving edits to GitHub';
 }
-const prog = key => STORE.progress[key];
+function editUI() {  // what only shows while editing: the Tracker tab and the map's locked/draft key
+  document.body.classList.toggle('editing', editing());
+  $('#home-tracker').hidden = !editing();
+}
+const pg = key => STORE.pages[key];
 function mutate(key, fn) {
-  const cur = structuredClone(STORE.progress[key] || {});
-  fn(cur); cur.at = Date.now(); STORE.progress[key] = cur; persist(); refreshMap(); render(false);
+  const cur = structuredClone(STORE.pages[key] || {});
+  fn(cur); cur.at = Date.now(); STORE.pages[key] = cur; dirty.add(key); persist(); refreshMap(); render(false);
 }
 let note = '';
 function setNote(t) { note = t; const b = $('#dbnote'); if (b) { b.textContent = t; b.hidden = !t; } }
@@ -144,9 +141,9 @@ function ent(key) {
   if (t === 'f' && D.franch[id]) return { type: 'f', id, o: D.franch[id] };
   return null;
 }
-function fromOf(k) { const p = D.players[k]; const ov = prog('p_' + k)?.from; return ov || (p.from ? { ...p.from, ll: p.ll } : null); }
+function fromOf(k) { const p = D.players[k]; return p.from ? { ...p.from, ll: p.ll } : null; }
 
-/* ---------------- doors ---------------- */
+/* ---------------- research links ---------------- */
 const yt = q => 'https://www.youtube.com/results?search_query=' + enc(q);
 const img = q => 'https://www.google.com/search?tbm=isch&q=' + enc(q);
 const gg = q => 'https://www.google.com/search?q=' + enc(q);
@@ -154,71 +151,10 @@ const wiki = q => 'https://en.wikipedia.org/w/index.php?search=' + enc(q);
 const sabr = q => 'https://sabr.org/?s=' + enc(q);
 const loc = q => 'https://www.loc.gov/collections/chronicling-america/?q=' + enc(q);
 const books = q => 'https://www.google.com/search?tbm=bks&q=' + enc(q);
-function doorsFor(key) {
-  const e = ent(key); if (!e) return [];
-  const o = e.o;
-  if (e.type === 'p') {
-    const n = nameOf(o), old = (o.pk || 2000) < 1925;
-    const br = o.br ? `https://www.baseball-reference.com/players/${o.br[0]}/${o.br}.shtml` : `https://www.baseball-reference.com/search/search.fcgi?search=${enc(n)}`;
-    return [
-      { id: 'video', g: 'see', label: 'Highlights', hint: 'YouTube', url: yt(n + (old ? ' baseball footage' : ' highlights')) },
-      { id: 'photos', g: 'see', label: 'Photos', hint: 'when there’s no film', url: img(n + ' baseball ' + (o.pk || '')) },
-      { id: 'interview', g: 'see', label: 'Interview or voice', hint: 'YouTube', url: yt(n + ' interview') },
-      { id: 'sabr', g: 'read', label: 'SABR biography', hint: 'BioProject', url: sabr(n) },
-      { id: 'wiki', g: 'read', label: 'Wikipedia', hint: 'quick overview', url: wiki(n + ' baseball') },
-      { id: 'news', g: 'read', label: 'Old newspapers', hint: 'Chronicling America', url: loc(n) },
-      { id: 'book', g: 'read', label: 'A biography', hint: 'Google Books', url: books(n + ' biography') },
-      { id: 'stats', g: 'nums', label: 'Baseball-Reference', hint: 'full stat pages', url: br },
-    ];
-  }
-  if (e.type === 't') {
-    const n = `${o.y} ${o.n}`, park = o.pk && D.parks[o.pk];
-    const major = ['NA', 'NL', 'AL', 'AA', 'UA', 'PL', 'FL'].includes(o.lg);
-    const out = [
-      { id: 'photos', g: 'see', label: 'Team photo', hint: 'images', url: img(n + ' team photo') },
-      { id: 'video', g: 'see', label: 'Film or highlights', hint: 'YouTube', url: yt(n) },
-      { id: 'wiki', g: 'read', label: 'Season story', hint: 'Wikipedia', url: wiki(n + ' season') },
-      { id: 'sabr', g: 'read', label: 'SABR', hint: 'team histories', url: sabr(n) },
-      { id: 'news', g: 'read', label: 'Old newspapers', hint: 'Chronicling America', url: loc(o.n + ' ' + o.y) },
-      { id: 'stats', g: 'nums', label: 'Roster & stats', hint: 'Baseball-Reference', url: major && o.br ? `https://www.baseball-reference.com/teams/${o.br}/${o.y}.shtml` : gg(n + ' baseball-reference') },
-    ];
-    const pn = park ? park.n : o.park;
-    if (pn) out.push({ id: 'park', g: 'see', label: 'The ballpark', hint: pn, url: img(pn + ' ' + (park ? park.c : '') + ' ballpark ' + o.y) },
-      { id: 'diagram', g: 'nums', label: 'Park diagram', hint: 'Clem’s Baseball', url: gg('site:andrewclem.com ' + pn) });
-    return out;
-  }
-  if (e.type === 'f') {
-    const last = D.teams[o.s[o.s.length - 1]], n = o.n;
-    return [
-      { id: 'photos', g: 'see', label: 'Photos through the years', hint: 'images', url: img(n + ' baseball history') },
-      { id: 'video', g: 'see', label: 'Film', hint: 'YouTube', url: yt(n + ' history') },
-      { id: 'wiki', g: 'read', label: 'Franchise history', hint: 'Wikipedia', url: wiki(n + ' baseball franchise history') },
-      { id: 'sabr', g: 'read', label: 'SABR', hint: 'team histories', url: sabr(n) },
-      { id: 'stats', g: 'nums', label: 'Franchise index', hint: 'Baseball-Reference', url: last.br ? `https://www.baseball-reference.com/teams/${last.br}/` : gg(n + ' baseball-reference') },
-    ];
-  }
-  if (e.type === 'g') {
-    const n = `${o.y} ${o.g} ${o.d || ''}`.trim();
-    return [
-      { id: 'video', g: 'see', label: 'Watch it', hint: 'YouTube', url: yt(n) },
-      { id: 'photos', g: 'see', label: 'Photos', hint: 'images', url: img(n) },
-      { id: 'read', g: 'read', label: 'The story', hint: 'Wikipedia', url: wiki(o.y + ' ' + (o.gt || o.g)) },
-      { id: 'news', g: 'read', label: 'Next-day papers', hint: 'Chronicling America', url: loc(o.y + ' ' + (o.d || o.g)) },
-      { id: 'stats', g: 'nums', label: 'Box score', hint: 'search', url: gg(n + ' box score baseball-reference') },
-    ];
-  }
-  return [];
-}
-function doorState(key) { const base = key.startsWith('p_') ? (D.players[key.slice(2)]?.base || {}) : {}; return { ...base, ...(prog(key)?.doors || {}) }; }
-function lights(key) {
-  const ds = doorState(key), d = prog(key) || {}, on = { see: false, read: false, nums: false };
-  for (const dr of doorsFor(key)) if (ds[dr.id]) on[dr.g] = true;
-  for (const c of d.clips || []) { if (c.k === 'video') on.see = true; else if (c.k !== 'link') on.read = true; }
-  return on;
-}
-// a page is done when you mark it complete (the checkbox on each tracked page); everything starts incomplete
-const isDone = key => !!prog(key)?.done;
-const litN = key => isDone(key) ? 3 : 0;
+// a page is finished when it's locked; everything starts as a draft
+const isLocked = key => !!pg(key)?.locked;
+const canEdit = key => editing() && !isLocked(key);
+const litN = key => isLocked(key) ? 3 : 0;
 // tracked pages: your players, the top team seasons (one per season played, the 1869 Red Stockings included), as many of your top games,
 // each of those seasons' year pages, every decade (before 1871 is one), the US states and other countries your players
 // are from, and every franchise
@@ -234,8 +170,9 @@ function trackKeys() {
   const F = Object.keys(D.franch).map(k => 'f_' + k);
   return { P, T, G, Y, Dc, Pl, F, all: new Set([...P, ...T, ...G, ...Y, ...Dc, ...Pl, ...F]) };
 }
-const doneHTML = key => trackKeys().all.has(key)
-  ? `<button class="donebtn" data-done="${esc(key)}" aria-pressed="${isDone(key)}"><span class="box" aria-hidden="true"></span>${isDone(key) ? 'Complete' : 'Mark complete'}</button>` : '';
+// editing only: whether the page is locked, and the switch
+const lockHTML = key => editing() && trackKeys().all.has(key)
+  ? `${!isLocked(key) ? `<span class="pagestate">${pg(key) ? 'Draft, edited' : 'Draft'}</span>` : ''}<button class="donebtn" data-lock="${esc(key)}" aria-pressed="${isLocked(key)}" title="${isLocked(key) ? 'Unlock to edit again' : 'Lock it in: hides the editing tools'}"><span class="box" aria-hidden="true"></span>${isLocked(key) ? 'Locked' : 'Lock page'}</button>` : '';
 
 /* ================================================================ places index */
 const placeKey = (pl, lvl) => lvl === 0 ? pl.n : lvl === 1 ? `${pl.n}|${pl.r || '—'}` : `${pl.n}|${pl.r || '—'}|${pl.c || '—'}`;
@@ -395,7 +332,7 @@ function leave() {  // remember the home we're leaving
 // only tracked team seasons have pages (the top ones by your model, one per season played); any other season opens its franchise
 const pageKey = key => { if (key.startsWith('t_')) { const t = D.teams[key.slice(2)]; if (t && !t.top) return 'f_' + t.fr; } return key; };
 function go(key, push = true) {
-  key = pageKey(key);
+  key = pageKey(key); TL_EDIT = null;
   stopPlay(); leave(); setFull(false, false);
   const d = depth();
   try { history.replaceState({ d, sc: scroller().scrollTop }, ''); } catch (e) { }
@@ -412,7 +349,7 @@ function goHome(h) {
 const back = () => history.back();
 function onPop(e) {  // the browser moved through history: show that page, scrolled where you left it
   const v = viewFromHash(); if (!v) return;
-  stopPlay(); leave(); setFull(false, false);
+  stopPlay(); leave(); setFull(false, false); TL_EDIT = null;
   view = v; if (v.type === 'y') { YEAR = +v.id; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; }
   render(true, { restore: homeOf(v) === 'map' });
   const sc = e.state?.sc; scroller().scrollTop = sc != null ? sc : homeOf(v) && homeOf(v) !== 'map' ? homeScroll[homeOf(v)] || 0 : 0;
@@ -424,24 +361,12 @@ function setFull(on, redraw = true) {
 window.go = go;
 
 /* ================================================================ shared bits */
-const lightsHTML = key => { const l = lights(key); return `<div class="lights">${[['see', 'Seen'], ['read', 'Read'], ['nums', 'Numbers']].map(([k, t]) => `<span class="bulb ${l[k] ? 'on' : ''}"><i></i>${t}</span>`).join('')}</div>`; };
-const dotsHTML = key => { const l = lights(key); return `<span class="dots" title="seen · read · numbers">${['see', 'read', 'nums'].map(k => `<i class="${l[k] ? 'on' : ''}"></i>`).join('')}</span>`; };
-function doorsHTML(key) {
-  const ds = doorState(key);
-  return `<div class="doors">${doorsFor(key).map(d => `<div class="door ${ds[d.id] ? 'done' : ''}">
-    <input type="checkbox" class="tick" id="d-${d.id}" data-door="${d.id}" ${ds[d.id] ? 'checked' : ''} aria-label="Mark ${esc(d.label)} done">
-    <label for="d-${d.id}">${esc(d.label)}${d.hint ? `<small>${esc(d.hint)}</small>` : ''}</label>
-    <a href="${esc(d.url)}" target="_blank" rel="noopener">Open ↗</a></div>`).join('')}</div>`;
-}
-const GR = ['Poor', 'Fair', 'Average', 'Good', 'Great', 'Elite'];
-// your rating model's tools (20-80) pre-fill the card until you pick a grade yourself
-const MODEL_TOOL = { Hit: 'hit_tool', Power: 'power', Run: 'speed', Field: 'fielding', Fastball: 'K_plus', Control: 'BB_plus', Durability: 'dur' };
-const gradeOf80 = v => GR[v < 35 ? 0 : v < 45 ? 1 : v < 55 ? 2 : v < 65 ? 3 : v < 75 ? 4 : 5];
-function gradesHTML(key, pitcher, mt = {}) {
-  const tools = pitcher ? ['Fastball', 'Off-speed', 'Control', 'Durability', 'Hitting'] : ['Hit', 'Power', 'Discipline', 'Run', 'Field', 'Throw'];
-  const g = prog(key)?.grades || {};
-  return `<div class="grades">${tools.map(t => { const v = mt[MODEL_TOOL[t]], sg = !g[t] && v != null ? gradeOf80(v) : null;
-    return `<div class="grade"><span>${t}${v != null ? ` <b class="m80" title="Model, 20–80${t === 'Fastball' ? ' (from strikeout rate)' : ''}">${v}</b>` : ''}</span><div class="scale" data-tool="${t}">${GR.map(s => `<button type="button" aria-pressed="${g[t] === s}" ${sg === s ? 'class="sugg"' : ''} data-grade="${s}">${s}</button>`).join('')}</div></div>`; }).join('')}</div>`;
+// the scouting card: the model's 20-80 tools
+const CARD = [['hit_tool', 'Hit'], ['power', 'Power'], ['speed', 'Run'], ['fielding', 'Field'], ['K_plus', 'Fastball', 'from strikeout rate'], ['BB_plus', 'Control', 'from walk rate'], ['dur', 'Durability']];
+function cardHTML(p) {
+  const ts = CARD.filter(([c]) => p.tools?.[c] != null); if (!ts.length) return '';
+  return `<div class="card80"><div class="kind">Scouting card <small>20–80, the model</small></div>${ts.map(([c, l, why]) => { const v = p.tools[c];
+    return `<div class="tool80"${why ? ` title="${why}"` : ''}><span>${l}</span><i><b style="width:${Math.max(0, Math.min(1, (v - 20) / 60)) * 100}%"></b></i><span class="v">${v}</span></div>`; }).join('')}</div>`;
 }
 /* ================================================================ the rating model
    One rating for players: projected WAR per 150 games, era-adjusted before the war (scripts/build_data.py).
@@ -454,7 +379,7 @@ const RATING = 'Projected WAR per 150 games';
 // a year's ranked players: [name, key, rating, pos, team season, 'war' for war-service credit]; rel: the reliever row
 function modelList(lst, start = 0, rel = false) {
   return `<div class="list">${lst.map((e, i) => { const [nm, k, s, pos, tid, war] = e, tm = war ? 'military service' : tid && D.teams[tid] ? D.teams[tid].n : '';
-    const inner = `${k ? avatar(k) : '<span class="avatar">·</span>'}<span class="yr">${rel ? 'RP' : `#${i + 1 + start} ${esc(pos || '')}`}</span><span class="rn">${esc(nm)}${tm ? `<small>${esc(tm)}</small>` : ''}</span><span class="meta">${rel ? '' : `<span title="${RATING}">${fmtR(s)}</span>`} ${k ? dotsHTML('p_' + k) : ''}</span>`;
+    const inner = `${k ? avatar(k) : '<span class="avatar">·</span>'}<span class="yr">${rel ? 'RP' : `#${i + 1 + start} ${esc(pos || '')}`}</span><span class="rn">${esc(nm)}${tm ? `<small>${esc(tm)}</small>` : ''}</span><span class="meta">${rel ? '' : `<span title="${RATING}">${fmtR(s)}</span>`}</span>`;
     return k ? `<button class="row" onclick="go('p_${k}')">${inner}</button>` : tid ? `<button class="row" onclick="go('t_${tid}')">${inner}</button>` : `<div class="row" style="cursor:default">${inner}</div>`; }).join('')}</div>`;
 }
 function teamRankRow([tid, t], i, all = true) {
@@ -477,55 +402,50 @@ function rosterHTML(tid) {
    ${r.B.length ? `<h2>Bench</h2><div class="statline">${hit(r.B)}</div>` : ''}`;
 }
 /* ================================================================ tracker
-   Everything counts only once you tick "Mark complete" on its page (see trackKeys for what's tracked). */
+   Only while editing: how many pages of each kind are locked, and a spin for each (see trackKeys for what's tracked). */
 function vTracker() {
-  const K = trackKeys(), done = keys => keys.filter(isDone).length;
+  if (!editing()) return `${banner()}<h1 class="name">Edit this site</h1>${saveBox()}`;
+  const K = trackKeys(), done = keys => keys.filter(isLocked).length, edited = keys => keys.filter(k => pg(k) && !isLocked(k)).length;
   const types = [['Players', K.P, 'the list'], ['Team seasons', K.T, `the top ${K.T.length} by the model, one per season played (1869 included)`], ['Games', K.G, `the top ${K.G.length}`],
     ['Years', K.Y, 'every season since 1869'], ['Decades', K.Dc, 'before 1871 is one page'], ['Franchises', K.F, 'every franchise'], ['Places of origin', K.Pl, 'the US states and other countries the players are from']];
   const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
-  const bar = (d, n) => `<div class="tbar" title="${d} of ${n} complete"><i class="d" style="width:${100 * d / (n || 1)}%"></i></div>`;
-  const row = ([label, keys, note]) => { const d = done(keys); return `<tr><td>${label}${note ? `<small>${note}</small>` : ''}</td><td><b>${d}</b>/${keys.length} <span class="pc">${pct(d, keys.length)}%</span></td><td class="wide">${bar(d, keys.length)}</td></tr>`; };
+  const bar = (d, n) => `<div class="tbar" title="${d} of ${n} locked"><i class="d" style="width:${100 * d / (n || 1)}%"></i></div>`;
+  const row = ([label, keys, note], i) => { const d = done(keys), e = edited(keys); return `<tr><td>${label}${note ? `<small>${note}</small>` : ''}</td><td><b>${d}</b>/${keys.length} <span class="pc">${pct(d, keys.length)}%</span>${e ? `<small>${e} in progress</small>` : ''}</td><td class="wide">${bar(d, keys.length)}</td>${i != null ? `<td><button class="btn ghost" data-spin="${i}">Spin</button></td>` : ''}</tr>`; };
   // year grid: each tracked season's pages (year, best team, its tracked games, your top 5 that year)
   const yItems = {}, add = (y, k) => (yItems[y] = yItems[y] || new Set()).add(k);
   for (const k of K.Y) add(+k.slice(2), k);
   for (const k of K.T) add(D.teams[k.slice(2)].y, k);
   for (const k of K.G) add(D.games[k.slice(2)].y, k);
   for (const [y, yd] of Object.entries(D.years)) if (yItems[y]) for (const e of [...(yd.mH || []).slice(0, 5), ...(yd.mP || []).slice(0, 5)]) if (e[1]) add(+y, 'p_' + e[1]);
-  const years = Object.keys(yItems).map(Number).sort((a, b) => a - b), yf = y => { const ks = [...yItems[y]]; return ks.filter(isDone).length / ks.length; };
+  const years = Object.keys(yItems).map(Number).sort((a, b) => a - b), yf = y => { const ks = [...yItems[y]]; return ks.filter(isLocked).length / ks.length; };
   const step = f => f === 0 ? 0 : f < .34 ? 1 : f < .67 ? 2 : f < 1 ? 3 : 4, grid = [];
   for (let d = Math.floor(years[0] / 10) * 10; d <= years[years.length - 1]; d += 10) grid.push(`<div class="yg-row"><span class="yg-d">${d}s</span>${[...Array(10)].map((_, i) => { const y = d + i;
-    return yItems[y] ? `<button class="yg s${step(yf(y))}" onclick="go('y_${y}')" title="${y}: ${[...yItems[y]].filter(isDone).length} of ${yItems[y].size} complete"><span>${String(y).slice(2)}</span></button>` : '<span class="yg none"></span>'; }).join('')}</div>`);
+    return yItems[y] ? `<button class="yg s${step(yf(y))}" onclick="go('y_${y}')" title="${y}: ${[...yItems[y]].filter(isLocked).length} of ${yItems[y].size} locked"><span>${String(y).slice(2)}</span></button>` : '<span class="yg none"></span>'; }).join('')}</div>`);
   const byPos = POSITIONS.map(pos => { const ks = K.P.filter(k => D.players[k.slice(2)].pos === pos); return [pos, ks]; }).filter(x => x[1].length);
-  const next = (keys, rank) => keys.filter(k => !isDone(k)).sort((a, b) => rank(a) - rank(b)).slice(0, 5);
+  const next = (keys, rank) => keys.filter(k => !isLocked(k)).sort((a, b) => rank(a) - rank(b)).slice(0, 5);
   const nP = next(K.P, k => D.players[k.slice(2)].ovr || 999), nT = next(K.T, k => D.teams[k.slice(2)].tr?.ar ?? 0), nG = next(K.G, k => D.games[k.slice(2)].rk);
   const nextRow = k => { const e = ent(k), o = e.o;
     const [a, b] = e.type === 'p' ? [rankLabel(o), nameOf(o)] : e.type === 't' ? [o.tr ? `#${o.tr.ar}` : String(o.y), `${o.y} ${o.n}`] : [`#${o.rk}`, `${o.y} ${o.gt || o.g}${o.d ? ' · ' + o.d : ''}`];
     return `<button class="row" onclick="go('${k}')"><span class="yr">${esc(a)}</span><span class="rn">${esc(b)}</span></button>`; };
   const all = [...K.all], allDone = done(all);
-  return `${banner()}<div class="eyebrow">Progress</div><h1 class="name">Tracker</h1>
-   <p class="note">A page counts once you tick “Mark complete” on it. Everything starts incomplete.</p>
-   <div class="overall"><div class="big"><b>${allDone}</b> of ${all.length} pages complete <span class="pc">${pct(allDone, all.length)}%</span></div>${bar(allDone, all.length)}</div>
+  TRACK_TYPES = types.map(t => t[1]);
+  const wip = all.filter(k => pg(k) && !isLocked(k));
+  return `${banner()}<div class="eyebrow">Building the site</div><h1 class="name">Tracker</h1>
+   <p class="note">Every page starts as a draft built from the data. Edit it until it’s right, then lock it.</p>
+   <div class="overall"><div class="big"><b>${allDone}</b> of ${all.length} pages locked <span class="pc">${pct(allDone, all.length)}%</span></div>${bar(allDone, all.length)}</div>
+   ${wip.length ? `<h2>In progress <small>edited, not locked</small></h2><div class="list">${wip.map(k => `<button class="row" onclick="go('${k}')"><span class="rn">${esc(keyName(k))}</span><span class="meta">${ago(pg(k).at)}</span></button>`).join('')}</div>` : ''}
    <h2>By page type</h2>
-   <table class="track"><tr><th></th><th>Complete</th><th class="wide"></th></tr>${types.map(row).join('')}</table>
+   <table class="track"><tr><th></th><th>Locked</th><th class="wide"></th><th></th></tr>${types.map(row).join('')}</table>
    <h2>Year by year <small>each season’s year page, best team, games and top 5</small></h2>
    <div class="ygrid">${grid.join('')}</div>
    <div class="tlegend"><span><i class="yg s0"></i>none</span><span><i class="yg s1"></i>some</span><span><i class="yg s2"></i>a third</span><span><i class="yg s3"></i>two thirds</span><span><i class="yg s4"></i>all</span></div>
    <h2>Players by position</h2>
    <table class="track">${byPos.map(([pos, ks]) => row([pos, ks])).join('')}</table>
-   <h2>Next up <small>the highest-ranked not yet complete</small></h2>
+   <h2>Next up <small>the highest-ranked not yet locked</small></h2>
    ${nP.length ? `<h3 class="sm">Players, by the list</h3><div class="list">${nP.map(nextRow).join('')}</div>` : ''}
    ${nT.length ? `<h3 class="sm">Team seasons, best first by the model</h3><div class="list">${nT.map(nextRow).join('')}</div>` : ''}
    ${nG.length ? `<h3 class="sm">Games, by the list</h3><div class="list">${nG.map(nextRow).join('')}</div>` : ''}
    ${saveBox()}`;
-}
-const KINDS = [['story', 'Story'], ['quote', 'Quote'], ['scouting', 'Scouting'], ['personal', 'Personal'], ['video', 'Video'], ['link', 'Link']];
-function clipsHTML(key) {
-  const cl = prog(key)?.clips || [];
-  return `${cl.length ? cl.map((c, i) => `<div class="clip"><div class="kind">${esc((KINDS.find(k => k[0] === c.k) || ['', 'Note'])[1])}</div>${esc(c.t || '')}${c.u ? `<div><a href="${esc(c.u)}" target="_blank" rel="noopener">${esc(c.u)}</a></div>` : ''}<button class="x" data-delclip="${i}" aria-label="Remove clipping">×</button></div>`).join('') : `<p class="empty">Nothing kept yet. Paste a quote, an anecdote, a good video link.</p>`}
-  <form class="add" id="clipform">
-    <textarea class="t" id="clip-t" placeholder="“Hot as hell, ain’t it, Prez?” or a one-line story"></textarea>
-    <div class="r"><input class="t" id="clip-u" type="url" placeholder="Link (optional)"><select class="t" id="clip-k" style="flex:0 0 auto">${KINDS.map(k => `<option value="${k[0]}">${k[1]}</option>`).join('')}</select><button class="btn" type="submit">Keep</button></div>
-  </form>`;
 }
 function avatar(k) { const p = D.players[k], ph = PHOTOS[k]; return `<span class="avatar">${ph ? `<img src="photos/${esc(ph.file)}" alt="" loading="lazy">` : esc(initials(p))}</span>`; }
 function playerChip(k) { const p = D.players[k]; return p ? `<button class="chip ${litN('p_' + k) ? 'lit' : ''}" onclick="go('p_${k}')"><span class="k">${esc(p.pos)}</span>${esc(nameOf(p))}</button>` : ''; }
@@ -533,10 +453,13 @@ function teamBadge(t) {
   const logo = logoFor(t), [bg, fg] = teamColors(t);
   return logo ? `<span class="teambadge"><img src="logos/${esc(logo)}" alt=""></span>` : `<span class="teambadge" style="background:${bg};color:${fg}">${esc(t.br || t.tm)}</span>`;
 }
-const crumbs = (label, key) => `<div class="crumbs">${depth() ? `<button id="backbtn">← Back</button><span>·</span>` : ''}<span>${esc(label)}</span>${key ? `<span class="grow"></span>${doneHTML(key)}` : ''}</div>`;
-const pagebar = key => { const d = doneHTML(key); return d ? `<div class="crumbs"><span class="grow"></span>${d}</div>` : ''; };
+const crumbs = (label, key) => `<div class="crumbs">${depth() ? `<button id="backbtn">← Back</button><span>·</span>` : ''}<span>${esc(label)}</span>${key ? `<span class="grow"></span>${lockHTML(key)}` : ''}</div>`;
+const pagebar = key => { const d = lockHTML(key); return d ? `<div class="crumbs"><span class="grow"></span>${d}</div>` : ''; };
+// a section of found material (a story, links to look further); without anything in it, it only shows while editing
+const section = (title, links = [], body = '', sub = false) => body || editing()
+  ? `${sub ? '<h3 class="sm">' : '<h2>'}${title}${links.length ? ` <small class="find">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join(' · ')}</small>` : ''}${sub ? '</h3>' : '</h2>'}${body}` : '';
 const banner = () => `<div class="banner" id="dbnote" ${note ? '' : 'hidden'}>${esc(note)}</div>`;
-function gameRow(g) { return `<button class="row" onclick="go('g_${g.rk}')"><span class="yr">${g.y}</span><span class="rn">${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}<small>${g.o ? 'from the “Others” row' : `#${g.rk} on the list`}</small></span><span class="meta">${dotsHTML('g_' + g.rk)}</span></button>`; }
+function gameRow(g) { return `<button class="row" onclick="go('g_${g.rk}')"><span class="yr">${g.y}</span><span class="rn">${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}<small>${g.o ? 'from the “Others” row' : `#${g.rk} on the list`}</small></span></button>`; }
 function placeText(f) { return f ? [f.c, f.r && f.r !== '—' && f.n !== 'Puerto Rico' ? f.r : null, f.n !== 'United States' ? f.n : null].filter(Boolean).join(', ') : ''; }
 const placeLink = (f, lvl = 2) => f && f.n ? `<a href="#" onclick="go('l_${enc(placeKey(f, lvl))}');return false">${esc(placeText(f))}</a>` : '';
 
@@ -578,8 +501,7 @@ function leagueSection(key, l, y0, y1) {
   const yrs = l.y0 === l.y1 ? l.y0 : `${l.y0}–${l.y1}`;
   return `<h2>${esc(LEAGUES[l.code] || l.code)} <small>${yrs}</small></h2>
    ${l.clubs.length ? `<p class="note" style="margin:0 0 6px">Black clubs and independents: ${esc(l.clubs.join(', '))}</p>` : ''}
-   ${champs.length ? `<div class="list">${champs.map(([y, tid, t]) => `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="yr">${y}</span><span class="rn">${esc(t.n)}<small>${t.w ?? '?'}–${t.l ?? '?'}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ' · first place'}</small></span></button>`).join('')}</div>` : ''}
-   ${noteSection(key, 'lg_' + l.code, '', 'What this league was like, its stars, its stories…', [], { sub: true, bare: true })}`;
+   ${champs.length ? `<div class="list">${champs.map(([y, tid, t]) => `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="yr">${y}</span><span class="rn">${esc(t.n)}<small>${t.w ?? '?'}–${t.l ?? '?'}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ' · first place'}</small></span></button>`).join('')}</div>` : ''}`;
 }
 function vDecade() {
   const d = view.id === 'pre' ? 'pre' : String(Math.floor(+view.id / 10) * 10), pre = d === 'pre';
@@ -607,9 +529,9 @@ function vYear() {
   const wpa = (yd.top || []).find(e => e[0] === 'WPA'), mH = yd.mH || [], mP = yd.mP || [];
   const gms = (yd.games || []).map(r => D.games[r]).sort((a, b) => b.gr - a.gr || a.rk - b.rk);
   const yn = NOTES.years[y] || {};
-  const champ = ([tid, t]) => `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="rn">${esc(t.n)}<small>${t.ws ? 'won the World Series' : esc(t.lg) + ' pennant'}${t.w != null ? ` · ${t.w}–${t.l}` : ''}</small></span><span class="meta">${dotsHTML('t_' + tid)}</span></button>`;
+  const champ = ([tid, t]) => `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="rn">${esc(t.n)}<small>${t.ws ? 'won the World Series' : esc(t.lg) + ' pennant'}${t.w != null ? ` · ${t.w}–${t.l}` : ''}</small></span></button>`;
   return `${pagebar('y_' + y)}${banner()}<div class="eyebrow">${y} · <a href="#" onclick="go('d_${decadeOf(y)}');return false">the ${decadeName(decadeOf(y))}</a></div>
-  <div class="sub" style="margin-top:4px"><span><b>${tms.length}</b> teams</span><span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> complete</span>${lgs.length ? `<span>${lgs.map(l => esc(l)).join(' · ')}</span>` : ''}</div>
+  <div class="sub" style="margin-top:4px"><span><b>${tms.length}</b> teams</span>${editing() ? `<span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> locked</span>` : ''}${lgs.length ? `<span>${lgs.map(l => esc(l)).join(' · ')}</span>` : ''}</div>
   ${ws.length || pen.length ? `<h2>Champions</h2><div class="list">${[...ws, ...pen].map(champ).join('')}</div>` : ''}
   ${tms.some(([, t]) => t.tr) ? `<h2>Teams by the model <small>talent and results</small></h2><div class="list">${tms.filter(([, t]) => t.tr).sort((a, b) => a[1].tr.yr - b[1].tr.yr).slice(0, 8).map((e, i) => teamRankRow(e, i, false)).join('')}</div>` : ''}
   ${mH.length ? `<h2>Top 5 <small>position players</small></h2>${modelList(mH.slice(0, 5))}` : ''}
@@ -622,26 +544,23 @@ function vYear() {
   ${yn.quick && yn.quick.length ? `<h2>Changes and notes</h2>${quickList(yn.quick)}` : ''}
   ${yn.text && yn.text.length ? `<h2>Write-up</h2>${writeup(yn.text)}` : ''}
   ${era ? `<h2>Era notes <small>${era[0]}${era[1] !== era[0] ? '–' + era[1] : ''}</small></h2><p style="margin:0">${esc(era[2])}</p>${era[3] ? `<p class="note" style="margin-top:4px">Black clubs and independents: ${esc(era[3])}</p>` : ''}` : ''}
-  ${tms.length ? `<details class="allteams"><summary>All ${tms.length} teams</summary><div class="chips">${tms.sort((a, b) => a[1].lg.localeCompare(b[1].lg) || a[1].rk - b[1].rk).map(([tid, t]) => `<button class="chip ${litN('t_' + tid) ? 'lit' : ''}" onclick="go('t_${tid}')"><span class="k">${esc(t.lg)}</span>${esc(t.n)}</button>`).join('')}</div></details>` : `<p class="empty">No league teams in the database this year. The era notes are the way in.</p>`}
-  ${saveBox()}`;
+  ${tms.length ? `<details class="allteams"><summary>All ${tms.length} teams</summary><div class="chips">${tms.sort((a, b) => a[1].lg.localeCompare(b[1].lg) || a[1].rk - b[1].rk).map(([tid, t]) => `<button class="chip ${litN('t_' + tid) ? 'lit' : ''}" onclick="go('t_${tid}')"><span class="k">${esc(t.lg)}</span>${esc(t.n)}</button>`).join('')}</div></details>` : `<p class="empty">No league teams in the database this year. The era notes are the way in.</p>`}`;
 }
+let TRACK_TYPES = [];
 function saveBox() {
-  const n = Object.keys(STORE.progress).length, u = unbacked(), tok = ghToken();
-  const status = tok ? (SYNC.state === 'error' ? `<b class="bad">Not saved: ${esc(SYNC.err)}.</b> It’ll keep trying; your changes are safe in this browser meanwhile.`
-      : `Saving to GitHub (<code>progress.json</code> on the <code>${GH.branch}</code> branch) as you go. ${SYNC.at ? 'Last saved ' + ago(SYNC.at) + '.' : ''}`)
-    : `Your check-offs, grades and notes (${n} page${n === 1 ? '' : 's'}) are saved only in this browser${u ? `, <b class="bad">${u} not backed up</b>` : ''}. Clearing site data would lose them.`;
-  const connect = tok ? `<button class="btn ghost" id="ghsave">Save now</button><button class="btn ghost" id="ghoff">Disconnect GitHub</button>`
-    : `<details class="ghconnect"><summary>Save to GitHub automatically</summary>
-       <p>Make a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token ↗</a> with access to only <code>${GH.repo}</code> and <b>Contents: Read and write</b>, then paste it here. Do this once in each browser you use. The token stays in this browser; the repo is public, so your progress file is too.</p>
-       <form id="ghform" class="r"><input class="t" id="ghtoken" type="password" placeholder="github_pat_…" autocomplete="off"><button class="btn" type="submit">Connect</button></form></details>`;
-  return `<div class="savebox" id="savebox"><div>${status}</div>${connect ? `<div class="r">${connect}</div>` : ''}
-  <div class="r"><button class="btn ghost" id="exportbtn">Export a copy</button><label class="btn ghost" style="cursor:pointer">Import…<input type="file" id="importfile" accept="application/json" hidden></label><span id="savemsg"></span></div></div>`;
+  const tok = ghToken();
+  const status = tok ? (SYNC.state === 'error' ? `<b class="bad">Not saved: ${esc(SYNC.err)}.</b> It’ll keep trying; the edits are kept in this browser meanwhile.`
+      : `Editing. Edits save to <code>${GH.path}</code> on <code>${GH.branch}</code> as you go, and the live site follows a minute or so later. ${SYNC.at ? 'Last saved ' + ago(SYNC.at) + '.' : ''}`)
+    : `Paste a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token ↗</a> with access to only <code>${GH.repo}</code> and <b>Contents: Read and write</b> to turn on editing in this browser. Visitors never see the editing tools.`;
+  const connect = tok ? `<button class="btn ghost" id="ghsave">Save now</button><button class="btn ghost" id="ghoff">Stop editing here</button>`
+    : `<form id="ghform" class="r"><input class="t" id="ghtoken" type="password" placeholder="github_pat_…" autocomplete="off"><button class="btn" type="submit">Start editing</button></form>`;
+  return `<div class="savebox" id="savebox"><div>${status}</div><div class="r">${connect}<span id="savemsg"></span></div></div>`;
 }
 function refreshSaveBox() { const b = $('#savebox'); if (b && !b.contains(document.activeElement)) { b.outerHTML = saveBox(); wireSave(); } }
 
 function vPlayer() {
   const k = view.id, p = D.players[k]; if (!p) return notFound();
-  const key = 'p_' + k, pitcher = POSP.has(p.pos), ph = PHOTOS[k], f = fromOf(k), n = nameOf(p);
+  const key = 'p_' + k, ph = PHOTOS[k], f = fromOf(k), n = nameOf(p), ed = canEdit(key);
   const m = p.mr, pk = m?.pk || p.pk;
   const rank = [...(m ? m.rel ? [`#${m.rk} among relievers`] : [`#${m.rk} overall`, `#${m.prk} ${esc(m.pos)}`]
     : [p.ovr ? `#${p.ovr} overall` : typeof p.prk === 'string' ? `List group ${esc(p.prk)}` : '', typeof p.prk === 'number' ? `#${p.prk} ${esc(p.pos)}` : esc(p.pos)]),
@@ -651,36 +570,104 @@ function vPlayer() {
   const facts = [p.born || p.bplace ? `Born${p.born ? ' ' + p.born.slice(0, 4) : ''}${p.bplace ? ' in ' + (bornHere ? placeLink(f) : esc(p.bplace)) : ''}` : '',
     f && !bornHere ? `From ${placeLink(f)}` : '', p.died ? `Died ${p.died.slice(0, 4)}` : '', ht, p.bt && p.bt !== '?/?' ? `Bats/Throws ${esc(p.bt)}` : ''].filter(Boolean);
   const br = p.br ? `https://www.baseball-reference.com/players/${p.br[0]}/${p.br}.shtml` : `https://www.baseball-reference.com/search/search.fcgi?search=${enc(n)}`;
+  const find = [['YouTube', yt(n + ((p.pk || 2000) < 1925 ? ' baseball footage' : ' highlights'))], ['Interviews', yt(n + ' interview')], ['Images', img(n + ' baseball')]];
   return `${crumbs('Player', key)}${banner()}
    <div class="hero">${ph ? `<figure class="photo" style="margin:0"><img src="photos/${esc(ph.file)}" alt="${esc(n)}" title="Photo: ${esc(ph.credit || 'unknown')}${ph.license ? ' · ' + esc(ph.license) : ''}"></figure>` : ''}
    <div class="who"><div class="eyebrow">${rank}</div><h1 class="name">${esc(n)}</h1>
    ${facts.length ? `<div class="sub">${facts.map(x => `<span>${x}</span>`).join('')}</div>` : ''}</div></div>
-   ${bioHTML(p, k, [['Baseball-Reference', br], ['SABR biography', sabr(n)], ['Wikipedia', wiki(n + ' baseball')], ['A biography', books(n + ' biography')], ['Old newspapers', loc(n)]])}
-   ${noteSection(key, 'career', 'Add a story', 'The 1934 strike, the trade, what teammates said, a quote…', [], { sub: true })}
-   ${(prog(key)?.notes?.person || []).length ? noteSection(key, 'person', '', 'Another story…', [], { bare: true }) : ''}
-   ${playerNotes(k, (p.ss || []).length > 0)}
-   ${noteSection(key, 'highlights', 'Highlights', 'Paste a video link', [['YouTube', yt(n + ((p.pk || 2000) < 1925 ? ' baseball footage' : ' highlights'))]], { link: true, pre: ytEmbed(p.md?.hl) })}
-   ${noteSection(key, 'interview', 'Interview or voice', 'Paste a video or audio link', [['YouTube', yt(n + ' interview')]], { link: true, pre: ytEmbed(p.md?.iv) })}
-   ${noteSection(key, 'photos', 'Photos', 'Paste an image link', [['Image search', img(n + ' baseball ' + (p.pk || ''))]], { link: true, img: true, pre: photoGrid(p.md?.ph) })}
-   <h2>Scouting card</h2>${gradesHTML(key, pitcher, p.tools)}
-   ${(prog(key)?.clips || []).length ? `<h2>Older clippings</h2>${clipsHTML(key)}` : ''}`;
+   ${bioHTML(p, k, [['Baseball-Reference', br], ['SABR biography', sabr(n)], ['Wikipedia', wiki(n + ' baseball')], ['A biography', books(n + ' biography')], ['Old newspapers', loc(n)]], itemsOf(k), ed)}
+   ${ed ? `<h3 class="sm">Add to the timeline <small class="find">${find.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join(' · ')}</small></h3>${itemForm({ k: 'story' }, true)}` : ''}`;
 }
 // when each story happened: the first year it names within his lifetime; an undated career story takes its
 // neighbor's year (the career lists run in order) unless it's about his youth; an undated story about the person goes before the career if
 // it's about his youth, and just after it otherwise (y null)
 const EARLY = /\b(born|grew up|boyhood|childhood|as a boy|as a child|high school|college|university|tryout|his parents|his father|his mother|immigrants?|youth|teenager|sandlots?)\b/i;
+const yearIn = (t, b, d) => { for (const x of String(t || '').matchAll(/\b(18[4-9]\d|19\d\d|20[0-2]\d)\b/g)) if (+x[1] >= b && +x[1] <= d) return +x[1]; return null; };
 function datedStories(p, y0) {
   const b = p.born ? +p.born.slice(0, 4) : (y0 || 1900) - 25, d = p.died ? +p.died.slice(0, 4) : 2026;
-  const yr = t => { for (const x of t.matchAll(/\b(18[4-9]\d|19\d\d|20[0-2]\d)\b/g)) if (+x[1] >= b && +x[1] <= d) return +x[1]; return null; };
+  const yr = t => yearIn(t, b, d);
   const c = (p.sto?.c || []).map(x => ({ x, y: yr(x[0]) }));
   const dated = c.filter(o => o.y != null);
   c.forEach((o, i) => { if (o.y == null) o.y = EARLY.test(o.x[0]) ? b : ([...c.slice(0, i)].reverse().find(q => dated.includes(q)) || c.slice(i).find(q => dated.includes(q)) || { y: y0 }).y; });
   return [...c, ...(p.sto?.p || []).map(x => { const y = yr(x[0]); return { x, y: y ?? (EARLY.test(x[0]) ? b : null) }; })];
 }
-const storyHTML = o => `<div class="clip story">${esc(o.x[0])} <a class="src" href="${esc(o.x[1])}" target="_blank" rel="noopener">${esc(o.x[2])} ↗</a></div>`;
-// the biography: his stories in order, with the career table in the middle, a row per season and team (rating and
-// rank that year, gold in a year's top 5), that season's stories under it, career totals at the bottom
-function bioHTML(p, k, links) {
+/* ---------------- the timeline
+   Everything on a player page sits at a year: stories, paragraphs from the history doc, photos, video, the scouting card at
+   his peak. Items without a year come after the career. seedItems is the draft from the data; the first edit copies it into
+   the page's own items (data/pages.json), which win from then on, so refetching stories or media never changes an edited page. */
+const ytId = u => (String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/) || [])[1] || (/^[\w-]{11}$/.test(u) ? u : null);
+function seedItems(k) {
+  const p = D.players[k], ss = p.ss || [], y0 = ss.length ? Math.min(...ss.map(r => r[0])) : p.st?.[0]?.[2], pk = p.mr?.pk || p.pk || null;
+  const b = p.born ? +p.born.slice(0, 4) : (y0 || 1900) - 25, d = p.died ? +p.died.slice(0, 4) : 2026, yr = t => yearIn(t, b, d);
+  const out = datedStories(p, y0).map((o, i) => ({ id: 's' + i, k: 'story', y: o.y, t: o.x[0], u: o.x[1], src: o.x[2] }));
+  const season = /^(\d{4}) \(([^)]*)\):?\s*(.*)$/;  // season lines from the doc sit in the career table; without one they become paragraphs
+  (NOTES.players[k] || []).forEach((x, i) => { const sm = x.match(season); if (sm && ss.length) return;
+    out.push(sm ? { id: 'w' + i, k: 'text', y: +sm[1], t: sm[3] || '' } : { id: 'w' + i, k: 'text', y: yr(x), t: x }); });
+  if (CARD.some(([c]) => p.tools?.[c] != null)) out.push({ id: 'card', k: 'card', y: pk });
+  const v = (id, x, y) => x && out.push({ id, k: 'video', y, v: x[0], t: x[1], src: x[2] || '', min: x[3] || null });
+  v('hl', p.md?.hl, yr(p.md?.hl?.[1]) ?? pk); v('iv', p.md?.iv, yr(p.md?.iv?.[1]));
+  (p.md?.ph || []).forEach((x, i) => out.push({ id: 'ph' + i, k: 'photo', y: yr(decodeURIComponent(x[0].split('/').pop()).replace(/_/g, ' ')) ?? yr(x[4]) ?? pk, u: x[0], page: x[3], t: x[4] || '', credit: [x[1], x[2]].filter(Boolean).join(' · ') }));
+  return out;
+}
+const itemsOf = k => pg('p_' + k)?.items || seedItems(k);
+const sortItems = items => items.slice().sort((a, b) => (a.y ?? 1e9) - (b.y ?? 1e9));  // stable: same-year items keep their order
+let TL_EDIT = null;  // the item whose form is open
+const TL_KINDS = { story: 'Story', text: 'Paragraph', photo: 'Photo', video: 'Video', card: 'Scouting card' };
+function itemBody(o, p) {
+  if (o.k === 'story') return `<div class="clip story">${esc(o.t)}${o.u ? ` <a class="src" href="${esc(o.u)}" target="_blank" rel="noopener">${esc(o.src || 'Source')} ↗</a>` : ''}</div>`;
+  if (o.k === 'text') return `<div class="writeup tl-text"><p>${md(o.t)}</p></div>`;
+  if (o.k === 'photo') return `<figure class="tl-photo"><a href="${esc(o.page || o.u)}" target="_blank" rel="noopener"${o.credit ? ` title="Photo: ${esc(o.credit)}"` : ''}><img src="${esc(o.u)}" alt="${esc(o.t)}" loading="lazy"></a>${o.t ? `<figcaption>${esc(o.t)}</figcaption>` : ''}</figure>`;
+  if (o.k === 'video') return ytEmbed([o.v, o.t, o.src, o.min]);
+  if (o.k === 'card') return cardHTML(p);
+  return '';
+}
+function tlItem(o, p, ed) {
+  if (!ed) return itemBody(o, p);
+  if (TL_EDIT === o.id) return `<div class="tl-item editing">${itemForm(o)}</div>`;
+  return `<div class="tl-item">${itemBody(o, p) || '<p class="empty">Nothing to show.</p>'}<div class="tl-tools"><span class="tl-k">${TL_KINDS[o.k]} · ${o.y ?? 'after the career'}</span>
+    <button type="button" data-tl="up:${esc(o.id)}" title="Move earlier">↑</button><button type="button" data-tl="down:${esc(o.id)}" title="Move later">↓</button>
+    <button type="button" data-tl="edit:${esc(o.id)}">Edit</button><button type="button" data-tl="del:${esc(o.id)}" title="Remove">×</button></div></div>`;
+}
+function itemForm(o, isNew = false) {
+  const inp = (n, ph, v) => `<input class="t" name="${n}" placeholder="${esc(ph)}" value="${esc(v ?? '')}"${isNew ? ` id="tl-${n}"` : ''}>`;
+  const k = o.k, link = { story: 'Source link', photo: 'Image link', video: 'YouTube link' }[k];
+  const linkV = k === 'video' && o.v ? 'https://www.youtube.com/watch?v=' + o.v : o.u;
+  return `<form class="add tlform" data-id="${isNew ? 'new' : esc(o.id)}">
+    ${isNew ? `<select class="t" name="k" id="tl-k" style="flex:0 0 auto">${Object.entries(TL_KINDS).filter(([x]) => x !== 'card').map(([x, l]) => `<option value="${x}">${l}</option>`).join('')}</select>` : `<div class="kind">${TL_KINDS[k]}</div>`}
+    ${k !== 'card' || isNew ? `<textarea class="t" name="t" placeholder="${isNew ? 'The story, the paragraph, or a caption' : k === 'photo' || k === 'video' ? 'Caption' : ''}"${isNew ? ' id="tl-t"' : ''}>${esc(o.t || '')}</textarea>` : ''}
+    <div class="r">${isNew ? inp('u', 'Link: the source, the image or the YouTube video') : link ? inp('u', link, linkV) : ''}${isNew || k === 'story' ? inp('src', 'Source name', o.src) : ''}
+    <input class="t" name="y" placeholder="Year" inputmode="numeric" style="flex:0 0 80px" value="${esc(o.y ?? '')}"${isNew ? ' id="tl-y"' : ''}>
+    <button class="btn" type="submit">${isNew ? 'Add' : 'Save'}</button>${isNew ? '' : '<button class="btn ghost" type="button" data-tl="cancel:">Cancel</button>'}</div></form>`;
+}
+// edit a player's timeline: the first edit copies the draft in
+function editItems(key, fn) { mutate(key, cur => { cur.items = fn(sortItems(cur.items || seedItems(key.slice(2)))) || cur.items; }); }
+function timelineAct(key, act, id) {
+  if (act === 'edit' || act === 'cancel') { TL_EDIT = act === 'edit' ? id : null; return render(false); }
+  if (act === 'del' && !confirm('Remove this from the timeline?')) return;
+  editItems(key, L => {
+    const i = L.findIndex(o => o.id === id); if (i < 0) return L;
+    if (act === 'del') return L.filter(o => o.id !== id);
+    const j = i + (act === 'up' ? -1 : 1); if (j < 0 || j >= L.length) return L;
+    const a = L[i], b = L[j]; a.y = b.y; L[i] = b; L[j] = a;  // a step past a neighbor in another year moves it into that year
+    return L;
+  });
+}
+function timelineSave(key, f) {
+  const val = n => (f.elements.namedItem(n)?.value || '').trim(), y = val('y'), isNew = f.dataset.id === 'new';
+  const o = isNew ? { id: 'u' + Date.now().toString(36), k: val('k') } : structuredClone(itemsOf(key.slice(2)).find(x => x.id === f.dataset.id));
+  if (!o) return;
+  o.y = /^\d{4}$/.test(y) ? +y : null;
+  if (o.k !== 'card') o.t = val('t');
+  if (o.k === 'story') { o.u = val('u'); o.src = val('src') || (o.u ? new URL(o.u, location.href).hostname.replace(/^www\./, '') : ''); }
+  if (o.k === 'photo' && val('u') !== o.u) Object.assign(o, { u: val('u'), page: val('u'), credit: '' });
+  if (o.k === 'video') { const v = ytId(val('u')); if (!v) return setNote('That isn’t a YouTube link.'); if (v !== o.v) Object.assign(o, { v, src: '', min: null }); }
+  if ((o.k === 'photo' && !o.u) || ((o.k === 'story' || o.k === 'text') && !o.t)) return setNote(o.k === 'photo' ? 'A photo needs an image link.' : 'Write something first.');
+  setNote(''); TL_EDIT = null; if (isNew) f.reset();  // so the re-render doesn't carry the text back in
+  editItems(key, L => isNew ? [...L, o] : L.map(x => x.id === o.id ? o : x));
+}
+// the biography: the timeline in order, with the career table in the middle, a row per season and team (rating and
+// rank that year, gold in a year's top 5), that season's items under it, career totals at the bottom
+function bioHTML(p, k, links, items, ed) {
   const pitcher = POSP.has(p.pos), rel = p.mr?.rel, ss = p.ss || [], bat = p.bat, pit = p.pit;
   const showBat = bat && (!pitcher || bat.AB > 1500), showPit = pit && (pitcher || parseFloat(pit.IP) > 300);
   const by = {}; for (const a of p.arc || []) if ((a[3] === 'R') === !!rel && (!by[a[0]] || a[1] > by[a[0]][1])) by[a[0]] = a;
@@ -690,9 +677,9 @@ function bioHTML(p, k, links) {
   const head = m ? `<div class="sub" style="margin-top:0">${m.rel ? `<span><b>${fmtS(m.r)}</b> per-batter rating</span>` : `<span title="${RATING}"><b>${fmtR(m.r)}</b> ${tierOf(m.r)}</span>`}</div>` : '';
   const clubs = p.clubs && p.clubs.length ? `<h3 class="sm">Clubs</h3><div class="list">${p.clubs.map(c => c[4] ? `<button class="row" onclick="go('c_${c[4]}')"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></button>` : `<div class="row" style="cursor:default"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></div>`).join('')}</div>` : '';
   const sy = ss.map(r => r[0]), y0 = sy.length ? Math.min(...sy) : p.st?.[0]?.[2], y1 = sy.length ? Math.max(...sy) : p.st?.length ? Math.max(...p.st.map(x => x[3])) : y0;
-  const st = datedStories(p, y0), inRun = o => o.y != null && o.y >= y0 && o.y <= y1;
-  const before = st.filter(o => o.y != null && o.y < y0).sort((a, b) => a.y - b.y), after = [...st.filter(o => o.y == null), ...st.filter(o => o.y > y1).sort((a, b) => a.y - b.y)];
-  if (!ss.length || !(showBat || showPit)) return `${h2}${head}${clubs}${[...before, ...st.filter(inRun).sort((a, b) => a.y - b.y), ...after].map(storyHTML).join('')}`;
+  const st = sortItems(items), inRun = o => o.y != null && o.y >= y0 && o.y <= y1, one = o => tlItem(o, p, ed);
+  const before = st.filter(o => o.y != null && o.y < y0), after = st.filter(o => o.y == null || o.y > y1);
+  if (!ss.length || !(showBat || showPit)) return `${h2}${head}${clubs}${st.map(one).join('')}`;
   const primP = !showBat || (pitcher && showPit);
   const B = [['G', 0], ['PA', 1], ['R', 3], ['H', 4], ['2B', 5], ['3B', 6], ['HR', 7], ['RBI', 8], ['SB', 9], ['BB', 10], ['SO', 11], ['AVG', 12], ['OBP', 13], ['SLG', 14]];
   const Pc = [['W', 0], ['L', 1], ['ERA', 10], ['G', 2], ['GS', 3], ['SV', 4], ['IP', 5], ['H', 6], ['BB', 7], ['SO', 8], ['HR', 9]];
@@ -703,40 +690,24 @@ function bioHTML(p, k, links) {
   for (const o of st.filter(inRun)) (byY[o.y] = byY[o.y] || []).push(o);
   const yrs = [...new Set([...sy, ...Object.keys(reads).map(Number), ...Object.keys(byY).map(Number)])].sort((a, b) => a - b);
   const readRow = y => reads[y] && reads[y][0] ? `<tr class="read"><td></td><td colspan="${ncol - 1}">${md(reads[y][0])}</td></tr>` : '';
-  const storyRows = y => (byY[y] || []).map(o => `<tr class="story"><td colspan="${ncol}">${storyHTML(o)}</td></tr>`).join('');
+  const storyRows = y => (byY[y] || []).map(o => `<tr class="story"><td colspan="${ncol}">${one(o)}</td></tr>`).join('');
   const rows = yrs.map(y => { const rs = ss.filter(r => r[0] === y), a = by[y];
     if (!rs.length) return `<tr class="nostat"><td><a href="#" onclick="go('y_${y}');return false">${y}</a></td><td>${age(y)}</td><td colspan="${ncol - 2}">${esc(reads[y]?.[1] || '')}</td></tr>${readRow(y)}${storyRows(y)}`;
     return rs.map((r, i) => `<tr><td>${i ? '' : `<a href="#" onclick="go('y_${y}');return false">${y}</a>`}</td><td>${i ? '' : age(y)}</td><td>${r[1] ? `<a href="#" onclick="go('t_${r[1]}');return false">${esc(r[2])}</a>` : r[5] ? `<a href="#" onclick="go('c_${r[5]}');return false">${esc(r[2])}</a>` : esc(r[2])}</td><td class="mdl">${!i && a ? fmt(a[1]) : ''}</td><td class="mdl">${i ? '' : rk(a)}</td>${main.map(c => `<td>${cell(r[mi], c)}</td>`).join('')}${second.map(c => `<td class="sec">${cell(r[si], c)}</td>`).join('')}</tr>`).join('') + readRow(y) + storyRows(y); }).join('');
   const sum = (idx, i) => ss.reduce((t, r) => t + (r[idx] ? +r[idx][i] || 0 : 0), 0);
   const tot = c => primP ? ({ ERA: pit.ERA, IP: pit.IP }[c[0]] ?? sum(4, c[1])) : ({ AVG: bat.AVG, OBP: bat.OBP, SLG: bat.SLG }[c[0]] ?? sum(3, c[1]));
   const tot2 = c => c[1] === -1 ? `${pit.W}–${pit.L}` : primP ? bat[c[0]] : pit[c[0]];
-  return `${h2}${head}${before.map(storyHTML).join('')}
+  return `${h2}${head}${before.map(one).join('')}
    <div class="statline"><table class="stats career"><tr><th>Year</th><th>Age</th><th>Team</th><th class="mdl" title="${rel ? 'Per batter faced' : RATING}">Rating</th><th class="mdl">Rk</th>${main.map(c => `<th>${c[0]}</th>`).join('')}${second.map(c => `<th class="sec">${c[0]}</th>`).join('')}</tr>
    ${rows}<tr class="tot"><td>Career</td><td></td><td></td><td class="mdl">${m ? fmt(m.r) : ''}</td><td class="mdl">${m ? '#' + m.rk : ''}</td>${main.map(c => `<td>${tot(c)}</td>`).join('')}${second.map(c => `<td class="sec">${tot2(c)}</td>`).join('')}</tr></table></div>
-   ${after.map(storyHTML).join('')}`;
+   ${after.map(one).join('')}`;
 }
 const ytEmbed = v => v ? `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${esc(v[0])}" title="${esc(v[1])}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
   <p class="note">${esc(v[1])}${v[2] ? ' · ' + esc(v[2]) : ''}${v[3] ? ' · ' + v[3] + ' min' : ''} · <a href="https://www.youtube.com/watch?v=${esc(v[0])}" target="_blank" rel="noopener">Watch on YouTube ↗</a></p>` : '';
-const photoGrid =ph => ph && ph.length ? `<div class="pgrid">${ph.map(x => `<a href="${esc(x[3])}" target="_blank" rel="noopener" title="${esc(x[4] ? x[4] + ' · ' : '')}Photo: ${esc(x[1])}${x[2] ? ' · ' + esc(x[2]) : ''}"><img src="${esc(x[0])}" alt="${esc(x[4] || '')}" loading="lazy"></a>`).join('')}</div>` : '';
-// a section you fill in, like clippings: a line of text and/or a link per entry
-function noteSection(key, sec, title, ph, links = [], o = {}) {
-  const list = prog(key)?.notes?.[sec] || [], isImg = u => /\.(png|jpe?g|gif|webp)(\?|$)/i.test(u) || /upload\.wikimedia\.org/.test(u);
-  const head = o.bare ? '' : `${o.sub ? '<h3 class="sm">' : '<h2>'}${title}${links.length ? ` <small class="find">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join(' · ')}</small>` : ''}${o.sub ? '</h3>' : '</h2>'}`;
-  return `${head}${o.pre || ''}${list.map((c, i) => `<div class="clip">${o.img && c.u && isImg(c.u) ? `<img class="clipimg" src="${esc(c.u)}" alt="" loading="lazy">` : ''}${c.t ? `<div>${esc(c.t)}</div>` : ''}${c.u ? `<div><a href="${esc(c.u)}" target="_blank" rel="noopener">${esc(c.u)}</a></div>` : ''}<button class="x" data-delnote="${sec}:${i}" aria-label="Remove">×</button></div>`).join('')}
-   <form class="add noteform" data-sec="${sec}">${o.link ? `<div class="r"><input class="t nu" type="url" placeholder="${esc(ph)}"><input class="t nt" placeholder="Note (optional)"><button class="btn" type="submit">Add</button></div>`
-     : `<textarea class="t nt" placeholder="${esc(ph)}"></textarea><div class="r"><input class="t nu" type="url" placeholder="Link (optional)"><button class="btn" type="submit">Add</button></div>`}</form>`;
-}
 // your doc's lines about a player that start with "YYYY (...)": year -> [what you wrote, the team/position bit]
 function seasonReads(k) {
   const out = {}; for (const x of NOTES.players[k] || []) { const m = x.match(/^(\d{4}) \(([^)]*)\):?\s*(.*)$/); if (m) out[m[1]] = [m[3] || '', m[2]]; }
   return out;
-}
-function playerNotes(k, seasonsInTable) {
-  const ps = NOTES.players[k]; if (!ps || !ps.length) return '';
-  const season = /^\d{4} \(/, seasons = seasonsInTable ? [] : ps.filter(x => season.test(x)), text = ps.filter(x => !season.test(x));
-  return `${text.length ? `<h2>Write-up</h2>${writeup(text, 3)}` : ''}
-   ${seasons.length ? `<h2>Season by season</h2><div class="list">${seasons.map(x => { const m = x.match(/^(\d{4}) \(([^)]*)\):?\s*(.*)$/) || [, x.slice(0, 4), '', x];
-     return `<div class="row" style="cursor:default"><span class="yr">${m[1]}</span><span class="rn">${md(m[3] || '')}<small>${esc(m[2])}</small></span></div>`; }).join('')}</div>` : ''}`;
 }
 function vTeam() {
   const tid = view.id, t = D.teams[tid]; if (!t) return notFound();
@@ -752,14 +723,11 @@ function vTeam() {
    <p class="note">Per 162 games: talent ${fmtS(t.tr.tal)} (80%), Pythagorean record ${fmtS(t.tr.py)} (15%), actual record ${fmtS(t.tr.wp)} (5%)${t.w + t.l < 150 ? ', records shrunk toward .500 for the short season' : ''}.</p>
    <p class="note">${t.tr.v} projected WAR per 162: ${t.tr.h} from position players, ${t.tr.p} from pitchers. Most of it from ${t.tr.top.map(e => `${e[1] ? `<a href="#" onclick="go('p_${e[1]}');return false">${esc(e[0])}</a>` : esc(e[0])}${e[2] != null ? ` (<span title="${RATING}">${fmtR(e[2])}</span>)` : ''}`).join(', ')}.</p>` : ''}
    ${park || t.park ? `<h2>Ballpark</h2><div class="parkbox"><b>${esc(park ? park.n : t.park)}</b>${park ? ` · ${esc(park.c)} · used ${park.y0}–${park.y1}${park.al ? `<div class="note">Also called ${esc(park.al)}</div>` : ''}${park.note ? `<div class="note">Note: ${esc(park.note)}</div>` : ''}` : (t.ap ? ' <span class="note">(map pin at the city)</span>' : '')}</div>` : ''}
-   ${lightsHTML(key)}
-   <h2>Doors</h2>${doorsHTML(key)}
    <h2>From the list <small>${ro.length} on this roster${t.ros ? ', best rating first' : ''}</small></h2>${ro.length ? `<div class="chips">${ro.map(k => t.ros && k in t.ros ? playerChip(k).replace('</button>', ` <span class="k" title="${RATING}">${fmtR(t.ros[k])}</span></button>`) : playerChip(k)).join('')}</div>` : '<p class="empty">Nobody from the list played here this year.</p>'}
    ${rosterHTML(tid)}
    ${gms.length ? `<h2>Great games</h2><div class="list">${gms.map(gameRow).join('')}</div>` : ''}
    <h2>The franchise <small>${fr ? `<a href="#" onclick="go('f_${t.fr}');return false">${esc(fr.n)} ›</a>` : esc(t.n)}</small></h2>
-   <div class="list">${eras.map(e => `<button class="row" onclick="go('t_${e.tid}')"><span class="yr">${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}</span><span class="rn">${esc(e.n)}${e.c ? `<small>${esc(e.c)}</small>` : ''}</span></button>`).join('')}</div>
-   <h2>Clippings</h2>${clipsHTML(key)}`;
+   <div class="list">${eras.map(e => `<button class="row" onclick="go('t_${e.tid}')"><span class="yr">${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}</span><span class="rn">${esc(e.n)}${e.c ? `<small>${esc(e.c)}</small>` : ''}</span></button>`).join('')}</div>`;
 }
 function vFranchise() {
   const fid = view.id, fr = D.franch[fid]; if (!fr) return notFound();
@@ -772,16 +740,13 @@ function vFranchise() {
   return `${crumbs('Franchise', key)}${banner()}
    <div class="hero">${teamBadge(last)}<div class="who"><div class="eyebrow">Franchise · ${first.y}${last.y !== first.y ? '–' + last.y : ''}</div><h1 class="name">${esc(fr.n)}</h1></div></div>
    <div class="sub" style="margin-top:8px"><span><b>${ts.length}</b> season${ts.length > 1 ? 's' : ''}</span>${W + Lo ? `<span><b>${W}–${Lo}</b> all-time</span>` : ''}${pens ? `<span><b>${pens}</b> pennant${pens > 1 ? 's' : ''}</span>` : ''}${wss ? `<span><b>${wss}</b> World Series</span>` : ''}</div>
-   ${lightsHTML(key)}
-   <h2>Doors</h2>${doorsHTML(key)}
    <h2>Names and homes</h2><div class="list">${eras.map(e => `<button class="row" onclick="go('t_${e.tid}')"><span class="yr">${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}</span><span class="rn">${esc(e.n)}${e.c ? `<small>${esc(e.c)}</small>` : ''}</span></button>`).join('')}</div>
    ${(fr.pk || []).length ? `<h2>Ballparks <small>photos and diagrams from Wikipedia; hover for credits</small></h2><div class="parks">${fr.pk.map(parkCard).join('')}</div>` : ''}
    ${rated.length ? `<h2>Best seasons <small>by the model</small></h2><div class="list">${rated.slice(0, 8).map(teamRankRow).join('')}</div>` : ''}
    ${mine.length ? `<h2>From the list <small>${mine.length} played here</small></h2><div class="chips">${mine.map(playerChip).join('')}</div>` : ''}
    ${managersHTML(fr.mg)}
    ${fr.ex ? `<h2>Front office <small>from Wikipedia</small></h2><div class="execs">${[['own', 'Principal owners'], ['gm', 'General managers']].filter(([k]) => fr.ex[k]).map(([k, l]) => `<div><h3 class="sm">${l}</h3>${execRows(fr.ex[k])}</div>`).join('')}</div>` : ''}
-   <h2>Every season</h2><div class="statline"><table class="stats roster fr"><tr><th>Year</th><th class="nm">Team</th><th>W–L</th><th>Finish</th><th></th><th title="The model, wins over an average team">Score</th><th>Rank</th><th title="Best team that season (tracked)">★</th></tr>${ts.map(season).join('')}</table></div>
-   <h2>Clippings</h2>${clipsHTML(key)}`;
+   <h2>Every season</h2><div class="statline"><table class="stats roster fr"><tr><th>Year</th><th class="nm">Team</th><th>W–L</th><th>Finish</th><th></th><th title="The model, wins over an average team">Score</th><th>Rank</th><th title="Best team that season (tracked)">★</th></tr>${ts.map(season).join('')}</table></div>`;
 }
 // a home park: Wikipedia photo, its dimensions diagram (or a field drawn from the infobox distances), years here
 const wpFile = f => 'https://en.wikipedia.org/wiki/File:' + enc(f);
@@ -841,7 +806,7 @@ function vClub() {  // clubs outside the database (NPB, Cuba, Mexico, Puerto Ric
   return `${crumbs('Club', key)}${banner()}<div class="eyebrow">${esc([c.c, c.cn].filter(Boolean).join(', '))}</div><h1 class="name">${esc(c.n)}</h1>
    <h2>From the list <small>${pl.length} played here</small></h2><div class="list">${pl.map(([pk, y0, y1]) => { const p = D.players[pk];
      return `<button class="row" onclick="go('p_${pk}')">${avatar(pk)}<span class="yr">${y0 ? y0 + (y1 !== y0 ? '–' + y1 : '') : ''}</span><span class="rn">${esc(nameOf(p))}<small>${esc(p.pos)}</small></span></button>`; }).join('')}</div>
-   ${noteSection(key, 'club', 'The club', 'Its history, its park, its great teams…', [['Wikipedia', wiki(c.n + ' baseball')], ['Photos', img(c.n + ' baseball')]])}`;
+   ${section('The club', [['Wikipedia', wiki(c.n + ' baseball')], ['Photos', img(c.n + ' baseball')]])}`;
 }
 const ip = o => o == null ? '' : Math.floor(o / 3) + (o % 3 ? '.' + (o % 3) : '');
 const nv = v => v == null ? '' : v;
@@ -886,9 +851,7 @@ function vGame() {
    ${bx ? `<h2>Box score${bx.br ? ` <small class="find"><a href="${esc(bx.br)}" target="_blank" rel="noopener">Baseball-Reference ↗</a></small>` : ''}</h2>
      ${full ? `<p class="note linkkey"><a class="in" href="#" onclick="return false">Names like this</a> open their pages here; <a class="ext" href="#" onclick="return false">names like this</a> go to Baseball-Reference.</p>${teamBox(bx.v)}${teamBox(bx.h)}` : lineups}` : ''}
    <h2>Video <small class="find"><a href="${esc(yt(n + ' ' + (g.vs || '') + ' full game'))}" target="_blank" rel="noopener">YouTube search ↗</a></small></h2>${ytEmbed(g.yt)}
-   ${noteSection(key, 'video', 'More video', 'Paste a video link', [], { sub: true, link: true })}
-   ${noteSection(key, 'story', 'Game story', 'What happened, who was there, how it was written up…', [['Wikipedia', rec?.sto?.url || wikiQ]], { pre: gameStory(rec?.sto) })}
-   ${(prog(key)?.clips || []).length ? `<h2>Older clippings</h2>${clipsHTML(key)}` : ''}`;
+   ${section('Game story', [['Wikipedia', rec?.sto?.url || wikiQ]], gameStory(rec?.sto))}`;
 }
 let PLACE_OPTS = null;
 
@@ -901,13 +864,13 @@ function vList() {
   if (view.id === 'tracker') return vTracker();
   const h = view.id === 'teams' || view.id === 'games' ? view.id : 'players', st = RK[h], f = st.f.toLowerCase();
   const filter = (ph, extra = '') => `<div class="r" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><input class="t" id="rkfilter" placeholder="${ph}" value="${esc(st.f)}">${extra}</div>`;
-  const sortSel = yearLabel => `<select class="t" id="rksort" style="flex:0 0 auto"><option value="rank" ${st.sort === 'rank' ? 'selected' : ''}>List order</option><option value="peak" ${st.sort === 'peak' ? 'selected' : ''}>${yearLabel}</option><option value="lit" ${st.sort === 'lit' ? 'selected' : ''}>Darkest first</option></select>`;
+  const sortSel = yearLabel => `<select class="t" id="rksort" style="flex:0 0 auto"><option value="rank" ${st.sort === 'rank' ? 'selected' : ''}>List order</option><option value="peak" ${st.sort === 'peak' ? 'selected' : ''}>${yearLabel}</option>${editing() ? `<option value="lit" ${st.sort === 'lit' ? 'selected' : ''}>Drafts first</option>` : ''}</select>`;
   if (h === 'players') {
     const arr = Object.entries(D.players).filter(([, p]) => (st.pos === 'All' || p.pos === st.pos) && (!f || nameOf(p).toLowerCase().includes(f)));
     const byRank = (a, b) => st.pos === 'All' ? (a[1].ovr || 999) - (b[1].ovr || 999) : (typeof a[1].prk === 'number' ? a[1].prk : 999) - (typeof b[1].prk === 'number' ? b[1].prk : 999);
     arr.sort({ rank: byRank, peak: (a, b) => (a[1].pk || 0) - (b[1].pk || 0), lit: (a, b) => litN('p_' + a[0]) - litN('p_' + b[0]) || byRank(a, b) }[st.sort] || byRank);
     const rows = arr.map(([k, p]) => { const fr = fromOf(k); const rk = st.pos === 'All' ? rankLabel(p) : (typeof p.prk === 'number' ? '#' + p.prk : p.prk || '') + ' ' + p.pos;
-      return `<button class="row" onclick="go('p_${k}')">${avatar(k)}<span class="yr">${esc(rk)}</span><span class="rn">${esc(nameOf(p))}<small>peak ${p.pk || '?'}${fr ? ' · ' + esc(placeText(fr)) : ''}</small></span><span class="meta">${dotsHTML('p_' + k)}</span></button>`; }).join('');
+      return `<button class="row" onclick="go('p_${k}')">${avatar(k)}<span class="yr">${esc(rk)}</span><span class="rn">${esc(nameOf(p))}<small>peak ${p.pk || '?'}${fr ? ' · ' + esc(placeText(fr)) : ''}</small></span></button>`; }).join('');
     return `${banner()}<div class="eyebrow">The list · ${Object.keys(D.players).length} players</div><h1 class="name">Players</h1>
      <div class="chips" style="margin-bottom:8px">${['All', ...POSITIONS].map(p => `<button class="chip" aria-pressed="${st.pos === p}" data-pos="${p}">${p}</button>`).join('')}</div>
      ${filter('Filter by name…', sortSel('Peak year'))}<div class="list">${rows || '<p class="empty">No one matches.</p>'}</div>`;
@@ -937,7 +900,7 @@ function vList() {
   }).filter(x => (st.grp === 'all' || x.grp === st.grp) && (!f || x.eras.some(e => e.n.toLowerCase().includes(f))));
   const block = ([g, label]) => {
     const xs = frs.filter(x => x.grp === g).sort((a, b) => b.ts.length - a.ts.length); if (!xs.length) return '';
-    return `<h2>${label} <small>${xs.length}</small></h2><div class="list">${xs.map(x => `<div class="row frow">${badgeSm(x.last)}<span class="yr">${x.ts[0].y}–${x.last.y}</span><span class="rn"><a href="#" onclick="go('f_${x.fid}');return false">${esc(x.last.n)}</a><small>${x.eras.length > 1 ? x.eras.map(e => `<a href="#" onclick="go('t_${e.tid}');return false">${esc(e.n)}</a> ${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}`).join(' · ') : `${x.ts.length} season${x.ts.length > 1 ? 's' : ''}`}</small></span><span class="meta" title="seasons complete">${x.fr.s.filter(tid => litN('t_' + tid)).length}/${x.ts.length}</span></div>`).join('')}</div>`;
+    return `<h2>${label} <small>${xs.length}</small></h2><div class="list">${xs.map(x => `<div class="row frow">${badgeSm(x.last)}<span class="yr">${x.ts[0].y}–${x.last.y}</span><span class="rn"><a href="#" onclick="go('f_${x.fid}');return false">${esc(x.last.n)}</a><small>${x.eras.length > 1 ? x.eras.map(e => `<a href="#" onclick="go('t_${e.tid}');return false">${esc(e.n)}</a> ${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}`).join(' · ') : `${x.ts.length} season${x.ts.length > 1 ? 's' : ''}`}</small></span>${editing() ? `<span class="meta" title="seasons locked">${x.fr.s.filter(tid => litN('t_' + tid)).length}/${x.ts.length}</span>` : ''}</div>`).join('')}</div>`;
   };
   return `${banner()}<div class="eyebrow">${Object.keys(D.franch).length} franchises</div><h1 class="name">Teams</h1>
    <p class="note">Every franchise and the names it played under.</p>
@@ -968,13 +931,13 @@ function vPlace() {
   const played = [...nd.played.entries()].sort((a, b) => (D.players[a[0]].ovr || 999) - (D.players[b[0]].ovr || 999));
   const teams = nd.teams.map(t => [t, D.teams[t]]).filter(([, t]) => (t.w + t.l) >= 40 || t.pen).sort((a, b) => wpct(b[1]) - wpct(a[1]));
   const nWS = nd.teams.filter(t => D.teams[t].ws).length, nPen = nd.teams.filter(t => D.teams[t].pen).length;
-  const prow = (pk, extra) => { const p = D.players[pk]; return `<button class="row" onclick="go('p_${pk}')">${avatar(pk)}<span class="yr">${esc(rankLabel(p))}</span><span class="rn">${esc(nameOf(p))}<small>${extra}</small></span><span class="meta">${dotsHTML('p_' + pk)}</span></button>`; };
+  const prow = (pk, extra) => { const p = D.players[pk]; return `<button class="row" onclick="go('p_${pk}')">${avatar(pk)}<span class="yr">${esc(rankLabel(p))}</span><span class="rn">${esc(nameOf(p))}<small>${extra}</small></span></button>`; };
   const LIM = 25;
   return `${pagebar('l_' + k)}${banner()}<div class="placecrumbs">${trail.join('')}</div><div class="eyebrow">${['Country', 'State / region', 'City'][nd.lvl]}</div><h1 class="name">${esc(placeLabel(nd))}</h1>
    <div class="sub"><span><b>${nd.from.length}</b> of the players from here</span><span><b>${nd.played.size}</b> played here</span><span><b>${nd.teams.length}</b> team seasons</span>${nWS ? `<span><b>${nWS}</b> World Series</span>` : ''}${nPen ? `<span><b>${nPen}</b> pennants</span>` : ''}</div>
    <h2>Best players from here</h2>${from.length ? `<div class="list">${from.slice(0, LIM).map(pk => prow(pk, `peak ${D.players[pk].pk || '?'}${nd.lvl < 2 ? ' · ' + esc(fromOf(pk).c || '') : ''}`)).join('')}</div>${from.length > LIM ? `<p class="note">and ${from.length - LIM} more</p>` : ''}` : '<p class="empty">Nobody on the list is from here.</p>'}
    <h2>Best players to play here</h2>${played.length ? `<div class="list">${played.slice(0, LIM).map(([pk, x]) => prow(pk, `${x.y0}${x.y1 !== x.y0 ? '–' + x.y1 : ''} · ${esc([...x.tm].join(', '))}`)).join('')}</div>${played.length > LIM ? `<p class="note">and ${played.length - LIM} more</p>` : ''}` : '<p class="empty">No one from the list played for a team based here.</p>'}
-   <h2>Best teams from here <small>by record</small></h2>${teams.length ? `<div class="list">${teams.slice(0, 20).map(([tid, t]) => `<button class="row" onclick="go('t_${tid}')"><span class="yr">${t.y} ${esc(t.lg)}</span><span class="rn">${esc(t.n)}<small>${t.w}–${t.l}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ''}</small></span><span class="meta">${dotsHTML('t_' + tid)}</span></button>`).join('')}</div>` : '<p class="empty">No teams based here in the database.</p>'}
+   <h2>Best teams from here <small>by record</small></h2>${teams.length ? `<div class="list">${teams.slice(0, 20).map(([tid, t]) => `<button class="row" onclick="go('t_${tid}')"><span class="yr">${t.y} ${esc(t.lg)}</span><span class="rn">${esc(t.n)}<small>${t.w}–${t.l}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ''}</small></span></button>`).join('')}</div>` : '<p class="empty">No teams based here in the database.</p>'}
    ${subs.length ? `<h2>${nd.lvl === 0 ? 'States and regions' : 'Cities'}</h2><div class="list">${subs.map(n => `<button class="row" onclick="go('l_${enc(n.k)}')"><span class="rn">${esc(placeLabel(n))}</span><span class="meta">${n.from.length} from · ${n.teams.length} team seasons</span></button>`).join('')}</div>` : ''}`;
 }
 const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.</p>`;
@@ -1004,7 +967,7 @@ function mapFor() {
 }
 function render(newView = true, opts = {}) {
   const panel = $('#panel'), t = view.type, st = panel.scrollTop, active = document.activeElement && document.activeElement.id;
-  const drafts = {}; for (const id of ['clip-t', 'clip-u', 'rkfilter']) { const el = document.getElementById(id); if (el) drafts[id] = el.value; }
+  const drafts = {}; for (const id of ['tl-k', 'tl-t', 'tl-u', 'tl-src', 'tl-y', 'rkfilter']) { const el = document.getElementById(id); if (el) drafts[id] = el.value; }
   const V = { d: vDecade, y: vYear, p: vPlayer, t: vTeam, g: vGame, f: vFranchise, c: vClub, r: vList, l: vPlace };
   const lay = layoutOf(view), home = homeOf(view);
   document.body.classList.remove('lay-map', 'lay-page', 'lay-list'); document.body.classList.add('lay-' + lay);
@@ -1029,13 +992,9 @@ function curKey() { return view.type + '_' + view.id; }
 function wire() {
   const key = curKey();
   $('#backbtn')?.addEventListener('click', back);
-  document.querySelectorAll('.tick').forEach(el => el.addEventListener('change', () => mutate(key, cur => { cur.doors = cur.doors || {}; cur.doors[el.dataset.door] = el.checked ? 1 : 0; })));
-  document.querySelectorAll('.scale').forEach(sc => sc.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const tool = sc.dataset.tool, g = b.dataset.grade;
-    mutate(key, cur => { cur.grades = cur.grades || {}; if (cur.grades[tool] === g) delete cur.grades[tool]; else cur.grades[tool] = g; }); }));
-  $('#clipform')?.addEventListener('submit', e => { e.preventDefault(); const t = $('#clip-t').value.trim(), u = $('#clip-u').value.trim(), k = $('#clip-k').value; if (!t && !u) return;
-    $('#clip-t').value = ''; $('#clip-u').value = ''; mutate(key, cur => { (cur.clips = cur.clips || []).push({ t, u, k, at: Date.now() }); }); });
-  document.querySelectorAll('[data-delclip]').forEach(b => b.addEventListener('click', () => mutate(key, cur => { cur.clips.splice(+b.dataset.delclip, 1); })));
-  // from place
+  // the timeline (only drawn while editing an unlocked page)
+  document.querySelectorAll('[data-tl]').forEach(b => b.addEventListener('click', () => { const [act, id] = b.dataset.tl.split(':'); timelineAct(key, act, id); }));
+  document.querySelectorAll('form.tlform').forEach(f => f.addEventListener('submit', e => { e.preventDefault(); timelineSave(key, f); }));
   // home lists
   const st = view.type === 'r' ? RK[view.id] : null;
   document.querySelectorAll('[data-pos]').forEach(b => b.addEventListener('click', () => { st.pos = b.dataset.pos; render(false); }));
@@ -1044,32 +1003,22 @@ function wire() {
   $('#tmore')?.addEventListener('click', () => { st.n += 200; render(false); });
   $('#rksort')?.addEventListener('change', e => { st.sort = e.target.value; render(false); });
   $('#rkfilter')?.addEventListener('input', e => { st.f = e.target.value; clearTimeout(window.__rf); window.__rf = setTimeout(() => render(false), 150); });
-  document.querySelectorAll('.noteform').forEach(f => f.addEventListener('submit', e => { e.preventDefault(); const t = f.querySelector('.nt').value.trim(), u = f.querySelector('.nu').value.trim(); if (!t && !u) return;
-    mutate(key, cur => { cur.notes = cur.notes || {}; (cur.notes[f.dataset.sec] = cur.notes[f.dataset.sec] || []).push({ t, u, at: Date.now() }); }); }));
-  document.querySelectorAll('[data-delnote]').forEach(b => b.addEventListener('click', () => { const [sec, i] = b.dataset.delnote.split(':'); mutate(key, cur => { cur.notes[sec].splice(+i, 1); }); }));
-  // mark a tracked page complete (or not)
-  document.querySelectorAll('[data-done]').forEach(b => b.addEventListener('click', () => { mutate(b.dataset.done, cur => { if (cur.done) delete cur.done; else cur.done = Date.now(); }); scheduleSync(0); }));  // completing a page saves at once
+  // lock a page (or unlock it); a player page locks with its own copy of the timeline
+  document.querySelectorAll('[data-lock]').forEach(b => b.addEventListener('click', () => { TL_EDIT = null;
+    mutate(b.dataset.lock, cur => { if (cur.locked) delete cur.locked; else { if (b.dataset.lock.startsWith('p_') && !cur.items) cur.items = seedItems(b.dataset.lock.slice(2)); cur.locked = Date.now(); } }); scheduleSync(0); }));  // locking saves at once
+  document.querySelectorAll('[data-spin]').forEach(b => b.addEventListener('click', () => spin(TRACK_TYPES[+b.dataset.spin])));
   wireSave();
 }
-function wireSave() {  // export/import, GitHub
-  $('#exportbtn')?.addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify({ progress: STORE.progress, exportedAt: new Date().toISOString() }, null, 1)], { type: 'application/json' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'progress.json'; document.body.appendChild(a); a.click(); a.remove();
-    if (!ghToken()) { lsSet(BAK, String(Date.now())); syncUI(); }
-    $('#savemsg').textContent = 'Saved progress.json to your downloads.';
-  });
-  $('#importfile')?.addEventListener('change', async e => { const f = e.target.files[0]; if (!f) return;
-    try { const j = JSON.parse(await f.text()); mergeIn(j); persist(); buildPlaces(); render(true); setTimeout(() => { const m = $('#savemsg'); if (m) m.textContent = 'Imported.'; }, 0); }
-    catch (err) { $('#savemsg').textContent = 'That file isn’t an atlas progress export.'; } });
+function wireSave() {  // turning editing on and off
   $('#ghform')?.addEventListener('submit', async e => { e.preventDefault(); const t = $('#ghtoken').value.trim(); if (!t) return;
     $('#savemsg').textContent = 'Checking the token…';
     try { await ghConnect(t); render(false); } catch (err) { $('#savemsg').textContent = err.message; } });
   $('#ghsave')?.addEventListener('click', () => ghSave());
-  $('#ghoff')?.addEventListener('click', () => { lsSet(GHK, null); clearTimeout(syncT); SYNC.state = 'idle'; syncUI(); render(false); });
+  $('#ghoff')?.addEventListener('click', () => { lsSet(GHK, null); clearTimeout(syncT); SYNC.state = 'idle'; syncUI(); editUI(); render(false); });
 }
-function spin() {  // a random tracked page you haven't marked complete
-  const pool = [...trackKeys().all].filter(k => !isDone(k));
-  if (!pool.length) { setNote('Everything on your tracker is complete.'); return; }
+function spin(keys) {  // a random page; while editing, one not yet locked (of one kind, from the tracker)
+  const pool = [...(keys || trackKeys().all)].filter(k => !editing() || !isLocked(k));
+  if (!pool.length) { setNote('Every one of those is locked.'); return; }
   const k = pool[Math.floor(Math.random() * pool.length)];
   go(k.startsWith('l_') ? 'l_' + enc(k.slice(2)) : k);  // place links carry the key encoded
 }
@@ -1106,9 +1055,10 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
 (async function boot() {
   [D, WORLD, STATES, PHOTOS, PARKS] = await Promise.all([getJSON('data/atlas.json'), getJSON('data/world.json'), getJSON('data/states.json'), getJSON('data/photos.json', {}), getJSON('data/parks.json', {})]);
   NOTES = { ...NOTES, ...(await getJSON('data/notes.json', {})) };
-  const [committed, synced] = await Promise.all([getJSON('data/progress.json', {}), ghPull()]);
-  loadStore(committed, synced);
-  if (ghToken() && unbacked()) scheduleSync(1000);  // changes made here while offline or before connecting
+  const [published, fresh] = await Promise.all([getJSON('data/pages.json', {}), ghPull()]);
+  loadStore(published, fresh);
+  if (ghToken() && JSON.stringify(fresh.pages || {}) !== JSON.stringify(STORE.pages)) { for (const k in STORE.pages) if (JSON.stringify(STORE.pages[k]) !== JSON.stringify(fresh.pages?.[k])) dirty.add(k); scheduleSync(1000); }  // edits made here that never reached GitHub
+  editUI();
   buildPlaces(); buildIndex();
   setupMap();
   addEventListener('resize', () => { clearTimeout(window.__rs); window.__rs = setTimeout(() => placeMap(false), 200); });
@@ -1125,7 +1075,7 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
   for (const id of ['#mapexpand', '#mapfab']) $(id).addEventListener('click', () => setFull(true));
   $('#mapclose').addEventListener('click', () => setFull(false));
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && FULL) setFull(false); });
-  $('#spin').addEventListener('click', spin);
+  $('#spin').addEventListener('click', () => spin());
   $('#syncbtn').addEventListener('click', () => { goHome('tracker'); setTimeout(() => $('#savebox')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); });
   addEventListener('visibilitychange', () => { if (document.hidden && SYNC.state === 'pending') ghSave(); });  // leaving: save now
   addEventListener('beforeunload', e => { if (SYNC.state === 'pending' || SYNC.state === 'saving') { ghSave(); e.preventDefault(); } });  // still saving: ask before closing

@@ -72,22 +72,7 @@ h2{font-family:var(--f-display);font-weight:600;font-size:20px;letter-spacing:.0
 h2 small{font-family:var(--f-body);font-size:12px;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:400}
 .sub{color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 14px}
 .sub b{color:var(--ink);font-weight:600}
-.lights{display:flex;gap:16px;margin:14px 0 4px;align-items:center}
-.bulb{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
-.bulb i{width:14px;height:14px;border-radius:50%;background:var(--ghost);display:inline-block}
-.bulb.on{color:var(--ink)}
-.bulb.on i{background:var(--lit);box-shadow:0 0 0 4px var(--lit-soft),0 0 14px var(--lit)}
-.doors{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr));gap:6px}
-.door{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--raise);min-width:0}
-.door.done{border-color:color-mix(in srgb,var(--lit) 55%,var(--line))}
-.tick{appearance:none;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ghost);cursor:pointer;flex:none;margin:0;display:grid;place-items:center}
-.tick:checked{background:var(--lit);border-color:var(--lit)}
-.tick:checked::after{content:"";width:6px;height:9px;border:solid var(--bg);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
-.door label{flex:1;min-width:0;font-size:14px;cursor:pointer}
-.door label small{display:block;color:var(--muted);font-size:11px;font-family:var(--f-mono)}
-.door a{font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:2px 7px;white-space:nowrap}
-.door a:hover{color:var(--ink);border-color:var(--ink)}
-.statline{overflow-x:auto}
+.statline{overflow-x:auto;container-type:inline-size}  /* 100cqw inside: the visible width, for rows that span a wide table */
 table.stats{border-collapse:collapse;font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
 table.stats th{color:var(--muted);font-weight:500;text-align:right;padding:2px 9px 2px 0;border-bottom:1px solid var(--line)}
 table.stats td{text-align:right;padding:3px 9px 3px 0}
@@ -98,22 +83,12 @@ table.stats td{text-align:right;padding:3px 9px 3px 0}
 .row .rn{flex:1;min-width:0}
 .row .rn small{color:var(--muted);display:block;font-size:12px}
 .row .meta{font-family:var(--f-mono);font-size:12px;color:var(--muted);text-align:right}
-.dots{display:inline-flex;gap:3px}
-.dots i{width:7px;height:7px;border-radius:50%;background:var(--ghost)}
-.dots i.on{background:var(--lit)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 a.chip,button.chip{text-decoration:none;color:inherit}
 .chip.lit{border-color:color-mix(in srgb,var(--lit) 60%,var(--line))}
 .chip .k{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-right:4px}
-.grades{display:grid;gap:6px}
-.grade{display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center}
-.grade span{font-size:13px;color:var(--muted)}
-.scale{display:flex;gap:3px;flex-wrap:wrap}
-.scale button{border:1px solid var(--line);background:var(--raise);border-radius:6px;padding:2px 7px;font-size:12px;cursor:pointer}
-.scale button[aria-pressed="true"]{background:var(--lit);border-color:var(--lit);color:var(--bg);font-weight:600}
 .clip{border-left:3px solid var(--lit);padding:6px 10px;margin:8px 0;background:var(--raise);border-radius:0 8px 8px 0;font-size:14px;position:relative}
 .clip .kind{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.clip .x{position:absolute;right:6px;top:4px;border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px}
 .clip a{word-break:break-all;color:var(--muted)}
 .clip.story .src{word-break:normal;white-space:nowrap;font-size:12px}
 form.add{display:grid;gap:6px;margin-top:8px}
@@ -172,8 +147,6 @@ textarea.t{min-height:64px;resize:vertical}
 .savebox{margin-top:30px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px;font-size:13px;color:var(--muted);display:grid;gap:8px}
 .savebox .r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .savebox .bad{color:var(--stitch)}
-.savebox .ghconnect summary{cursor:pointer;font-weight:600;color:var(--ink)}
-.savebox .ghconnect p{margin:8px 0}
 .savebox #ghtoken{flex:1;min-width:180px}
 #syncbtn .sdot{width:8px;height:8px;border-radius:50%;background:var(--ghost);flex:none}
 #syncbtn[data-st=saved] .sdot{background:#3f9a5c}
@@ -292,10 +265,7 @@ details.allteams summary{cursor:pointer;font-family:var(--f-display);font-weight
   .maplayers .chip{font-size:12px;padding:2px 9px}
   .maphint{display:none}
 }
-/* your rating model */
 h3.sm{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:12px 0 2px}
-.scale button.sugg{border:1.5px dashed var(--lit);color:var(--ink)}
-.grade .m80{font-family:var(--f-mono);font-weight:500;font-size:11px;color:var(--lit);margin-left:2px}
 table.stats.ss td:nth-child(-n+2),table.stats.ss th:nth-child(-n+2){text-align:left}
 table.stats.ss td a,table.stats.roster td a{color:inherit;text-underline-offset:2px}
 table.stats.roster{font-size:13px}
@@ -310,9 +280,6 @@ table.track td small{display:block;color:var(--muted);font-size:12px}
 table.track td b{font-variant-numeric:tabular-nums}
 table.track .pc{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
 table.track .wide{width:38%}
-table.track.lights3 td{width:26%}
-table.track.lights3 td span{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-left:6px}
-table.track.lights3 .tbar{display:inline-block;width:calc(100% - 44px);vertical-align:middle}
 .tbar{display:flex;height:10px;border-radius:5px;background:var(--line);overflow:hidden;gap:2px}
 .tbar.sm{height:8px}
 .tbar i{display:block;height:100%}
@@ -414,4 +381,28 @@ svg.field text{font:600 36px var(--f-mono);fill:var(--ink)}
 .exr .yr{flex:0 0 92px;color:var(--muted);font-family:var(--f-mono);font-size:12px;padding-top:2px}
 .exr a{color:inherit;text-underline-offset:2px}
 table.stats.career tr.story td{white-space:normal;text-align:left;font-family:var(--f-body);padding:0;max-width:0}
-table.stats.career tr.story .clip{position:sticky;left:0;max-width:min(100%,calc(100vw - 32px));box-sizing:border-box;margin:4px 0 6px}
+table.stats.career tr.story td>*{position:sticky;left:0;max-width:min(100%,100cqw);box-sizing:border-box;margin:4px 0 6px}
+/* editing (only with a GitHub token in this browser) */
+body:not(.editing) .legend{display:none}
+.pagestate{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-right:8px}
+.tl-item{position:relative;border:1px dashed var(--line);border-radius:10px;padding:4px 10px 6px;margin:8px 0}
+.tl-item:hover{border-color:var(--muted)}
+.tl-item.editing{border-style:solid;border-color:var(--lit)}
+.tl-item .clip{margin:4px 0}
+.tl-tools{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:12px}
+.tl-tools .tl-k{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-right:auto}
+.tl-tools button{border:1px solid var(--line);background:var(--raise);color:var(--ink);border-radius:6px;padding:1px 8px;cursor:pointer;font-size:12px}
+.tl-tools button:hover{border-color:var(--ink)}
+form.tlform .kind{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+form.tlform textarea{min-height:90px}
+/* the timeline's photos and scouting card */
+.tl-photo{margin:10px 0;max-width:420px}
+.tl-photo img{display:block;max-width:100%;max-height:360px;border-radius:8px;border:1px solid var(--line)}
+.tl-photo figcaption{font-size:12.5px;color:var(--muted);margin-top:4px}
+.card80{border:1px solid var(--line);border-radius:10px;background:var(--raise);padding:8px 12px;margin:10px 0;max-width:420px;display:grid;gap:5px}
+.card80 .kind{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.card80 .kind small{text-transform:none;letter-spacing:0;margin-left:6px}
+.tool80{display:grid;grid-template-columns:84px 1fr 28px;gap:8px;align-items:center;font-size:13px}
+.tool80 i{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.tool80 i b{display:block;height:100%;background:var(--lit)}
+.tool80 .v{font-family:var(--f-mono);font-size:12px;text-align:right}

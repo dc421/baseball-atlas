@@ -17,13 +17,13 @@
     <button id="home-teams"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6l-8-3z"/></svg><span>Teams</span></button>
     <button id="home-players"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Players</span></button>
     <button id="home-games"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 21 12 12 21 3 12z"/></svg><span>Games</span></button>
-    <button id="home-tracker"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h3M4 12h3M4 18h3M10 6l2 2 4-4M10 12h10M10 18h10"/></svg><span>Tracker</span></button>
+    <button id="home-tracker" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h3M4 12h3M4 18h3M10 6l2 2 4-4M10 12h10M10 18h10"/></svg><span>Tracker</span></button>
   </nav>
   <div class="search"><input id="q" type="search" placeholder="Find a player, team, place, game…" autocomplete="off" aria-label="Search the atlas"><div class="results" id="results" hidden></div></div>
   <div class="tools">
     <button class="tool" id="searchbtn" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-5-5"/></svg></button>
     <button class="tool" id="syncbtn" hidden><i class="sdot" aria-hidden="true"></i><span></span></button>
-    <button class="tool" id="spin" title="Take me somewhere I haven't been"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h5v5M20 20h-5v-5M5 9a8 8 0 0 1 14-2M19 15a8 8 0 0 1-14 2"/></svg><span>Spin</span></button>
+    <button class="tool" id="spin" title="A random page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h5v5M20 20h-5v-5M5 9a8 8 0 0 1 14-2M19 15a8 8 0 0 1-14 2"/></svg><span>Spin</span></button>
   </div>
 </header>
 <main class="split">
@@ -33,7 +33,7 @@
     <button class="mapexpand" id="mapexpand" aria-label="Open the big map"><span>Open map ⤢</span></button>
     <button class="mapclose" id="mapclose">Close map ✕</button>
     <div class="maphint" id="maphint"></div>
-    <div class="legend"><span><i style="background:var(--ghost)"></i>not yet complete</span><span><i style="background:var(--lit)"></i>complete</span></div>
+    <div class="legend"><span><i style="background:var(--ghost)"></i>draft</span><span><i style="background:var(--lit)"></i>locked</span></div>
     <div class="mapbar" id="mapbar">
       <button class="iconbtn" id="yprev" aria-label="Previous year">‹</button>
       <div class="bigyear" id="bigyear">2025</div>

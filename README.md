@@ -58,16 +58,20 @@ python scripts/build_data.py                                            # rebuil
 
 Game pages show the result, series standing, batting and pitching lines, video, and a linked Wikipedia summary when one is available. Automatic video picks are screened for the season, game number, matchup, and embedding availability; YouTube availability can still change.
 
-## Your progress
+## Editing pages
 
-Check-offs, grades, notes and "from" changes save in the browser you use. To keep them safe and the same on every device, open **Save to GitHub automatically** (bottom of the Tracker) and paste a fine-grained token with access to only this repo and *Contents: Read and write*. Do it once per browser. From then on, marking a page complete saves at once, and any other change about 2 seconds later, to `progress.json` on the repo's `progress` branch (a branch holding only that file, so `main` and Pages are left alone), and every browser that opens the site starts from it. Newer changes win, page by page. The header shows **Saved** or **Saving…**, or **Back up** in red when changes exist only in this browser.
+Every page starts as a draft built from the data above. To edit, open `#r-tracker` on the site and paste a fine-grained token with access to only this repo and *Contents: Read and write* (once per browser). Visitors never see the editing tools.
 
-Without a token, **Export a copy** still gives you a file. An older export committed as `docs/data/progress.json` is still read too.
+- **Player pages** are a timeline: stories, paragraphs from the history doc, photos, video and the scouting card each sit at a year, with the career table running through the middle. While editing, each item can move earlier or later, be rewritten, get a new year or be removed, and new stories, paragraphs, photos and videos can be added.
+- The first edit gives a page its own copy in `docs/data/pages.json`, which wins over the data from then on. Rerunning the fetch scripts never changes an edited page.
+- **Lock page** marks it finished and hides the editing tools. Unlock to change it again.
+- Edits save straight to `docs/data/pages.json` on `main` (a commit per save, bundled a couple of seconds apart), so the live site follows a minute or so later. Pull before working locally.
+- The **Tracker** (only shown while editing) counts locked pages by type and has a Spin for each type. The header Spin picks any page that isn't locked.
 
 ## Layout
 
 ```
-docs/            the website (index.html, app.js, style.css, data/, photos/, logos/, vendor/)
+docs/            the website (index.html, app.js, style.css, data/, photos/, logos/, vendor/); data/pages.json holds page edits
 scripts/         export_sheet.py, build_data.py, fetch_photos.py, fetch_logos.py, build_notes.py
 data/source/     CSVs exported from your spreadsheet
 data/overrides/  hand fixes

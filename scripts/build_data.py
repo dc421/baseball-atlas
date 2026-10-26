@@ -683,32 +683,85 @@ def series_rows(files, y, pred):
     return sorted(rows, key=lambda x: (x[1][0], x[1][1]))
 retro_who = {r.retroID: [key_of.get(r.playerID), nz(r.bbrefID)] for r in P.itertuples() if r.retroID}  # a lineup's Retrosheet id -> [your list's player key, bbref id]
 who_ = lambda n: '' if n.strip() in ('', '(none)') else n  # Retrosheet writes '(none)' for no save
+# what a park was called that season (naming rights change): data/overrides/park_names.csv, else Lahman's name
+PARK_AT = pd.read_csv(OVR / 'park_names.csv').itertuples() if (OVR / 'park_names.csv').exists() else []
+PARK_AT = [(r.park, int(r.y0), int(r.y1), r.name) for r in PARK_AT]
+def park_at(pid, y, default):
+    return next((n for p, y0, y1, n in PARK_AT if p == pid and y0 <= y <= y1), default)
+fullname = lambda tid, code: teams[tid]['n'] if tid else code
 def box(r):  # one game log row -> what the page shows
     vt, ht = retro2tid.get((r[3], int(r[0][:4]))), retro2tid.get((r[6], int(r[0][:4])))
-    side = lambda tid, code, line, h, e, lu: dict(n=nick(tid) if tid else code, tid=tid, inn=innings(line), r=None, h=int(h or 0), e=int(e or 0),
+    side = lambda tid, code, line, h, e, lu: dict(n=nick(tid) if tid else code, fn=fullname(tid, code), tid=tid, inn=innings(line), r=None, h=int(h or 0), e=int(e or 0),
                                                    lu=[[lu[i + 1], POSN.get(lu[i + 2], lu[i + 2]), *retro_who.get(lu[i], [None, None])] for i in range(0, 27, 3) if lu[i + 1]])
     v = side(vt, r[3], r[19], r[22], r[47], r[105:132]); h = side(ht, r[6], r[20], r[50], r[75], r[132:159])
     v['r'], h['r'] = int(r[9]), int(r[10])
     pk = PKd.get(r[16]); date = r[0]
-    return dict(date=f"{MONTHS[int(date[4:6]) - 1]} {int(date[6:])}, {date[:4]}", park=pk.parkname if pk else r[16], att=int(r[17]) if r[17].isdigit() and int(r[17]) else None,
+    return dict(gid=r[6] + date + r[1], date=f"{MONTHS[int(date[4:6]) - 1]} {int(date[6:])}, {date[:4]}", park=park_at(r[16], int(date[:4]), pk.parkname if pk else r[16]),
+                att=int(r[17]) if r[17].isdigit() and int(r[17]) else None,
                 time=int(r[18]) if r[18].isdigit() and int(r[18]) else None, v=v, h=h, wp=who_(r[94]), lp=who_(r[96]), sv=who_(r[98]), wpl=retro_who.get(r[93]), lpl=retro_who.get(r[95]), svl=retro_who.get(r[97]),
                 br=f"https://www.baseball-reference.com/boxes/{r[6]}/{r[6]}{date}{r[1]}.shtml")
+def series(rows, row, vr, hr, nm):  # the series standing after this game, and how long the series was: ['Astros lead series 3–2', 7]
+    win = lambda r: r[vr[0]] if int(r[vr[1]]) > int(r[hr[1]]) else r[hr[0]] if int(r[hr[1]]) > int(r[vr[1]]) else None
+    final = {}
+    for r in rows: final[win(r)] = final.get(win(r), 0) + 1
+    need = max(n for t, n in final.items() if t)
+    if need < 2: return None  # a one-game playoff
+    w, ties = {}, 0
+    for r in rows[:rows.index(row) + 1]:
+        t = win(r); ties += not t; w[t] = w.get(t, 0) + 1
+    a, b = row[vr[0]], row[hr[0]]
+    (lead, x), (_, z) = sorted([(a, w.get(a, 0)), (b, w.get(b, 0))], key=lambda p: -p[1])
+    s = f'Series tied {x}–{z}' if x == z else f"{nm(lead)} {'win' if x == need else 'lead'} series {x}–{z}"
+    return [s + (f" ({ties} tie{'s' if ties > 1 else ''})" if ties else ''), 2 * need - 1]
+
+# Negro Leagues World Series games aren't in the game logs: line score, teams and park from Retrosheet's CSVs
+CSVD = RET / 'csv'
+def zcsv(zname, member, keep=lambda r: True):
+    p = CSVD / zname
+    if not p.exists(): return []
+    with zipfile.ZipFile(p) as z:
+        member = next((n for n in z.namelist() if n.endswith(member)), None)  # a season's files are 1975batting.csv...
+        if not member: return []
+        with z.open(member) as f: return [r for r in csv.DictReader(io.TextIOWrapper(f, 'latin-1')) if r.get('stattype', 'value') == 'value' and keep(r)]
+BIO = {m: zcsv('biodata.zip', m) for m in ['teams0.csv', 'ballparks0.csv']}
+RPARK = {r['site']: r['name'].split(';')[0] for r in BIO['ballparks0.csv']}
+name2tid = {(t['n'], t['y']): tid for tid, t in teams.items()}
+RTEAM = {r['team']: f"{r['city']} {r['nickname']}" for r in BIO['teams0.csv']}
+def rtid(code, y): return retro2tid.get((code, y)) or name2tid.get((RTEAM.get(code), y))
+NEGRO = sorted([r for r in zcsv('negroleagues.zip', 'gameinfo.csv') if r['gametype'] == 'championship'], key=lambda r: (r['date'], r['number']))
+NEGRO_TS = {(r['gid'], r['team']): r for r in zcsv('negroleagues.zip', 'teamstats.csv', lambda r: r['gametype'] == 'championship')}
+NEGRO_NAMES = {r['id']: f"{r['first']} {r['last']}" for r in zcsv('negroleagues.zip', 'allplayers.csv')}
+def negro_box(gi):
+    y = int(gi['date'][:4])
+    def side(code):
+        ts, tid = NEGRO_TS.get((gi['gid'], code), {}), rtid(code, y)
+        inn = [ts.get(f'inn{i}', '') for i in range(1, 29)]
+        while inn and inn[-1] == '': inn.pop()
+        iv = lambda k: int(ts[k]) if ts.get(k, '').lstrip('-').isdigit() else 0
+        return dict(n=nick(tid) if tid else RTEAM.get(code, code), fn=fullname(tid, RTEAM.get(code, code)), tid=tid, inn=inn, r=iv('b_r'), h=iv('b_h'), e=iv('d_e'), lu=[])
+    nm = lambda i: NEGRO_NAMES.get(i, '') if i and i != '(none)' else ''
+    d = gi['date']
+    return dict(gid=gi['gid'], date=f"{MONTHS[int(d[4:6]) - 1]} {int(d[6:])}, {d[:4]}", park=park_at(gi['site'], y, RPARK.get(gi['site'], gi['site'])),
+                att=int(gi['attendance']) if gi['attendance'].isdigit() and int(gi['attendance']) else None,
+                time=int(gi['timeofgame']) if gi['timeofgame'].isdigit() and int(gi['timeofgame']) else None, v=side(gi['visteam']), h=side(gi['hometeam']),
+                wp=nm(gi['wp']), lp=nm(gi['lp']), sv=nm(gi['save']), wpl=retro_who.get(gi['wp']), lpl=retro_who.get(gi['lp']), svl=retro_who.get(gi['save']), br=None)
+
 boxes, matched = {}, 0
 for key, g in games.items():
-    y, lab = g['y'], g['g']; row = rnd = None; title = lab
+    y, lab = g['y'], g['g']; row = rnd = None; title = lab; srcz = 'postseason.zip'
     if m := re.match(r'^(WS|ALCS|NLCS) G(\d+)$', lab):
         lg = {'ALCS': 'AL', 'NLCS': 'NL'}.get(m[1])
         rows = series_rows(['glws.zip'] if m[1] == 'WS' else ['gllc.zip'], y, lambda r: not lg or r[7] == lg)
         title = f"{'World Series' if m[1] == 'WS' else LGN[lg] + ' Championship Series'}, Game {m[2]}"
-        if len(rows) >= int(m[2]): row = rows[int(m[2]) - 1][1]
+        if len(rows) >= int(m[2]): rnd, row = rows[int(m[2]) - 1]
     elif m := re.match(r'^([AN])([EW])DS G(\d+)$', lab):
         lg, dv = {'A': 'AL', 'N': 'NL'}[m[1]], m[2]
         rows = series_rows(['gldv.zip'], y, lambda r: r[7] == lg and (teams.get(retro2tid.get((r[6], y)), {}).get('dv') == dv))
         title = f"{LGN[lg]} {'East' if dv == 'E' else 'West'} Division Series, Game {m[3]}"
-        if len(rows) >= int(m[3]): row = rows[int(m[3]) - 1][1]
+        if len(rows) >= int(m[3]): rnd, row = rows[int(m[3]) - 1]
     elif m := re.match(r'^(AL|NL)WC$', lab):
         rows = series_rows(['glwc.zip'], y, lambda r: r[7] == m[1]); title = f"{LGN[m[1]]} Wild Card Game"
-        if rows: row = rows[0][1]
+        if rows: rnd, row = rows[0]
     elif m := re.match(r'^([A-Z]{2,3})-([A-Z]{2,3}) G(\d+)$', lab):
         a, c = code2tid(m[1], y), code2tid(m[2], y); pair = {retro_of.get(a), retro_of.get(c)}
         rows = series_rows(['gldv.zip', 'glwc.zip', 'gllc.zip', 'glws.zip'], y, lambda r: {r[3], r[6]} == pair)
@@ -719,19 +772,69 @@ for key, g in games.items():
         a, c = code2tid(t1, y), code2tid(t2, y); pair = {retro_of.get(a), retro_of.get(c)}
         rows = [r for r in reg_rows(y) if r[0] == f"{y}{int(mo):02d}{int(dy):02d}" and {r[3], r[6]} == pair]
         if rows: row = rows[0]
-        title = f"{MONTHS[int(mo) - 1]} {int(dy)}"
-    elif m := re.match(r'^Negro WS G(\d+)$', lab): title = f"Negro World Series, Game {m[1]}"
+        title = f"{MONTHS[int(mo) - 1]} {int(dy)}"; srcz = f'{y}csvs.zip'
+    elif m := re.match(r'^Negro WS G(\d+)$', lab):
+        title = f"Negro World Series, Game {m[1]}"
+        rows = [r for r in NEGRO if r['date'][:4] == str(y)]
+        if len(rows) >= int(m[1]):
+            gi = rows[int(m[1]) - 1]; bx = negro_box(gi); bx['src'] = 'negroleagues.zip'
+            bx['ser'] = series(rows, gi, ('visteam', 'vruns'), ('hometeam', 'hruns'), lambda c: nick(t) if (t := rtid(c, y)) else RTEAM.get(c, c))
+            boxes[key] = bx; matched += 1
     g['gt'] = title
     if row:
-        bx = box(row); boxes[key] = bx; matched += 1
-        g['vs'] = f"{bx['v']['n']} at {bx['h']['n']}"
+        bx = box(row); bx['src'] = srcz; boxes[key] = bx; matched += 1
+        if rnd:
+            pair = {row[3], row[6]}
+            bx['ser'] = series([r for f, r in series_rows([rnd], y, lambda r: {r[3], r[6]} == pair)], row, (3, 9), (6, 10), lambda c: nick(t) if (t := retro2tid.get((c, y))) else c)
+    if key in boxes:
+        bx = boxes[key]
+        g['vs'] = f"{bx['v']['n']} at {bx['h']['n']}"; g['nm'] = [bx['v']['fn'], bx['h']['fn']]
         if not (g['tid'] and teams.get(g['tid'], {}).get('top')) and bx['h']['tid']: g.setdefault('tid', bx['h']['tid'])
-# a video per game: the top YouTube result, found by scripts/fetch_videos.py (data/source/game_videos.csv)
+
+# box scores: every batter's and pitcher's line, from Retrosheet's per-game CSVs (postseason, Negro Leagues, and each
+# season with a regular-season game on your list). Batters: [name, pos, AB, R, H, RBI, BB, SO, 2B, 3B, HR, SB, sub, key, bbref];
+# pitchers: [name, outs, H, R, ER, BB, SO, HR, decision, key, bbref]. Blank is unknown (old box scores leave some out).
+want = {}
+for key, bx in boxes.items(): want.setdefault(bx.pop('src'), {})[bx['gid']] = key
+iv = lambda x: int(x) if x not in ('', None) else None
+nbox = 0
+for zname, gids in want.items():
+    keep = lambda r: r['gid'] in gids
+    bat, pit, fld = (zcsv(zname, f'{m}.csv', keep) for m in ['batting', 'pitching', 'fielding'])
+    if not bat: continue
+    names = {r['id']: f"{r['first']} {r['last']}" for r in zcsv(zname, 'allplayers.csv')}
+    pos = {}
+    for r in sorted(fld, key=lambda r: int(r['d_seq'] or 0)):
+        p = POSN.get(r['d_pos'], r['d_pos']); lst = pos.setdefault((r['gid'], r['id']), [])
+        if p not in lst: lst.append(p)
+    for gid, key in gids.items():
+        bx = boxes[key]
+        for vh, s in (('v', bx['v']), ('h', bx['h'])):
+            rows = sorted([r for r in bat if r['gid'] == gid and r['vishome'] == vh and r['b_lp']], key=lambda r: (int(r['b_lp']), int(r['b_seq'] or 1)))
+            def ps(r):
+                p = pos.get((gid, r['id']), [])
+                if r['dh'] == '1' and 'DH' not in p: p = ['DH'] + p
+                return '-'.join((['PH'] if r['ph'] == '1' else []) + (['PR'] if r['pr'] == '1' else []) + p)
+            s['bat'] = [[names.get(r['id'], r['id']), ps(r), *(iv(r[c]) for c in ['b_ab', 'b_r', 'b_h', 'b_rbi', 'b_w', 'b_k', 'b_d', 'b_t', 'b_hr', 'b_sb']),
+                         1 if int(r['b_seq'] or 1) > 1 else 0, *retro_who.get(r['id'], [None, None])] for r in rows]
+            prow = sorted([r for r in pit if r['gid'] == gid and r['vishome'] == vh], key=lambda r: int(r['p_seq'] or 1))
+            s['pit'] = [[names.get(r['id'], r['id']), *(iv(r[c]) for c in ['p_ipouts', 'p_h', 'p_r', 'p_er', 'p_w', 'p_k', 'p_hr']),
+                         'W' if r['wp'] == '1' else 'L' if r['lp'] == '1' else 'S' if r['save'] == '1' else '', *retro_who.get(r['id'], [None, None])] for r in prow]
+            if s['bat']: s['lu'] = []; nbox += 1
+for bx in boxes.values(): bx.pop('gid', None)
+# a video per game: scripts/fetch_videos.py (data/source/game_videos.csv), or your pick (data/overrides/game_videos.csv)
 if (SRC / 'game_videos.csv').exists():
     for r in pd.read_csv(SRC / 'game_videos.csv', dtype=str).fillna('').itertuples():
-        if r.rk in games and r.video: games[r.rk]['yt'] = [r.video, r.title, r.channel]
+        if r.rk in games and r.video: games[r.rk]['yt'] = [r.video, r.title, r.channel, int(getattr(r, 'mins', '') or 0)]
+if (OVR / 'game_videos.csv').exists():
+    for r in pd.read_csv(OVR / 'game_videos.csv', dtype=str).fillna('').itertuples():
+        if r.rk in games: games[r.rk]['yt'] = [r.video, r.note, '', 0, 1] if r.video else None
+# the Wikipedia write-up of each postseason game (scripts/fetch_game_stories.py)
+if (SRC / 'game_stories.json').exists():
+    for k, st in json.load(open(SRC / 'game_stories.json')).items():
+        if k in games: boxes.setdefault(k, {})['sto'] = st
 (OUT / 'games.json').write_text(json.dumps(boxes, separators=(',', ':'), ensure_ascii=False))
-print(f'games: {matched} of {len(games)} matched to Retrosheet line scores' + ('' if POST['glws.zip'] else ' (run scripts/fetch_retrosheet.py)'))
+print(f'games: {matched} of {len(games)} matched to Retrosheet line scores, {nbox // 2} with full box scores' + ('' if POST['glws.zip'] else ' (run scripts/fetch_retrosheet.py)'))
 
 for tid, ks in roster.items():  # your list's players on each team, by their model WAR for this team (as in the lineup)
     cw = {k: round(contrib[(players[k]['id'], tid)], 1) for k in set(ks) if (players[k].get('id'), tid) in contrib}

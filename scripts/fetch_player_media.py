@@ -2,7 +2,8 @@
 interview video (top YouTube results). Saved to data/source/player_media.json; build_data.py reads it.
 
     python scripts/fetch_player_media.py --photos     # Wikipedia/Commons images, with licenses
-    python scripts/fetch_player_media.py --videos     # YouTube: highlights (footage pre-1925), interview (peak 1925+)
+    python scripts/fetch_player_media.py --videos     # YouTube: highlights (footage pre-1925), interview (peak 1925+);
+                                                      # also replaces picks that can no longer be played here
     python scripts/fetch_player_media.py --photos --videos --redo   # look everyone up again
 
 Run after build_data.py (it reads docs/data/atlas.json and docs/data/photos.json), then rebuild.
@@ -63,9 +64,15 @@ def photos(page, main_source, last, n=4):  # images in the article that name the
     return sorted(out, key=lambda x: order.get('File:' + (x['page'] or '').rsplit('File:', 1)[-1].replace('_', ' '), 99))[:n]
 
 
-def youtube(q, last):  # the first of the top 10 results whose title names the player
+def embeddable(v):  # YouTube's oEmbed answers 401 when the uploader blocks playback on other websites, 404 when it's gone
+    try: return requests.get(f'https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={v}&format=json', timeout=20).status_code == 200
+    except requests.RequestException: return True  # can't tell: keep it
+
+
+def youtube(q, last):  # the first of the top 10 results whose title names the player and that plays here
     h = requests.get('https://www.youtube.com/results?search_query=' + quote_plus(q), headers={'User-Agent': UA, 'Accept-Language': 'en-US'}, timeout=30).text
-    m = next((x for x in list(HIT.finditer(h))[:10] if fold(last) in fold(text(x[2]))), None)
+    first = fold(q.split()[0])
+    m = next((x for x in list(HIT.finditer(h))[:10] if first + fold(last) in fold(text(x[2])) and embeddable(x[1])), None)
     return [m[1], text(m[2]), text(m[3])] if m else None
 
 
@@ -79,7 +86,8 @@ def main(a):
             try: cur['ph'] = photos(mani[k]['page'], mani[k].get('source'), p['l'])
             except (requests.RequestException, KeyError, ValueError) as e: print('  photos failed:', name, e)
             time.sleep(.3)
-        if a.videos and ('hl' not in cur or a.redo):
+        blocked = a.videos and any(cur.get(f) and not embeddable(cur[f][0]) for f in ('hl', 'iv'))
+        if a.videos and ('hl' not in cur or a.redo or blocked):
             try:
                 cur['hl'] = youtube(f"{name} {'baseball footage' if (p.get('pk') or 2000) < 1925 else 'highlights'}", p['l']); time.sleep(1.2)
                 cur['iv'] = youtube(f'{name} interview', p['l']) if (p.get('pk') or 2000) >= 1925 else None; time.sleep(1.2)

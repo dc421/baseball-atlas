@@ -1,0 +1,56 @@
+park,y0,y1,name
+ANA01,1966,1997,Anaheim Stadium
+ANA01,1998,2003,Edison International Field of Anaheim
+ANA01,2004,2099,Angel Stadium
+ARL02,1994,2004,The Ballpark in Arlington
+ARL02,2005,2006,Ameriquest Field in Arlington
+ARL02,2007,2013,Rangers Ballpark in Arlington
+ARL02,2014,2019,Globe Life Park in Arlington
+CHI10,1910,1912,White Sox Park
+CHI10,1913,1990,Comiskey Park
+CHI12,1991,2002,Comiskey Park
+CHI12,2003,2016,U.S. Cellular Field
+CHI12,2017,2024,Guaranteed Rate Field
+CHI12,2025,2099,Rate Field
+CIN07,1912,1933,Redland Field
+CIN08,1970,1996,Riverfront Stadium
+CIN08,1997,2002,Cinergy Field
+CLE05,1891,1946,League Park
+CLE08,1994,2007,Jacobs Field
+DET04,1912,1937,Navin Field
+DET04,1938,1960,Briggs Stadium
+DET04,1961,1999,Tiger Stadium
+HOU03,2000,2001,Enron Field
+HOU03,2002,2024,Minute Maid Park
+HOU03,2025,2099,Daikin Park
+KAN06,1973,1993,Royals Stadium
+MIA01,1987,1996,Joe Robbie Stadium
+MIA01,1997,2005,Pro Player Stadium
+MIA01,2006,2011,Dolphin Stadium
+MIL06,2001,2020,Miller Park
+MON02,1977,2004,Olympic Stadium
+NYC10,1889,1911,Polo Grounds
+NYC14,1911,1963,Polo Grounds
+NYC16,1923,2008,Yankee Stadium
+NYC21,2009,2099,Yankee Stadium
+OAK01,1966,1997,Oakland–Alameda County Coliseum
+OAK01,1998,2003,Network Associates Coliseum
+OAK01,2004,2008,McAfee Coliseum
+OAK01,2009,2011,Oakland–Alameda County Coliseum
+OAK01,2012,2015,O.co Coliseum
+PHI11,1909,1952,Shibe Park
+PHI11,1953,1970,Connie Mack Stadium
+PHO01,1998,2005,Bank One Ballpark
+SAN01,1969,1980,San Diego Stadium
+SAN01,1981,1996,San Diego Jack Murphy Stadium
+SAN01,1997,2003,Qualcomm Stadium
+SFO03,2000,2003,Pacific Bell Park
+SFO03,2004,2005,SBC Park
+SFO03,2006,2018,AT&T Park
+SFO03,2019,2099,Oracle Park
+STL07,1909,1952,Sportsman's Park
+STL09,1966,1982,Busch Memorial Stadium
+STL09,1983,2005,Busch Stadium
+STL10,2006,2099,Busch Stadium
+TOR02,1989,2004,SkyDome
+TOR02,2005,2099,Rogers Centre

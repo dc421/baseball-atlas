@@ -202,7 +202,7 @@ function doorsFor(key) {
     return [
       { id: 'video', g: 'see', label: 'Watch it', hint: 'YouTube', url: yt(n) },
       { id: 'photos', g: 'see', label: 'Photos', hint: 'images', url: img(n) },
-      { id: 'read', g: 'read', label: 'The story', hint: 'SABR Games Project', url: sabr(o.y + ' ' + o.g) },
+      { id: 'read', g: 'read', label: 'The story', hint: 'Wikipedia', url: wiki(o.y + ' ' + (o.gt || o.g)) },
       { id: 'news', g: 'read', label: 'Next-day papers', hint: 'Chronicling America', url: loc(o.y + ' ' + (o.d || o.g)) },
       { id: 'stats', g: 'nums', label: 'Box score', hint: 'search', url: gg(n + ' box score baseball-reference') },
     ];
@@ -281,7 +281,7 @@ function rescale() {
   gLab.selectAll('text').attr('font-size', 11 * s).attr('stroke-width', 3 * s).attr('dx', 9 * s).attr('dy', -9 * s);
 }
 const fillFor = n => n === 0 ? 'var(--ghost)' : `color-mix(in srgb,var(--lit) ${40 + n * 20}%,var(--ghost))`;
-let YEAR = 1897, MAPMODE = 'teams', highlight = null, focusPts = null;
+let YEAR = 2025, MAPMODE = 'teams', highlight = null, focusPts = null;
 
 function logoFor(t) {
   if (!D.logos.length) return null;
@@ -373,11 +373,11 @@ function setYear(y) {
    Four homes (map, teams, players, games) each remember where you left them; every other view is a page.
    Each page you open is a browser history entry (state.d = how deep you are, state.sc = where you'd scrolled),
    so the browser's back and forward buttons and swipes work like the ← Back button. */
-let view = { type: 'y', id: '1897' };
+let view = { type: 'y', id: '2025' };
 const HOMES = ['map', 'teams', 'players', 'games', 'tracker'];
 const homeOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' ? v.id : null;
-const layoutOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' ? 'list' : 'page';
-let lastHome = 'map', lastMap = { type: 'y', id: '1897' }, mapT = null, FULL = false, sizedFor = '';
+const layoutOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' || v.type === 'g' ? 'list' : 'page';  // game pages: no map
+let lastHome = 'map', lastMap = { type: 'y', id: '2025' }, mapT = null, FULL = false, sizedFor = '';
 const homeScroll = {};
 const hashOf = v => '#' + v.type + '-' + v.id;
 const setHash = () => { try { history.replaceState(history.state, '', hashOf(view)); } catch (e) { } };
@@ -695,7 +695,7 @@ function careerHTML(p, k) {
    ${rows}<tr class="tot"><td>Career</td><td></td><td></td><td class="mdl">${m ? fmtS(m.r) : ''}</td><td class="mdl">${m ? '#' + m.rk : ''}</td><td></td>${main.map(c => `<td>${tot(c)}</td>`).join('')}${second.map(c => `<td class="sec">${tot2(c)}</td>`).join('')}</tr></table></div>`;
 }
 const ytEmbed = v => v ? `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${esc(v[0])}" title="${esc(v[1])}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
-  <p class="note">${esc(v[1])} · ${esc(v[2])}: the top YouTube result; add a better one below if it isn’t right.</p>` : '';
+  <p class="note">${esc(v[1])}${v[2] ? ' · ' + esc(v[2]) : ''}${v[3] ? ' · ' + v[3] + ' min' : ''} · <a href="https://www.youtube.com/watch?v=${esc(v[0])}" target="_blank" rel="noopener">Watch on YouTube ↗</a></p>` : '';
 // stories written from his SABR biography and Wikipedia article: [text, link, where it's from]
 const storiesHTML = st => st && st.length ? st.map(x => `<div class="clip story">${esc(x[0])} <a class="src" href="${esc(x[1])}" target="_blank" rel="noopener">${esc(x[2])} ↗</a></div>`).join('') : '';
 const photoGrid =ph => ph && ph.length ? `<div class="pgrid">${ph.map(x => `<a href="${esc(x[3])}" target="_blank" rel="noopener" title="${esc(x[4] ? x[4] + ' · ' : '')}Photo: ${esc(x[1])}${x[2] ? ' · ' + esc(x[2]) : ''}"><img src="${esc(x[0])}" alt="${esc(x[4] || '')}" loading="lazy"></a>`).join('')}</div>` : '';
@@ -801,8 +801,8 @@ function fieldSVG(dims) {
    ${pts.map(p => { const [x, y] = xy(p.r, p.ft + 22); return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle">${p.ft}</text>`; }).join('')}</svg>`;
 }
 // a name in a box score: your list's players open their pages, others Baseball-Reference ([key, bbref id])
-const whoLink = (n, [k, br] = []) => k ? `<a href="#" onclick="go('p_${k}');return false">${esc(n)}</a>`
-  : br ? `<a href="https://www.baseball-reference.com/players/${esc(br[0])}/${esc(br)}.shtml" target="_blank" rel="noopener">${esc(n)}</a>` : esc(n);
+const whoLink = (n, [k, br] = []) => k ? `<a class="in" href="#" onclick="go('p_${k}');return false">${esc(n)}</a>`
+  : br ? `<a class="ext" href="https://www.baseball-reference.com/players/${esc(br[0])}/${esc(br)}.shtml" target="_blank" rel="noopener" title="Baseball-Reference">${esc(n)}</a>` : esc(n);
 function managersHTML(mg) {
   if (!mg || !mg.length) return '';
   const row = ([n, k, br, y0, y1, w, l]) => `<tr><td>${y0}${y1 !== y0 ? '–' + y1 : ''}</td><td class="nm">${k ? `<a href="#" onclick="go('p_${k}');return false">${esc(n)}</a>`
@@ -824,26 +824,51 @@ function vClub() {  // clubs outside the database (NPB, Cuba, Mexico, Puerto Ric
      return `<button class="row" onclick="go('p_${pk}')">${avatar(pk)}<span class="yr">${y0 ? y0 + (y1 !== y0 ? '–' + y1 : '') : ''}</span><span class="rn">${esc(nameOf(p))}<small>${esc(p.pos)}</small></span></button>`; }).join('')}</div>
    ${noteSection(key, 'club', 'The club', 'Its history, its park, its great teams…', [['Wikipedia', wiki(c.n + ' baseball')], ['Photos', img(c.n + ' baseball')]])}`;
 }
+const ip = o => o == null ? '' : Math.floor(o / 3) + (o % 3 ? '.' + (o % 3) : '');
+const nv = v => v == null ? '' : v;
+// one team's box score: batters (subs indented under the man they replaced), extra-base hits and steals, pitchers
+function teamBox(s) {
+  const sum = i => s.bat.some(b => b[i] == null) ? '' : s.bat.reduce((t, b) => t + b[i], 0), who = b => whoLink(b[0], b.slice(13));
+  const bat = `<table class="stats box"><tr><th class="nm">Batting</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th></tr>
+    ${s.bat.map(b => `<tr${b[12] ? ' class="subst"' : ''}><td class="nm">${who(b)} <span class="pos">${esc(b[1])}</span></td>${[2, 3, 4, 5, 6, 7].map(i => `<td>${nv(b[i])}</td>`).join('')}</tr>`).join('')}
+    <tr class="tot"><td class="nm">Totals</td>${[2, 3, 4, 5, 6, 7].map(i => `<td>${sum(i)}</td>`).join('')}</tr></table>`;
+  const xb = [[8, '2B'], [9, '3B'], [10, 'HR'], [11, 'SB']].map(([i, l]) => { const hs = s.bat.filter(b => b[i] > 0);
+    return hs.length ? `<span><b>${l}:</b> ${hs.map(b => esc(b[0].split(' ').slice(-1)[0]) + (b[i] > 1 ? ' ' + b[i] : '')).join(', ')}</span>` : ''; }).join('');
+  const pit = s.pit && s.pit.length ? `<table class="stats box"><tr><th class="nm">Pitching</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>HR</th></tr>
+    ${s.pit.map(p => `<tr><td class="nm">${whoLink(p[0], p.slice(9))}${p[8] ? ` <span class="pos">${p[8]}</span>` : ''}</td><td>${ip(p[1])}</td>${[2, 3, 4, 5, 6, 7].map(i => `<td>${nv(p[i])}</td>`).join('')}</tr>`).join('')}</table>` : '';
+  return `<h3 class="sm">${esc(s.fn || s.n)}</h3><div class="statline">${bat}</div>${xb ? `<p class="sub boxnotes">${xb}</p>` : ''}<div class="statline">${pit}</div>`;
+}
+// the Wikipedia write-up of the game, linked to its section
+const gameStory = st => st && st.p ? `<div class="clip story">${st.p.map(x => `<p>${esc(x)}</p>`).join('')}<a class="src" href="${esc(st.url)}" target="_blank" rel="noopener">${esc(st.src)}, Wikipedia ↗</a></div>` : '';
 function vGame() {
   const g = D.games[view.id]; if (!g) return notFound(); const key = 'g_' + g.rk, n = `${g.y} ${g.gt || g.g}`;
   if (!BOXES) boxLoad = boxLoad || getJSON('data/games.json', {}).then(b => { BOXES = b; if (view.type === 'g') render(false); });
-  const bx = BOXES && BOXES[view.id], team = s => s.tid ? `<a href="#" onclick="go('t_${s.tid}');return false">${esc(s.n)}</a>` : esc(s.n);
+  const rec = BOXES && BOXES[view.id], bx = rec && rec.v ? rec : null;
+  const team = (s, full) => {
+    const t = D.teams[s.tid], target = t ? (s.tid === g.tid ? 't_' + s.tid : 'f_' + t.fr) : null;
+    return target ? `<a class="in" href="#${target.replace('_', '-')}" onclick="go('${target}');return false">${esc(full ? s.fn || s.n : s.n)}</a>` : esc(full ? s.fn || s.n : s.n);
+  };
+  // the result, winner first: "Houston Astros 13, Los Angeles Dodgers 12 (10)"
+  const score = bx ? (() => { const inn = Math.max(bx.v.inn.length, bx.h.inn.length), [w, l] = bx.h.r > bx.v.r ? [bx.h, bx.v] : [bx.v, bx.h];
+    return `<p class="score">${team(w, true)} ${w.r}, ${team(l, true)} ${l.r}${inn && inn !== 9 ? ` <span class="inn">(${inn})</span>` : ''}</p>`; })() : '';
+  const ser = bx && bx.ser ? `<div class="sub" style="margin-top:4px"><span><b>${esc(bx.ser[0])}</b></span><span>Best of ${bx.ser[1]}</span></div>` : '';
   const line = bx ? (() => { const k = Math.max(9, bx.v.inn.length, bx.h.inn.length), cells = a => [...Array(k)].map((_, i) => `<td>${esc(a[i] ?? '')}</td>`).join('');
     return `<div class="statline"><table class="stats linescore"><tr><th></th>${[...Array(k)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th class="rhe">R</th><th>H</th><th>E</th></tr>
       ${[bx.v, bx.h].map(s => `<tr><td class="nm">${team(s)}</td>${cells(s.inn)}<td class="rhe"><b>${s.r}</b></td><td>${s.h}</td><td>${s.e}</td></tr>`).join('')}</table></div>
       <div class="sub" style="margin-top:6px">${[['W', bx.wp, bx.wpl], ['L', bx.lp, bx.lpl], ['S', bx.sv, bx.svl]].filter(x => x[1]).map(([l, n, w]) => `<span>${l}: <b>${whoLink(n, w)}</b></span>`).join('')}</div>
       <p class="note">${esc(bx.date)} · ${esc(bx.park)}${bx.att ? ` · ${bx.att.toLocaleString()} fans` : ''}${bx.time ? ` · ${Math.floor(bx.time / 60)}:${String(bx.time % 60).padStart(2, '0')}` : ''}</p>`; })() : '';
-  const lineups = bx && (bx.v.lu.length || bx.h.lu.length) ? `<div class="lineups">${[bx.v, bx.h].map(s => `<div><h3 class="sm">${esc(s.n)}</h3><table class="stats roster">${s.lu.map((p, i) => `<tr><td>${i + 1}</td><td class="nm">${whoLink(p[0], p.slice(2))}</td><td>${esc(p[1])}</td></tr>`).join('')}</table></div>`).join('')}</div>` : '';
-  const vid = ytEmbed(g.yt);
+  const full = bx && bx.v.bat && bx.v.bat.length;
+  const lineups = bx && !full && (bx.v.lu.length || bx.h.lu.length) ? `<div class="lineups">${[bx.v, bx.h].map(s => `<div><h3 class="sm">${esc(s.n)}</h3><table class="stats roster">${s.lu.map((p, i) => `<tr><td>${i + 1}</td><td class="nm">${whoLink(p[0], p.slice(2))}</td><td>${esc(p[1])}</td></tr>`).join('')}</table></div>`).join('')}</div>` : '';
+  const wikiQ = wiki(n);
   return `${crumbs('Game', key)}${banner()}<div class="eyebrow">${g.o ? 'From the “Others” row' : `#${g.rk}`}</div>
-   <h1 class="name">${esc(n)}</h1>${g.vs ? `<p style="font-size:17px;margin:2px 0 0"><b>${esc(g.vs)}</b></p>` : ''}${g.d ? `<p style="font-size:17px;margin:2px 0 0">${esc(g.d)}</p>` : ''}
-   <div class="sub" style="margin-top:8px">${g.tid ? `<span><a href="#" onclick="go('t_${g.tid}');return false">${esc(D.teams[g.tid].y + ' ' + D.teams[g.tid].n)}</a></span>` : ''}<span><a href="#" onclick="go('y_${g.y}');return false">More from ${g.y}</a></span></div>
+   <h1 class="name">${esc(n)}</h1>${score}${ser}
+   ${!bx && g.tid ? `<div class="sub" style="margin-top:8px"><span><a class="in" href="#" onclick="go('t_${g.tid}');return false">${esc(D.teams[g.tid].y + ' ' + D.teams[g.tid].n)}</a></span></div>` : ''}
    <h2>Line score</h2>${line || (BOXES ? '<p class="empty">No line score for this one in Retrosheet’s game logs.</p>' : '<p class="note">Loading…</p>')}
-   ${bx ? `<h2>Box score <small><a href="${esc(bx.br)}" target="_blank" rel="noopener">full box score on Baseball-Reference ↗</a></small></h2>${lineups}` : ''}
-   ${bx ? '<p class="note credit">Line scores and lineups: the information used here was obtained free of charge from and is copyrighted by Retrosheet (retrosheet.org).</p>' : ''}
-   <h2>Video <small class="find"><a href="${esc(yt(n + ' ' + (g.d || '')))}" target="_blank" rel="noopener">YouTube search ↗</a></small></h2>${vid}
+   ${bx ? `<h2>Box score${bx.br ? ` <small class="find"><a href="${esc(bx.br)}" target="_blank" rel="noopener">Baseball-Reference ↗</a></small>` : ''}</h2>
+     ${full ? `<p class="note linkkey"><a class="in" href="#" onclick="return false">Names like this</a> open their pages here; <a class="ext" href="#" onclick="return false">names like this</a> go to Baseball-Reference.</p>${teamBox(bx.v)}${teamBox(bx.h)}` : lineups}` : ''}
+   <h2>Video <small class="find"><a href="${esc(yt(n + ' ' + (g.vs || '') + ' full game'))}" target="_blank" rel="noopener">YouTube search ↗</a></small></h2>${ytEmbed(g.yt)}
    ${noteSection(key, 'video', 'More video', 'Paste a video link', [], { sub: true, link: true })}
-   ${noteSection(key, 'story', 'Game story', 'What happened, who was there, how it was written up…', [['SABR Games Project', sabr(n)], ['Next-day papers', loc(g.y + ' ' + (g.d || g.g))]])}
+   ${noteSection(key, 'story', 'Game story', 'What happened, who was there, how it was written up…', [['Wikipedia', rec?.sto?.url || wikiQ]], { pre: gameStory(rec?.sto) })}
    ${(prog(key)?.clips || []).length ? `<h2>Older clippings</h2>${clipsHTML(key)}` : ''}`;
 }
 let PLACE_OPTS = null;

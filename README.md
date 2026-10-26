@@ -11,6 +11,8 @@ cd docs && python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
+Run the game-content regression checks with `python -m unittest discover -s tests -v` after installing the Python requirements.
+
 ## Put it online (GitHub Pages)
 
 Repo **Settings → Pages → Build and deployment**: Source "Deploy from a branch", branch `main`, folder `/docs`. The site appears at `https://dc421.github.io/baseball-atlas/`.
@@ -28,7 +30,8 @@ python scripts/fetch_photos.py                                          # Wikipe
 python scripts/fetch_logos.py                                           # Wikipedia logos -> docs/logos/ (then rerun build_data.py)
 python scripts/build_notes.py                                           # your Baseball History doc -> docs/data/notes.json
 python scripts/export_other_leagues.py                                  # Japan/Cuba seasons from your ratings sheet -> data/source/japan_*.csv
-python scripts/fetch_retrosheet.py                                      # Retrosheet game logs -> data/retrosheet/ (line scores, lineups)
+python scripts/fetch_retrosheet.py                                      # Retrosheet logs and per-game stats -> data/retrosheet/ (line and box scores)
+python scripts/fetch_game_stories.py                                     # Wikipedia game summaries -> data/source/game_stories.json
 python scripts/fetch_videos.py                                          # a YouTube video per game -> data/source/game_videos.csv
 python scripts/fetch_player_media.py --photos --videos                  # player photos + highlight/interview videos -> data/source/player_media.json
 python scripts/fetch_parks.py                                           # a photo + dimensions diagram per home park -> docs/parks/, docs/data/parks.json
@@ -47,8 +50,12 @@ python scripts/build_data.py                                            # rebuil
   - `team_cities.csv`: locations for teams without a home-park record (mostly Negro League and Cuban clubs)
   - `team_colors.csv`: badge colors per franchise
   - `photo_titles.csv`: the Wikipedia article to use when the photo script picks the wrong person (`NONE` to skip)
+  - `game_videos.csv`: pin a game’s YouTube video by rank (`rk,video,note`); an empty video hides the automatic pick
+  - `park_names.csv`: historical park names by Retrosheet park ID and season range (`park,y0,y1,name`)
   - `park_titles.csv`: the Wikipedia article (or a specific photo / diagram file) for a park the park script gets wrong; check `data/park_review.csv`
 - **Logos**: see `docs/logos/README.md`.
+
+Game pages show the result, series standing, batting and pitching lines, video, and a linked Wikipedia summary when one is available. Automatic video picks are screened for the season, game number, matchup, and embedding availability; YouTube availability can still change.
 
 ## Your progress
 

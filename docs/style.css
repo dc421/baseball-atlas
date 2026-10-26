@@ -373,7 +373,25 @@ table.stats.linescore .rhe{padding-left:12px;border-left:1px solid var(--line)}
 .lineups table.stats.roster td:first-child{color:var(--muted)}
 .video{position:relative;aspect-ratio:16/9;max-width:640px;border-radius:10px;overflow:hidden;background:var(--line)}
 .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.credit{font-size:11px;margin-top:10px}
+/* links: pages on this site (bold, a lit underline) vs. Baseball-Reference (muted, dotted, ↗) */
+a.in{color:var(--ink);font-weight:600;text-decoration:underline;text-decoration-color:var(--lit);text-decoration-thickness:2px;text-underline-offset:3px}
+a.ext{color:var(--muted);text-decoration:underline dotted;text-underline-offset:3px}
+a.ext::after{content:"↗";font-size:.75em;margin-left:2px}
+a.in:hover,a.ext:hover{color:var(--lit)}
+/* game pages: the result, box score, the story */
+.score{font-size:19px;margin:4px 0 0}
+.score .inn{color:var(--muted)}
+.linkkey{margin:0 0 4px}
+table.stats.box{margin:4px 0 2px;min-width:min(100%,460px)}
+table.stats.box th.nm,table.stats.box td.nm{text-align:left;font-family:var(--f-body);font-size:13.5px;padding-right:18px;white-space:nowrap}
+table.stats.box th.nm{font-size:12px}
+table.stats.box .pos{color:var(--muted);font-family:var(--f-mono);font-size:11px}
+table.stats.box tr.subst td.nm{padding-left:14px}
+table.stats.box tr.tot td{border-top:1px solid var(--line);font-weight:600;padding-top:5px}
+.boxnotes{font-size:12.5px;margin:2px 0 10px}
+.boxnotes b{font-family:var(--f-mono);font-size:11.5px}
+.clip.story p{margin:0 0 8px}
+.clip.story p:last-of-type{margin-bottom:4px}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:6px 0 10px}
 .pgrid a{display:block;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:var(--line)}
 .pgrid img{width:100%;height:100%;object-fit:cover;display:block}

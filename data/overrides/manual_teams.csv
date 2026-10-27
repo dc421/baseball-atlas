@@ -1,2 +1,9 @@
-tid,y,lg,tm,fr,franch,n,w,l,park,city,region,country,lat,lon,bg,fg
-CIN-1869,1869,IND,CIN,RS9,Cincinnati Red Stockings (1869–70),Cincinnati Red Stockings,57,0,Union Grounds,Cincinnati,Ohio,United States,39.103,-84.512,#c8102e,#ffffff
+tid,y,lg,tm,fr,franch,n,w,l,park,city,region,country,lat,lon,bg,fg,top,ro
+CIN-1869,1869,IND,CIN,RS9,Cincinnati Red Stockings (1869–70),Cincinnati Red Stockings,57,0,Union Grounds,Cincinnati,Ohio,United States,39.103,-84.512,#c8102e,#ffffff,1,
+W25-1914,1914,IND,W25,W25,25th Infantry Wreckers,25th Infantry Wreckers,,,,Honolulu,Hawaii,United States,21.495,-158.063,#4b5320,#f2efe6,,
+W25-1915,1915,IND,W25,W25,25th Infantry Wreckers,25th Infantry Wreckers,,,,Honolulu,Hawaii,United States,21.495,-158.063,#4b5320,#f2efe6,,roganbu99
+W25-1916,1916,IND,W25,W25,25th Infantry Wreckers,25th Infantry Wreckers,,,,Honolulu,Hawaii,United States,21.495,-158.063,#4b5320,#f2efe6,,roganbu99 mooredo02
+W25-1917,1917,IND,W25,W25,25th Infantry Wreckers,25th Infantry Wreckers,,,,Honolulu,Hawaii,United States,21.495,-158.063,#4b5320,#f2efe6,,roganbu99 mooredo02
+W25-1918,1918,IND,W25,W25,25th Infantry Wreckers,25th Infantry Wreckers,,,,Nogales,Arizona,United States,31.34,-110.934,#4b5320,#f2efe6,,roganbu99 mooredo02
+W25-1919,1919,IND,W25,W25,25th Infantry Wreckers,25th Infantry Wreckers,,,,Nogales,Arizona,United States,31.34,-110.934,#4b5320,#f2efe6,,roganbu99 mooredo02
+BIS-1935,1935,IND,BIS,BIS,Bismarck Club,Bismarck Club,2,2,,Bismarck,North Dakota,United States,46.808,-100.784,#1f3a5f,#ffffff,,paigesa01 smithhi99

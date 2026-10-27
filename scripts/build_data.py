@@ -167,11 +167,16 @@ print('team seasons', len(teams), '| without a location:', sorted({t['n'] for t 
 
 # franchise colors: data/overrides/team_colors.csv (franchID, bg, fg); others get a neutral badge
 COLORS = {r.franchID: [r.bg, r.fg] for r in pd.read_csv(OVR / 'team_colors.csv').itertuples()}
-# teams from before the database starts (data/overrides/manual_teams.csv), e.g. the 1869 Cincinnati Red Stockings
-for r in pd.read_csv(OVR / 'manual_teams.csv').itertuples() if (OVR / 'manual_teams.csv').exists() else []:
-    teams[r.tid] = dict(y=int(r.y), lg=r.lg, tm=r.tm, fr=r.fr, n=r.n, w=int(r.w), l=int(r.l), rs=None, ra=None, rk=None, pen=0, ws=0, dv=None,
-                        pk=None, park=r.park, br=None, ll=[r.lat, r.lon], pl={'c': r.city, 'r': r.region, 'n': r.country}, ap=0, top=1)
+# teams the database doesn't carry (data/overrides/manual_teams.csv): the 1869 Cincinnati Red Stockings (a tracked season,
+# top=1) and clubs only Baseball-Reference's Black Baseball register knows (the 25th Infantry Wreckers, the 1935 Bismarck
+# club). ro: the list's players on the team, space-separated keys
+MANUAL_RO = {}
+for r in pd.read_csv(OVR / 'manual_teams.csv', dtype=str).fillna('').itertuples() if (OVR / 'manual_teams.csv').exists() else []:
+    teams[r.tid] = dict(y=int(r.y), lg=r.lg, tm=r.tm, fr=r.fr, n=r.n, w=int(r.w) if r.w else None, l=int(r.l) if r.l else None, rs=None, ra=None, rk=None,
+                        pen=0, ws=0, dv=None, pk=None, park=r.park or None, br=None, ll=[float(r.lat), float(r.lon)],
+                        pl={'c': r.city, 'r': r.region or None, 'n': r.country}, ap=0, **({'top': 1} if r.top == '1' else {}))
     TFn[r.fr] = r.franch; COLORS[r.fr] = [r.bg, r.fg]
+    if r.ro: MANUAL_RO[r.tid] = r.ro.split()
 # franchise pages: Lahman's franchises regrouped by city (data/overrides/franchise_pages.json, from the franchise
 # workbench). A page is one club in one city plus the clubs joined to it; each team season gets its page as 'fp'
 # ('fr' stays Lahman's franchise, for logos and colors). A season on no page shows on its league page, if it has one.
@@ -867,7 +872,14 @@ for tid, ks in roster.items():  # the list's players on each team, best season r
     cw = {k: rating_of[(players[k]['id'], teams[tid]['y'])] for k in set(ks) if (players[k].get('id'), teams[tid]['y']) in rating_of}
     teams[tid]['ro'] = sorted(set(ks), key=lambda k: (-cw.get(k, -99), players[k]['ovr'] or 999, k))
     if cw: teams[tid]['ros'] = cw
-
+for tid, ks in MANUAL_RO.items():  # and on the hand-entered teams, which also join the players' stints (map pins)
+    t = teams[tid]; ks = [k for k in ks if k in players]; t['ro'] = ks
+    for k in ks:
+        st = players[k].setdefault('st', [])
+        run = next((x for x in st if x[0] == t['fr'] and x[3] == t['y'] - 1), None)
+        if run: run[3] = t['y']
+        else: st.append([t['fr'], t['n'], t['y'], t['y'], 0, tid])
+        st.sort(key=lambda x: x[2])
 # ---------------------------------------------------------------- managers and executives (franchise pages)
 # managers: each run of seasons with a franchise, with his record there: [name, player key or None, bbref id, y0, y1, W, L]
 if (LAH / 'Managers.csv').exists():

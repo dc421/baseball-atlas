@@ -632,6 +632,20 @@
    "runs": [
     "mlb:OAK:Sacramento"
    ]
+  },
+  "W25": {
+   "n": "25th Infantry Wreckers",
+   "root": "negro:25th_Infantry_Wreckers:Honolulu",
+   "runs": [
+    "negro:25th_Infantry_Wreckers:Honolulu"
+   ]
+  },
+  "BIS": {
+   "n": "Bismarck Club",
+   "root": "negro:Bismarck_Club:Bismarck",
+   "runs": [
+    "negro:Bismarck_Club:Bismarck"
+   ]
   }
  },
  "teams": {
@@ -888,6 +902,7 @@
   "BFN-1884": "TOR",
   "BFN-1885": "TOR",
   "BFP-1890": "TOR",
+  "BIS-1935": "BIS",
   "BL1-1872": "BAL",
   "BL1-1873": "BAL",
   "BL1-1874": "BAL",
@@ -4125,6 +4140,12 @@
   "TRO-1871": "TRT",
   "TRO-1872": "TRT",
   "TT-1923": null,
+  "W25-1914": "W25",
+  "W25-1915": "W25",
+  "W25-1916": "W25",
+  "W25-1917": "W25",
+  "W25-1918": "W25",
+  "W25-1919": "W25",
   "WAP-1932": null,
   "WAS-1892": "WSN",
   "WAS-1893": "WSN",

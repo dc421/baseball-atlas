@@ -701,7 +701,7 @@ function vFranchise() {
   const W = ts.reduce((a, [, x]) => a + (x.w || 0), 0), Lo = ts.reduce((a, [, x]) => a + (x.l || 0), 0), pens = ts.filter(([, x]) => x.pen).length, wss = ts.filter(([, x]) => x.ws).length;
   const rated = ts.filter(([, x]) => x.tr).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
   const mine = [...new Set(ts.flatMap(([, x]) => x.ro || []))].filter(k => D.players[k]).sort((a, b) => (D.players[a].ovr || 999) - (D.players[b].ovr || 999));
-  const season = ([tid, x]) => `<tr><td><a href="#" onclick="go('t_${tid}');return false">${x.y}</a></td><td class="nm">${esc(x.n)}</td><td>${x.w ?? ''}–${x.l ?? ''}</td><td>${x.rk ? ordinal(x.rk) : ''}</td><td>${x.ws ? 'WS' : x.pen ? 'Pennant' : ''}</td><td>${x.tr ? fmtS(x.tr.a) : ''}</td><td>${x.tr ? '#' + x.tr.ar : ''}</td><td>${x.top ? '★' : ''}</td></tr>`;
+  const season = ([tid, x]) => `<tr><td><a href="#" onclick="go('t_${tid}');return false">${x.y}</a></td><td class="nm">${esc(x.n)}</td><td>${x.w != null ? `${x.w}–${x.l}` : ''}</td><td>${x.rk ? ordinal(x.rk) : ''}</td><td>${x.ws ? 'WS' : x.pen ? 'Pennant' : ''}</td><td>${x.tr ? fmtS(x.tr.a) : ''}</td><td>${x.tr ? '#' + x.tr.ar : ''}</td><td>${x.top ? '★' : ''}</td></tr>`;
   return `${crumbs('Franchise', key)}${banner()}
    <div class="hero">${teamBadge(last)}<div class="who"><div class="eyebrow">Franchise · ${first.y}${last.y !== first.y ? '–' + last.y : ''}</div><h1 class="name">${esc(fr.n)}</h1></div></div>
    <div class="sub" style="margin-top:8px"><span><b>${ts.length}</b> season${ts.length > 1 ? 's' : ''}</span>${W + Lo ? `<span><b>${W}–${Lo}</b> all-time</span>` : ''}${pens ? `<span><b>${pens}</b> pennant${pens > 1 ? 's' : ''}</span>` : ''}${wss ? `<span><b>${wss}</b> World Series</span>` : ''}</div>

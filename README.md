@@ -1,6 +1,6 @@
 # Living Atlas of Baseball
 
-A personal portal to baseball history: a map of every team season since 1871 (Negro Leagues included), rankings of your players and greatest games, and places (countries, states, cities) with the best players from them, the best who played there, and the best teams they've had. Every player, team and game has doors to open (film, photos, SABR, newspapers, Baseball-Reference) and lights that come on as you explore.
+A personal portal to baseball history: a map of every team season since 1871 (Negro Leagues included), rankings of your players and greatest games, a page for each franchise (organized by city) and for the other leagues your players played in. Every player, team and game has doors to open (film, photos, SABR, newspapers, Baseball-Reference) and lights that come on as you explore.
 
 The site is plain HTML/JS in `docs/`, so GitHub Pages can serve it directly.
 
@@ -41,7 +41,8 @@ python scripts/build_data.py                                            # rebuil
 
 - **Your list** comes from the IN, Year-by-Year Top 5, Games, Parks R/L and Checklist tabs. Only the IN columns the site uses are exported. Season rankings come from the rating model; the Year-by-Year tab now supplies only the cWPA leader.
 - **Your rating model** comes from `~/Documents/Baseball Ratings 2023.R` (pass another path to use a different version). `export_ratings.R` runs it unchanged up to the Hall of Fame models and saves every player-season's rating, year rank and tools, plus each player's peak-weighted rating and Hall odds. The site shows them as a career arc, 20-80 tools and the model's rank on player pages, the model's best five on team pages, and its top 10 on year pages. Skip this step and the site builds without them.
-- **Franchise pages** list every home park (a park counts in a season when it held a quarter of the home games) with a Wikipedia photo and its dimensions diagram, or a field drawn from the infobox distances when there is no diagram; every manager (Lahman); and, for today's 30 clubs, the principal owners and general managers from Wikipedia's navigation boxes.
+- **Franchise pages** are one club in one city, plus the clubs joined to it: `data/overrides/franchise_pages.json` maps every team season to its page (or to none, when it only appears on its league page) and names each page. It came from the franchise workbench; edit it by hand to move a season or rename a page. Each page lists every home park (a park counts in a season when it held a quarter of the home games) with a Wikipedia photo and its dimensions diagram, or a field drawn from the infobox distances when there is no diagram; every manager (Lahman); and, for today's 30 clubs, the principal owners and general managers from Wikipedia's navigation boxes.
+- **League pages** cover the AA, UA, Players' League, Federal League, both Negro National Leagues, the NAL, ECL and East-West League (from the team seasons), and Cuba, the Dominican Republic, Venezuela, Puerto Rico and Japan (`data/source/league_seasons.json`: the club census from Baseball-Reference, Seamheads and club histories, with the listed players on each club).
 - **Everything else** (careers, birthplaces, teams, parks, managers, stats through 2025) comes from the Lahman database (SABR's 2025 release, fetched by `fetch_lahman.py`).
 - **Hand fixes** live in `data/overrides/`:
   - `player_ids.csv`: force a player match (or `NONE` for players outside the database)
@@ -66,7 +67,7 @@ Every page starts as a draft built from the data above. To edit, open `#r-tracke
 - The first edit gives a page its own copy in `docs/data/pages.json`, which wins over the data from then on. Rerunning the fetch scripts never changes an edited page.
 - **Lock page** marks it finished and hides the editing tools. Unlock to change it again.
 - Edits save straight to `docs/data/pages.json` on `main` (a commit per save, bundled a couple of seconds apart), so the live site follows a minute or so later. Pull before working locally.
-- The **Tracker** (only shown while editing) counts locked pages by type and has a Spin for each type. The header Spin picks any page that isn't locked.
+- The **Tracker** counts locked pages by type, has a Spin for each type, and lists every page. The header Spin picks any page that isn't locked.
 
 ## Layout
 

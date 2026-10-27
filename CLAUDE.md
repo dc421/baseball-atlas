@@ -4,7 +4,7 @@ The site is being built page by page. The user spins a page, we iterate on it in
 
 ## Before touching anything
 - `git pull --rebase` first: the site commits page edits straight to `docs/data/pages.json` on `main`.
-- The user names a page by its URL hash (`#p-ruthba01` is the key `p_ruthba01`; `t_`, `g_`, `f_`, `y_`, `d_`, `l_`, `c_` for the other types).
+- The user names a page by its URL hash (`#p-ruthba01` is the key `p_ruthba01`; `t_`, `g_`, `f_`, `y_`, `d_`, `L_` (leagues), `c_` for the other types).
 - Read that page's entry in `docs/data/pages.json`, if it has one.
 
 ## Locked pages

@@ -406,3 +406,11 @@ form.tlform textarea{min-height:90px}
 .tool80 i{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
 .tool80 i b{display:block;height:100%;background:var(--lit)}
 .tool80 .v{font-family:var(--f-mono);font-size:12px;text-align:right}
+/* league pages: a season per row, opened for its table */
+details.lgyear{border-bottom:1px solid var(--line);padding:6px 0}
+details.lgyear summary{cursor:pointer;font-size:14px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+details.lgyear summary b{font-family:var(--f-mono);font-weight:600}
+details.lgyear summary small{color:var(--muted);font-size:12px}
+details.lgyear .statline{margin:8px 0 4px}
+table.stats.lgs td.nm small{color:var(--muted);font-size:11.5px}
+table.stats.lgs td:last-child{white-space:normal;font-size:12px}

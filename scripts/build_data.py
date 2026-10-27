@@ -32,6 +32,11 @@ def rd(n):
 
 P, A, T, H, PK, TF, BAT, PIT = [rd(n) for n in ['People', 'Appearances', 'Teams', 'HomeGames', 'Parks', 'TeamsFranchises', 'Batting', 'Pitching']]
 BAT = BAT.fillna(0); PIT = PIT.fillna(0)
+# one person split across two People rows (same bbrefID, e.g. Chino Smith's career sits under "Charlie Smith"):
+# file the appearances and stats under the row whose playerID is the bbrefID
+_dup = P[P.bbrefID.notna()].groupby('bbrefID').playerID.apply(list)
+SAME = {i: b for b, ids in _dup[_dup.map(len) > 1].items() if b in ids for i in ids if i != b}
+for d in (A, BAT, PIT): d['playerID'] = d.playerID.replace(SAME)
 PK = PK.astype(object).where(PK.notna(), None)
 
 
@@ -167,10 +172,20 @@ for r in pd.read_csv(OVR / 'manual_teams.csv').itertuples() if (OVR / 'manual_te
     teams[r.tid] = dict(y=int(r.y), lg=r.lg, tm=r.tm, fr=r.fr, n=r.n, w=int(r.w), l=int(r.l), rs=None, ra=None, rk=None, pen=0, ws=0, dv=None,
                         pk=None, park=r.park, br=None, ll=[r.lat, r.lon], pl={'c': r.city, 'r': r.region, 'n': r.country}, ap=0, top=1)
     TFn[r.fr] = r.franch; COLORS[r.fr] = [r.bg, r.fg]
+# franchise pages: Lahman's franchises regrouped by city (data/overrides/franchise_pages.json, from the franchise
+# workbench). A page is one club in one city plus the clubs joined to it; each team season gets its page as 'fp'
+# ('fr' stays Lahman's franchise, for logos and colors). A season on no page shows on its league page, if it has one.
+# Seasons added since the export go to the page of their franchise's latest season.
+FP = json.load(open(OVR / 'franchise_pages.json'))
+fr_page = {}
+for tid in sorted(teams, key=lambda x: teams[x]['y']):
+    if FP['teams'].get(tid): fr_page[teams[tid]['fr']] = FP['teams'][tid]
 franch = {}
-for tid, t in teams.items():
-    f = franch.setdefault(t['fr'], dict(n=TFn.get(t['fr'], t['n']), s=[], col=COLORS.get(t['fr'])))
-    f['s'].append(tid)
+for tid in sorted(teams, key=lambda x: (teams[x]['y'], x)):
+    t = teams[tid]; k = t['fp'] = FP['teams'][tid] if tid in FP['teams'] else fr_page.get(t['fr'])
+    if not k: continue
+    code = FP['pages'][k]['root'].split(':')[1]
+    franch.setdefault(k, dict(n=FP['pages'][k]['n'], s=[], col=COLORS.get(code) or COLORS.get(t['fr'])))['s'].append(tid)
 
 # parks (shown on team pages)
 parks = {}
@@ -211,8 +226,13 @@ for t in teams.values():
     if pk not in parks: parks[pk] = dict(n=t['park'], al=None, c=city, st=(t['pl'] or {}).get('r'), y0=t['y'], y1=t['y'])
     p = parks[pk]; p['y0'], p['y1'] = min(p['y0'], t['y']), max(p['y1'], t['y'])
     home.setdefault(t['fr'], {}).setdefault(pk, set()).add(t['y'])
-for fr, ps in home.items():
-    if fr not in franch: continue
+page_home = {}  # each page's parks: its seasons' years in their Lahman franchise's parks
+for k, f in franch.items():
+    for tid in f['s']:
+        t = teams[tid]
+        for pk, ys in home.get(t['fr'], {}).items():
+            if t['y'] in ys: page_home.setdefault(k, {}).setdefault(pk, set()).add(t['y'])
+for fr, ps in page_home.items():
     runs = []
     for pk, ys in ps.items():
         sp = []
@@ -360,8 +380,8 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
     pid2key = {o['id']: k for k, o in players.items() if o.get('id')}
     nm = RS.groupby('playerID').name.first().dropna()
     by_nm = nm.groupby(nm.map(norm)).apply(lambda s: s.index[0] if len(s) == 1 else None).dropna()
-    for k, o in players.items():
-        if not o.get('id') and norm(o['f'] + o['l']) in by_nm.index: pid2key[by_nm[norm(o['f'] + o['l'])]] = k
+    for k, o in players.items():  # also when the sheet files a Negro leaguer under its own id (smithch99 for smithch11)
+        if (not o.get('id') or o['id'] not in nm.index) and norm(o['f'] + o['l']) in by_nm.index: pid2key[by_nm[norm(o['f'] + o['l'])]] = k
     RS['key'] = RS.playerID.map(pid2key)
 
     # tools on a 20-80 scale: z-score among regular seasons, then the player's top 4 rated seasons
@@ -853,8 +873,8 @@ for tid, ks in roster.items():  # the list's players on each team, best season r
 if (LAH / 'Managers.csv').exists():
     key_of = {o['id']: k for k, o in players.items() if o.get('id')}
     MG = rd('Managers').merge(T[['yearID', 'teamID', 'franchID']].astype({'yearID': int}), on=['yearID', 'teamID'])
-    for fr, g in MG.sort_values(['yearID', 'inseason']).groupby('franchID'):
-        if fr not in franch: continue
+    MG['page'] = [teams.get(tkey.get((tm, y)), {}).get('fp') for tm, y in zip(MG.teamID, MG.yearID)]
+    for fr, g in MG[MG.page.notna()].sort_values(['yearID', 'inseason']).groupby('page'):
         runs = []
         for r in g.itertuples():
             e = runs[-1] if runs and runs[-1][0] == r.playerID and runs[-1][4] >= r.yearID - 1 else None
@@ -870,14 +890,52 @@ else:
     print('no data/lahman/Managers.csv: run python scripts/fetch_lahman.py for manager histories')
 # owners and general managers (scripts/fetch_execs.py -> data/source/executives.json): {kind: [[group, [[name, article]...], years]]}
 if (SRC / 'executives.json').exists():
+    # each row goes to the pages holding that franchise's seasons in its years (Brooklyn's owners to the Brooklyn page)
+    def span(yrs):
+        ys = [int(y) for y in re.findall(r'\d{4}', yrs)]
+        return (ys[0], 2100 if 'present' in yrs or len(ys) < 2 else ys[-1]) if ys else (0, 2100)
+    page_years = {}
+    for k, f in franch.items():
+        for tid in f['s']: page_years.setdefault((teams[tid]['fr'], k), set()).add(teams[tid]['y'])
     for fr, ex in json.load(open(SRC / 'executives.json')).items():
-        if fr in franch: franch[fr]['ex'] = ex
+        for (lf, k), ys in sorted(page_years.items(), key=lambda kv: min(kv[1])):
+            if lf != fr: continue
+            for kind, rows in ex.items():
+                keep = [r for r in rows if any(span(r[2])[0] <= y <= span(r[2])[1] for y in ys)]
+                if keep: franch[k].setdefault('ex', {}).setdefault(kind, []).extend(keep)
+
+# ---------------------------------------------------------------- league pages
+# The other major leagues and the Negro leagues from the team seasons; Cuba, the Dominican Republic, Venezuela, Puerto
+# Rico and Japan from data/source/league_seasons.json (the franchise workbench's club census). Each season row:
+# [year, season label, league, club, city, W, L, flag, team season or None, players from the list]
+LEAGUE_PAGES = {
+    'AA': ('American Association', ['AA']), 'UA': ('Union Association', ['UA']), 'PL': ("Players' League", ['PL']), 'FL': ('Federal League', ['FL']),
+    'NNL': ('Negro National League', ['NNL']), 'NN2': ('Negro National League (II)', ['NN2']), 'NAL': ('Negro American League', ['NAL']),
+    'ECL': ('Eastern Colored League', ['ECL']), 'EWL': ('East-West League', ['EWL']),
+    'CUB': ('Cuba', None), 'DOM': ('Dominican Republic', None), 'VEN': ('Venezuela', None), 'PR': ('Puerto Rico', None), 'JPN': ('Japan', None)}
+LS = json.load(open(SRC / 'league_seasons.json'))['leagues'] if (SRC / 'league_seasons.json').exists() else {}
+leagues = {}
+for code, (name, lgs) in LEAGUE_PAGES.items():
+    if lgs:
+        rows = [[t['y'], str(t['y']), t['lg'], t['n'], (t['pl'] or {}).get('c'), t['w'], t['l'], None, tid, [k for k in t.get('ro', []) if k in players]]
+                for tid, t in teams.items() if t['lg'] in lgs]
+        lg = dict(n=name, subs={}, s=rows)
+    elif code in LS:
+        src = LS[code]
+        lg = dict(n=name, subs=src['subs'], s=[r[:8] + [None, [k for k in r[8] if k in players]] for r in src['seasons']],
+                  also=[[r[0], r[1], r[2], r[3], r[4], [k for k in r[5] if k in players]] for r in src.get('also', [])])
+    else:
+        continue
+    lg['s'].sort(key=lambda r: (r[0], r[2], -(r[5] or 0), r[3]))
+    lg['y0'], lg['y1'] = min(r[0] for r in lg['s']), max(r[0] for r in lg['s'])
+    leagues[code] = lg
+print('league pages:', {k: len(v['s']) for k, v in leagues.items()})
 
 # ---------------------------------------------------------------- logos manifest
 logos = sorted(p.name for p in (ROOT / 'docs' / 'logos').glob('*') if p.suffix.lower() in ('.png', '.svg', '.jpg', '.jpeg', '.webp', '.none'))
 photos_manifest = ROOT / 'docs' / 'data' / 'photos.json'
 
-DATA = dict(clubs=clubs_out, players=players, teams=teams, franch=franch, parks=parks, years={str(k): v for k, v in years.items()},
+DATA = dict(clubs=clubs_out, players=players, teams=teams, franch=franch, leagues=leagues, fcol=COLORS, parks=parks, years={str(k): v for k, v in years.items()},
             games=games, eras=eras, logos=logos)
 OUT.mkdir(parents=True, exist_ok=True)
 s = json.dumps(DATA, separators=(',', ':'), ensure_ascii=False)

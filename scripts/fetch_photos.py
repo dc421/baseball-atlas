@@ -23,7 +23,7 @@ REVIEW = ROOT / 'data' / 'photo_review.csv'
 API = 'https://en.wikipedia.org/w/api.php'
 SPARQL = 'https://query.wikidata.org/sparql'
 S = requests.Session()
-S.headers['User-Agent'] = 'LivingAtlasOfBaseball/1.0 (personal hobby project; https://github.com/dc421/baseball-atlas)'
+S.headers['User-Agent'] = 'MoveTheNeedle/1.0 (personal hobby project; https://github.com/dc421/baseball-atlas)'
 
 
 def api(**params):

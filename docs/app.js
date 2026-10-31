@@ -1,5 +1,5 @@
 "use strict";
-/* Living Atlas of Baseball
+/* Move the Needle
    Data: data/atlas.json (built by scripts/build_data.py), data/photos.json (scripts/fetch_photos.py), data/parks.json (scripts/fetch_parks.py),
    data/pages.json (each edited page's own copy and whether it's locked). */
 
@@ -155,12 +155,12 @@ const isLocked = key => !!pg(key)?.locked;
 const canEdit = key => editing() && !isLocked(key);
 const litN = key => isLocked(key) ? 3 : 0;
 // tracked pages: your players, the top team seasons (one per season played, the 1869 Red Stockings included), as many of your top games,
-// each of those seasons' year pages, every decade (before 1871 is one), the US states and other countries your players
+// each of those seasons' year pages, every decade (1845–1868 is one), the US states and other countries your players
 // are from, and every franchise
 function trackKeys() {
   const P = Object.keys(D.players).map(k => 'p_' + k);
   const T = Object.entries(D.teams).filter(([, t]) => t.top).sort((a, b) => a[1].y - b[1].y).map(([k]) => 't_' + k);
-  const G = Object.values(D.games).filter(g => !g.o).sort((a, b) => a.rk - b.rk).slice(0, T.length).map(g => 'g_' + g.rk);
+  const G = Object.values(D.games).sort((a, b) => a.rk - b.rk).map(g => 'g_' + g.id);  // the build keeps as many as T
   const Y = [...new Set(Object.values(D.teams).map(t => t.y))].sort((a, b) => a - b).map(y => 'y_' + y);  // every season since 1869
   const Dc = ['d_pre', ...Array.from({ length: 16 }, (_, i) => 'd_' + (1870 + 10 * i))];
   const F = Object.keys(D.franch).map(k => 'f_' + k), Lg = Object.keys(D.leagues || {}).map(k => 'L_' + k);
@@ -170,18 +170,46 @@ function trackKeys() {
 const lockHTML = key => editing() && trackKeys().all.has(key)
   ? `${!isLocked(key) ? `<span class="pagestate">${pg(key) ? 'Draft, edited' : 'Draft'}</span>` : ''}<button class="donebtn" data-lock="${esc(key)}" aria-pressed="${isLocked(key)}" title="${isLocked(key) ? 'Unlock to edit again' : 'Lock it in: hides the editing tools'}"><span class="box" aria-hidden="true"></span>${isLocked(key) ? 'Locked' : 'Lock page'}</button>` : '';
 
-/* ================================================================ map */
-let svg, gRoot, gLand, gBase, gFocus, gLab, proj, path, W = 800, H = 600, K = 1;
-const zoom = d3.zoom().scaleExtent([1, 80]).on('zoom', ev => { gRoot.attr('transform', ev.transform); K = ev.transform.k; rescale(); });
+/* ================================================================ map
+   North America, the Caribbean and Venezuela on one map, zoomed to fit whatever the view is about (a year: every club
+   that played). Japan and Hawaii are insets in the corner, shown only when something on the map is there. */
+let svg, gRoot, gLand, gBase, gFocus, gLab, proj, path, W = 800, H = 600, K = 1, LAND = null, moved = false;
+const zoom = d3.zoom().scaleExtent([1, 80]).on('zoom', ev => { gRoot.attr('transform', ev.transform); K = ev.transform.k; if (ev.sourceEvent) moved = true; rescale(); });
+const INSETS = [  // box: [lon, lat] corners; in: which points it takes
+  { id: 'jp', name: 'Japan', lg: 'JPN', box: [[129.5, 31.2], [145.8, 45.5]], w: 150, h: 170, in: ll => ll[1] > 100 },
+  { id: 'hi', name: 'Hawaii', box: [[-160.3, 22.3], [-154.8, 18.9]], w: 150, h: 84, in: ll => ll[1] < -150 }];
+const insetOf = ll => INSETS.find(s => s.in(ll));
+const onMain = ll => !insetOf(ll) && ll[1] > -170 && ll[1] < -30;  // what the main map frames (Europe and the rest only show if in view)
+// the country leagues' clubs in a year: { key, n, lg, ll } from the club census (their cities are in D.leagues[code].ll)
+const CLUB_LEAGUES = ['CUB', 'DOM', 'PR', 'VEN', 'JPN'];
+function leagueClubs(y) {
+  const out = [];
+  for (const code of CLUB_LEAGUES) { const lg = D.leagues?.[code]; if (!lg) continue;
+    for (const r of lg.s) if (r[0] === y && lg.ll?.[r[4]]) out.push({ key: 'L_' + code, n: r[3], lg: code, city: r[4], ll: lg.ll[r[4]] }); }
+  return out;
+}
+const yearLLs = y => [...Object.values(D.teams).filter(t => t.y === y && t.ll).map(t => t.ll), ...leagueClubs(y).map(c => c.ll)];
 function setupMap() {
   svg = d3.select('#map'); gRoot = svg.append('g'); gLand = gRoot.append('g'); gBase = gRoot.append('g'); gFocus = gRoot.append('g'); gLab = gRoot.append('g');
+  LAND = { type: 'FeatureCollection', features: topojson.feature(WORLD, WORLD.objects.countries).features.filter(f => f.properties?.name !== 'Antarctica') };
+  const box = d3.select('#insets');
+  for (const s of INSETS) {
+    s.el = box.append('div').attr('class', 'inset').attr('hidden', true);
+    s.proj = d3.geoMercator().fitExtent([[4, 4], [s.w - 4, s.h - 4]], { type: 'MultiPoint', coordinates: s.box }).clipExtent([[0, 0], [s.w, s.h]]);
+    const g = s.el.append('svg').attr('viewBox', `0 0 ${s.w} ${s.h}`).attr('width', s.w).attr('height', s.h).attr('role', 'img').attr('aria-label', s.name);
+    g.append('path').datum(LAND).attr('class', 'land').attr('d', d3.geoPath(s.proj));
+    s.pins = g.append('g');
+    s.cap = s.el.append('div').attr('class', 'cap');
+  }
   svg.call(zoom); sizeMap();
 }
 function sizeMap() {
   const r = $('#map').getBoundingClientRect(); W = r.width || 800; H = r.height || 500;
-  proj = d3.geoNaturalEarth1().fitExtent([[0, 0], [W, H]], { type: 'Sphere' }); path = d3.geoPath(proj);
+  // zoomed all the way out: the lower 48 down to Venezuela
+  proj = d3.geoConicEqualArea().parallels([20, 45]).rotate([96, 0]).fitExtent([[0, 0], [W, H]], { type: 'MultiPoint', coordinates: [[-125, 49.5], [-60, 47], [-60, 8], [-125, 24]] });
+  path = d3.geoPath(proj);
   gLand.selectAll('*').remove();
-  gLand.append('path').datum(topojson.feature(WORLD, WORLD.objects.countries)).attr('class', 'land').attr('d', path);
+  gLand.append('path').datum(LAND).attr('class', 'land').attr('d', path);
   gLand.append('path').datum(topojson.mesh(STATES, STATES.objects.states, (a, b) => a !== b)).attr('class', 'states').attr('d', path);
 }
 const XY = ll => proj([ll[1], ll[0]]);
@@ -211,21 +239,35 @@ function logoFor(t) {
 }
 function teamColors(t) { const c = D.fcol?.[t.fr] || D.franch[t.fp]?.col; return c || ['#53635b', '#eef1ea']; }
 
+// a country-league club's badge: the initials of its name ("Tigres del Licey" -> TL, "Almendares" -> ALM)
+const clubAbbr = n => { const w = n.split(/\s+/).filter(x => /^[A-ZÁÉÍÓÚÑ0-9]/.test(x)); return w.length > 1 ? w.slice(0, 3).map(x => x[0]).join('') : n.slice(0, 3).toUpperCase(); };
+let INSET_PTS = [];  // what drawBase and drawFocus put in the insets: { ll, key, label, fill }
 function drawBase() {
-  gBase.selectAll('*').remove();
-  const s = sc();
+  gBase.selectAll('*').remove(); INSET_PTS = INSET_PTS.filter(p => p.focus);
   if (MAPMODE === 'teams') {
+    const pins = [...Object.entries(D.teams).filter(([, t]) => t.y === YEAR && t.ll).map(([tid, t]) => ({ tid, t, ll: t.ll })), ...leagueClubs(YEAR).map(c => ({ c, ll: c.ll }))];
     const byLL = {};
-    for (const [tid, t] of Object.entries(D.teams)) { if (t.y !== YEAR || !t.ll) continue; (byLL[t.ll.join()] = byLL[t.ll.join()] || []).push(tid); }
+    for (const p of pins) {
+      if (insetOf(p.ll)) { INSET_PTS.push({ ll: p.ll, key: p.t ? 't_' + p.tid : p.c.key, label: p.t ? `${p.t.y} ${p.t.n}` : `${p.c.n} · ${D.leagues[p.c.lg].n}`, fill: p.t ? teamColors(p.t)[0] : 'var(--chalk)' }); continue; }
+      (byLL[p.ll.join()] = byLL[p.ll.join()] || []).push(p);
+    }
     const items = [];
-    for (const tids of Object.values(byLL)) tids.forEach((tid, i) => {
-      const t = D.teams[tid], [x, y] = XY(t.ll), a = i * 2 * Math.PI / tids.length, off = tids.length > 1 ? 12 : 0;
-      items.push({ tid, t, x, y, ox: off * Math.sin(a), oy: -off * Math.cos(a) });
+    for (const ps of Object.values(byLL)) ps.forEach((p, i) => {
+      const [x, y] = XY(p.ll), a = i * 2 * Math.PI / ps.length, off = ps.length > 1 ? 12 : 0;
+      items.push({ ...p, x, y, ox: off * Math.sin(a), oy: -off * Math.cos(a) });
     });
     const g = gBase.selectAll('g.badge-t').data(items).enter().append('g').attr('class', 'badge-t pin').style('cursor', 'pointer')
-      .on('click', (ev, d) => go('t_' + d.tid));
+      .on('click', (ev, d) => go(d.t ? 't_' + d.tid : d.c.key));
     g.each(function (d) {
-      const el = d3.select(this), lit = litN('t_' + d.tid), [bg, fg] = teamColors(d.t), sel = highlight === 't_' + d.tid;
+      const el = d3.select(this);
+      if (d.c) {  // a club in Cuba, the Dominican Republic, Puerto Rico, Venezuela or Japan: opens its league
+        el.append('circle').attr('r', 10.5).attr('fill', 'var(--chalk)').attr('stroke', 'var(--water)').attr('stroke-width', 1.2);
+        el.append('text').attr('fill', 'var(--water)').attr('font-size', clubAbbr(d.c.n).length > 2 ? 6.4 : 7.5).text(clubAbbr(d.c.n));
+        el.attr('opacity', highlight ? .45 : 1);
+        el.append('title').text(`${d.c.n}, ${d.c.city} · ${D.leagues[d.c.lg].n}`);
+        return;
+      }
+      const lit = litN('t_' + d.tid), [bg, fg] = teamColors(d.t), sel = highlight === 't_' + d.tid;
       const logo = logoFor(d.t);
       el.append('circle').attr('r', sel ? 13 : 10.5).attr('fill', logo ? '#fff' : bg)
         .attr('stroke', lit || sel ? 'var(--lit)' : 'var(--water)').attr('stroke-width', lit || sel ? 2.5 : 1.2)
@@ -236,42 +278,73 @@ function drawBase() {
       el.append('title').text(`${d.t.y} ${d.t.n}`);
     });
   }
-  rescale();
+  rescale(); drawInsets();
+}
+// Japan and Hawaii: shown only when there's something to put in them
+function drawInsets() {
+  for (const s of INSETS) {
+    const pts = INSET_PTS.filter(p => s.in(p.ll));
+    s.el.attr('hidden', pts.length ? null : true); if (!pts.length) continue;
+    s.pins.selectAll('*').remove();
+    const byLL = {}; for (const p of pts) (byLL[p.ll.join()] = byLL[p.ll.join()] || []).push(p);
+    for (const ps of Object.values(byLL)) ps.forEach((p, i) => {
+      const [x, y] = s.proj([p.ll[1], p.ll[0]]), a = i * 2 * Math.PI / ps.length, off = ps.length > 1 ? 6 : 0;
+      s.pins.append('circle').attr('class', 'pin').attr('cx', x + off * Math.sin(a)).attr('cy', y - off * Math.cos(a)).attr('r', 5)
+        .attr('fill', p.fill).attr('stroke', 'var(--water)').attr('stroke-width', 1).style('cursor', p.key ? 'pointer' : null)
+        .on('click', () => p.key && go(p.key)).append('title').text(p.label);
+    });
+    const clubs = pts.filter(p => !p.focus).length, lg = s.lg && D.leagues?.[s.lg];
+    s.cap.html(`${lg ? `<a href="#" onclick="go('L_${s.lg}');return false">${esc(s.name)} ›</a>` : `<span>${esc(s.name)}</span>`}${clubs ? `<small>${clubs} club${clubs > 1 ? 's' : ''}</small>` : ''}`);
+  }
 }
 function drawFocus() {
   gFocus.selectAll('*').remove(); gLab.selectAll('*').remove();
-  if (!focusPts || !focusPts.length) return;
-  const pts = focusPts.map(p => ({ ...p, r: p.r || 6 }));
+  INSET_PTS = INSET_PTS.filter(p => !p.focus);
+  if (!focusPts || !focusPts.length) return drawInsets();
+  for (const p of focusPts) if (insetOf(p.ll)) INSET_PTS.push({ ll: p.ll, key: p.key, label: p.label, fill: 'var(--lit)', focus: true });
+  const pts = focusPts.filter(p => !insetOf(p.ll)).map(p => ({ ...p, r: p.r || 6 }));
   gFocus.selectAll('circle').data(pts).enter().append('circle').attr('class', 'pin')
     .attr('cx', d => XY(d.ll)[0]).attr('cy', d => XY(d.ll)[1]).attr('fill', d => d.key ? fillFor(litN(d.key)) : 'var(--lit)').attr('stroke', 'var(--chalk)')
     .on('click', (ev, d) => d.key && go(d.key)).append('title').text(d => d.label);
   const seen = new Set();
   gLab.selectAll('text').data(pts.filter(p => { const k = p.ll.join(); if (seen.has(k)) return false; seen.add(k); return true; })).enter().append('text').attr('class', 'maplabel')
     .attr('x', d => XY(d.ll)[0]).attr('y', d => XY(d.ll)[1]).text(d => d.label);
-  rescale();
+  rescale(); drawInsets();
 }
 function fitTo(lls, maxK = 30) {
-  if (!lls.length) return;
+  lls = lls.filter(onMain); if (!lls.length) return fitNorthAmerica();
+  moved = false;
   const xs = lls.map(XY); let [x0, x1] = d3.extent(xs, d => d[0]), [y0, y1] = d3.extent(xs, d => d[1]);
   const pad = Math.max(24, Math.min(W, H) * .1), bar = $('#mapbar').hidden ? 0 : 56;  // the year pill floats over the top of the map
-  const k = Math.min(maxK, Math.min((W - 2 * pad) / Math.max(x1 - x0, 20), (H - 2 * pad - bar) / Math.max(y1 - y0, 20)));
+  const foot = getComputedStyle($('#decstrip')).display === 'none' ? 0 : 40;  // and the decade strip along the bottom
+  const k = Math.min(maxK, Math.min((W - 2 * pad) / Math.max(x1 - x0, 20), (H - 2 * pad - bar - foot) / Math.max(y1 - y0, 20)));
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
-  svg.transition().duration(reduce ? 0 : 600).call(zoom.transform, d3.zoomIdentity.translate(W / 2 - k * (x0 + x1) / 2, (H + bar) / 2 - k * (y0 + y1) / 2).scale(k));
+  svg.transition().duration(reduce ? 0 : 600).call(zoom.transform, d3.zoomIdentity.translate(W / 2 - k * (x0 + x1) / 2, (H + bar - foot) / 2 - k * (y0 + y1) / 2).scale(k));
 }
-const fitNorthAmerica = () => fitTo([[50, -125], [17, -66]], 6);
+const fitNorthAmerica = () => fitTo([[50, -125], [24, -66]], 6);
+const fitYear = y => { const lls = yearLLs(y); if (lls.length) fitTo(lls, 14); else fitNorthAmerica(); };
 function refreshMap() { drawBase(); drawFocus(); }
 function setYear(y) {
   YEAR = Math.max(1845, Math.min(2025, y | 0)); $('#yr').value = YEAR; $('#bigyear').textContent = YEAR;
-  if (view.type === 'y') { view = { type: 'y', id: String(YEAR) }; setHash(); render(true, { keepMap: true }); } else drawBase();
+  const yk = pageKey('y_' + YEAR), cur = view.type + '_' + view.id;  // on a year page (or 1845–1868), the slider moves the page
+  if ((view.type === 'y' || cur === 'd_pre') && yk !== cur) { view = { type: yk[0], id: yk.slice(2) }; setHash(); render(true, { keepMap: true }); } else drawBase();
+  if (!moved && 'yd'.includes(view.type)) fitYear(YEAR);
+  decStrip();
+}
+// under the map: every decade, the one on show lit
+function decStrip() {
+  const cur = view.type === 'd' ? view.id : decadeOf(YEAR);
+  $('#decstrip').innerHTML = ['pre', ...Array.from({ length: 16 }, (_, i) => String(1870 + 10 * i))].map(d =>
+    `<button onclick="go('d_${d}')" aria-current="${d === cur}"${view.type === 'd' && d === cur ? ' class="on"' : ''}>${d === 'pre' ? 'Before 1869' : d + 's'}</button>`).join('');
 }
 
 /* ================================================================ routing
-   Four homes (map, teams, players, games) each remember where you left them; every other view is a page.
+   Two homes, the map and the rankings (plus the tracker while editing), each remember where you left them; every other view is a page.
    Each page you open is a browser history entry (state.d = how deep you are, state.sc = where you'd scrolled),
    so the browser's back and forward buttons and swipes work like the ← Back button. */
 let view = { type: 'y', id: '2025' };
-const HOMES = ['map', 'teams', 'players', 'games', 'tracker'];
-const homeOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' ? v.id : null;
+const HOMES = ['map', 'rankings', 'tracker'], LISTS = ['rankings', 'players', 'teams', 'games', 'tracker'];  // the full lists open from Rankings
+const homeOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' ? (v.id === 'tracker' ? 'tracker' : 'rankings') : null;
 const layoutOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' || v.type === 'g' ? 'list' : 'page';  // game pages: no map
 let lastHome = 'map', lastMap = { type: 'y', id: '2025' }, mapT = null, FULL = false, sizedFor = '';
 const homeScroll = {};
@@ -279,19 +352,24 @@ const hashOf = v => '#' + v.type + '-' + v.id;
 const setHash = () => { try { history.replaceState(history.state, '', hashOf(view)); } catch (e) { } };
 const depth = () => history.state?.d || 0;
 function viewFromHash() {
-  const m = (location.hash || '').slice(1).match(/^([ptgfcyardL])-(.+)$/); if (!m) return null;
+  const m = (location.hash || '').slice(1).match(/^([ptgfyardL])-(.+)$/); if (!m) return null;
   const pk = pageKey(m[1] + '_' + m[2]);
-  return { type: pk[0], id: pk[0] === 'r' && !HOMES.includes(pk.slice(2)) ? 'players' : pk.slice(2) };
+  return { type: pk[0], id: pk[0] === 'r' && !LISTS.includes(pk.slice(2)) ? 'rankings' : pk.slice(2) };
 }
 const scroller = () => innerWidth <= 820 ? document.scrollingElement : $('#panel');
 function leave() {  // remember the home we're leaving
   const h = homeOf(view); if (!h) return;
-  if (h === 'map') { lastMap = view; mapT = d3.zoomTransform(svg.node()); } else homeScroll[h] = scroller().scrollTop;
+  if (h === 'map') { lastMap = view; mapT = d3.zoomTransform(svg.node()); } else homeScroll[view.id] = scroller().scrollTop;
 }
 // only tracked team seasons have pages (the top ones by your model, one per season played); any other season opens its
-// franchise page, or its league page when the club has no franchise page
+// franchise page, or its league page when the club has no franchise page. Years run 1869–2025; before that is one page.
 const leagueOf = t => t && D.leagues?.[t.lg] ? t.lg : null;
-const pageKey = key => { if (key.startsWith('t_')) { const t = D.teams[key.slice(2)]; if (t && !t.top) { if (t.fp) return 'f_' + t.fp; if (leagueOf(t)) return 'L_' + t.lg; } } return key; };
+const pageKey = key => {
+  if (key.startsWith('t_')) { const t = D.teams[key.slice(2)]; if (t && !t.top) { if (t.fp) return 'f_' + t.fp; if (leagueOf(t)) return 'L_' + t.lg; } }
+  if (key.startsWith('y_')) { const y = +key.slice(2); if (y < 1869) return 'd_pre'; if (y > 2025) return 'y_2025'; }
+  if (key.startsWith('d_') && +key.slice(2) < 1870) return 'd_pre';
+  return key;
+};
 function go(key, push = true) {
   key = pageKey(key); TL_EDIT = null;
   stopPlay(); leave(); setFull(false, false);
@@ -322,12 +400,12 @@ function setFull(on, redraw = true) {
 window.go = go;
 
 /* ================================================================ shared bits */
-// the scouting card: the model's 20-80 tools
+// the scouting card: the model's tools (graded 20-80 in the build, drawn as bars)
 const CARD = [['hit_tool', 'Hit'], ['power', 'Power'], ['speed', 'Run'], ['fielding', 'Field'], ['K_plus', 'Fastball', 'from strikeout rate'], ['BB_plus', 'Control', 'from walk rate'], ['dur', 'Durability']];
 function cardHTML(p) {
   const ts = CARD.filter(([c]) => p.tools?.[c] != null); if (!ts.length) return '';
-  return `<div class="card80"><div class="kind">Scouting card <small>20–80, the model</small></div>${ts.map(([c, l, why]) => { const v = p.tools[c];
-    return `<div class="tool80"${why ? ` title="${why}"` : ''}><span>${l}</span><i><b style="width:${Math.max(0, Math.min(1, (v - 20) / 60)) * 100}%"></b></i><span class="v">${v}</span></div>`; }).join('')}</div>`;
+  return `<div class="card80"><div class="kind">Scouting card</div>${ts.map(([c, l, why]) => { const v = p.tools[c];
+    return `<div class="tool80"${why ? ` title="${why}"` : ''}><span>${l}</span><i><b style="width:${Math.max(0, Math.min(1, (v - 20) / 60)) * 100}%"></b></i></div>`; }).join('')}</div>`;
 }
 /* ================================================================ the rating model
    One rating for players: projected WAR per 150 games, era-adjusted before the war (scripts/build_data.py).
@@ -372,7 +450,7 @@ function everyPage([label, keys]) {
 function vTracker() {
   const K = trackKeys(), done = keys => keys.filter(isLocked).length, edited = keys => keys.filter(k => pg(k) && !isLocked(k)).length;
   const types = [['Players', K.P, 'the list'], ['Team seasons', K.T, `the top ${K.T.length} by the model, one per season played (1869 included)`], ['Games', K.G, `the top ${K.G.length}`],
-    ['Years', K.Y, 'every season since 1869'], ['Decades', K.Dc, 'before 1871 is one page'], ['Franchises', K.F, 'one club in one city, plus the clubs joined to it'], ['Leagues', K.Lg, 'the other major leagues, the Negro leagues, and Cuba, the Dominican Republic, Venezuela, Puerto Rico and Japan']];
+    ['Years', K.Y, 'every season since 1869'], ['Decades', K.Dc, '1845–1868 is one page'], ['Franchises', K.F, 'one club in one city, plus the clubs joined to it'], ['Leagues', K.Lg, 'the other major leagues, the Negro leagues, and Cuba, the Dominican Republic, Venezuela, Puerto Rico and Japan']];
   const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
   const bar = (d, n) => `<div class="tbar" title="${d} of ${n} locked"><i class="d" style="width:${100 * d / (n || 1)}%"></i></div>`;
   const row = ([label, keys, note], i) => { const d = done(keys), e = edited(keys); return `<tr><td>${label}${note ? `<small>${note}</small>` : ''}</td><td><b>${d}</b>/${keys.length} <span class="pc">${pct(d, keys.length)}%</span>${e ? `<small>${e} in progress</small>` : ''}</td><td class="wide">${bar(d, keys.length)}</td>${i != null ? `<td><button class="btn ghost" data-spin="${i}">Spin</button></td>` : ''}</tr>`; };
@@ -425,12 +503,13 @@ const pagebar = key => { const d = lockHTML(key); return d ? `<div class="crumbs
 const section = (title, links = [], body = '', sub = false) => body || editing()
   ? `${sub ? '<h3 class="sm">' : '<h2>'}${title}${links.length ? ` <small class="find">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join(' · ')}</small>` : ''}${sub ? '</h3>' : '</h2>'}${body}` : '';
 const banner = () => `<div class="banner" id="dbnote" ${note ? '' : 'hidden'}>${esc(note)}</div>`;
-function gameRow(g) { return `<button class="row" onclick="go('g_${g.rk}')"><span class="yr">${g.y}</span><span class="rn">${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}<small>${g.o ? 'from the “Others” row' : `#${g.rk} on the list`}</small></span></button>`; }
+function gameRow(g) { return `<button class="row" onclick="go('g_${g.id}')"><span class="yr">${g.y}</span><span class="rn">${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}<small>#${g.rk} on the list</small></span></button>`; }
 
 /* ================================================================ views */
 /* ---------------- your notes (docs/data/notes.json, from scripts/build_notes.py) ---------------- */
-const decadeOf = y => y < 1871 ? 'pre' : String(Math.floor(y / 10) * 10);
-const decadeName = d => d === 'pre' ? 'Before 1871' : d + 's';
+// 1845–1868 is one page (the years before 1869 have none of their own); 1869 opens the 1870s
+const decadeOf = y => y < 1869 ? 'pre' : y === 1869 ? '1870' : String(Math.floor(y / 10) * 10);
+const decadeName = d => d === 'pre' ? '1845–1868' : d + 's';
 function md(s) {  // your doc's text: escape it, then turn [text](url) and bare links into links
   let h = esc(s).replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, (m, t, u) => `<a href="${u}" target="_blank" rel="noopener">${t}</a>`);
   return h.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, (m, pre, u) => `${pre}<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40)}…</a>`);
@@ -472,10 +551,10 @@ function leagueSection(key, l, y0, y1) {
 }
 function vDecade() {
   const d = view.id === 'pre' ? 'pre' : String(Math.floor(+view.id / 10) * 10), pre = d === 'pre';
-  const y0 = pre ? 1845 : +d, y1 = pre ? 1870 : Math.min(+d + 9, 2026), dn = NOTES.decades[d] || {};
+  const y0 = pre ? 1845 : +d === 1870 ? 1869 : +d, y1 = pre ? 1868 : Math.min(+d + 9, 2025), dn = NOTES.decades[d] || {};
   const eras = D.eras.filter(e => e[0] <= y1 && e[1] >= y0);
   const prev = pre ? null : +d === 1870 ? 'pre' : String(+d - 10), next = pre ? '1870' : +d < 2020 ? String(+d + 10) : null;
-  const years = []; for (let y = Math.max(y0, 1871); y <= y1 && !pre; y++) years.push(y);
+  const years = []; for (let y = y0; y <= y1 && !pre; y++) years.push(y);
   const MAJ = ['NL', 'AL', 'AA', 'UA', 'PL', 'FL', 'NA'];  // the World Series champion, not a Negro World Series winner
   const yearRow = y => { const tms = Object.entries(D.teams).filter(([, t]) => t.y === y), ws = tms.find(([, t]) => t.ws && MAJ.includes(t.lg)) || tms.find(([, t]) => t.ws), q = (NOTES.years[y] || {}).quick || [];
     return `<div class="yrow">${ws ? `<button class="ylogo" onclick="go('t_${ws[0]}')" title="${esc(ws[1].n)}">${badgeSm(ws[1])}</button>` : '<span class="ylogo"></span>'}<button class="yhead" onclick="go('y_${y}')"><b>${y}</b>${ws ? `<span>${esc(ws[1].n)} win the Series</span>` : `<span>${tms.length} teams</span>`}</button>${quickList(q.filter(x => !/^New leagues: *$/i.test(x)))}</div>`; };
@@ -487,19 +566,32 @@ function vDecade() {
   ${years.length ? `<h2>Year by year <small>rule changes and notes</small></h2><div class="years">${years.map(yearRow).join('')}</div>` : ''}
   ${dn.text && dn.text.length ? `<h2>Write-up</h2>${writeup(dn.text)}` : ''}`;
 }
+// every club that year, by league: the US leagues from the team seasons (each opens its season, or its franchise when the
+// season has no page), then the country leagues from the club census (each opens its league)
+const LG_ORDER = ['NL', 'AL', 'NA', 'AA', 'UA', 'PL', 'FL', 'NNL', 'NN2', 'ECL', 'ANL', 'EWL', 'NSL', 'NAL', 'NAC', 'EAS', 'WES', 'IND', 'INT'];
+function clubsHTML(y, tms) {
+  const by = {}; for (const e of tms) (by[e[1].lg] = by[e[1].lg] || []).push(e);
+  const lgs = Object.keys(by).sort((a, b) => (LG_ORDER.indexOf(a) + 1 || 99) - (LG_ORDER.indexOf(b) + 1 || 99));
+  const club = ([tid, t]) => `<button class="club${litN('t_' + tid) ? ' lit' : ''}" onclick="go('t_${tid}')">${badgeSm(t)}<span>${esc(t.n)}</span><small>${t.w ?? '?'}–${t.l ?? '?'}</small></button>`;
+  const us = lgs.map(l => `<h3 class="sm">${esc(LG[l] || l)}</h3><div class="clubs">${by[l].sort((a, b) => (a[1].rk || 99) - (b[1].rk || 99) || wpct(b[1]) - wpct(a[1])).map(club).join('')}</div>`).join('');
+  const abroad = CLUB_LEAGUES.map(code => { const lg = D.leagues?.[code], rows = lg ? lg.s.filter(r => r[0] === y) : []; if (!rows.length) return '';
+    return `<h3 class="sm"><a href="#" onclick="go('L_${code}');return false">${esc(lg.n)} ›</a></h3><div class="clubs">${rows.map(r => `<button class="club" onclick="go('L_${code}')"><span class="avatar tb abroad">${esc(clubAbbr(r[3]))}</span><span>${esc(r[3])}</span>${r[5] != null ? `<small>${r[5]}–${r[6]}</small>` : ''}</button>`).join('')}</div>`; }).join('');
+  return us + abroad;
+}
 function vYear() {
   const y = +view.id; if (YEAR !== y) { YEAR = y; $('#yr').value = y; $('#bigyear').textContent = y; }
   const yd = D.years[y] || {}, era = D.eras.find(e => y >= e[0] && y <= e[1]);
   const tms = Object.entries(D.teams).filter(([, t]) => t.y === y);
-  const lgs = [...new Set(tms.map(([, t]) => t.lg))];
+  const lgs = [...new Set(tms.map(([, t]) => t.lg))], nClubs = tms.length + leagueClubs(y).length;
   const ws = tms.filter(([, t]) => t.ws), pen = tms.filter(([, t]) => t.pen && !t.ws);
   const wpa = (yd.top || []).find(e => e[0] === 'WPA'), mH = yd.mH || [], mP = yd.mP || [];
   const gms = (yd.games || []).map(r => D.games[r]).sort((a, b) => b.gr - a.gr || a.rk - b.rk);
   const yn = NOTES.years[y] || {};
   const champ = ([tid, t]) => `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="rn">${esc(t.n)}<small>${t.ws ? 'won the World Series' : esc(t.lg) + ' pennant'}${t.w != null ? ` · ${t.w}–${t.l}` : ''}</small></span></button>`;
   return `${pagebar('y_' + y)}${banner()}<div class="eyebrow">${y} · <a href="#" onclick="go('d_${decadeOf(y)}');return false">the ${decadeName(decadeOf(y))}</a></div>
-  <div class="sub" style="margin-top:4px"><span><b>${tms.length}</b> teams</span>${editing() ? `<span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> locked</span>` : ''}${lgs.length ? `<span>${lgs.map(l => esc(l)).join(' · ')}</span>` : ''}</div>
+  <div class="sub" style="margin-top:4px"><span><b>${nClubs}</b> clubs</span>${editing() ? `<span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> locked</span>` : ''}${lgs.length ? `<span>${lgs.map(l => esc(l)).join(' · ')}</span>` : ''}</div>
   ${ws.length || pen.length ? `<h2>Champions</h2><div class="list">${[...ws, ...pen].map(champ).join('')}</div>` : ''}
+  ${nClubs ? `<h2>Clubs <small>${nClubs}, by league</small></h2>${clubsHTML(y, tms)}<p class="note"><a href="#" onclick="RK.teams.mode='franch';go('r_teams');return false">Every franchise ›</a></p>` : ''}
   ${tms.some(([, t]) => t.tr) ? `<h2>Teams by the model <small>talent and results</small></h2><div class="list">${tms.filter(([, t]) => t.tr).sort((a, b) => a[1].tr.yr - b[1].tr.yr).slice(0, 8).map((e, i) => teamRankRow(e, i, false)).join('')}</div>` : ''}
   ${mH.length ? `<h2>Top 5 <small>position players</small></h2>${modelList(mH.slice(0, 5))}` : ''}
   ${mP.length ? `<h2>Top 5 <small>pitchers</small></h2>${modelList(mP.slice(0, 5))}${yd.mRP ? modelList([yd.mRP], 0, true) : ''}` : ''}
@@ -511,7 +603,7 @@ function vYear() {
   ${yn.quick && yn.quick.length ? `<h2>Changes and notes</h2>${quickList(yn.quick)}` : ''}
   ${yn.text && yn.text.length ? `<h2>Write-up</h2>${writeup(yn.text)}` : ''}
   ${era ? `<h2>Era notes <small>${era[0]}${era[1] !== era[0] ? '–' + era[1] : ''}</small></h2><p style="margin:0">${esc(era[2])}</p>${era[3] ? `<p class="note" style="margin-top:4px">Black clubs and independents: ${esc(era[3])}</p>` : ''}` : ''}
-  ${tms.length ? `<details class="allteams"><summary>All ${tms.length} teams</summary><div class="chips">${tms.sort((a, b) => a[1].lg.localeCompare(b[1].lg) || a[1].rk - b[1].rk).map(([tid, t]) => `<button class="chip ${litN('t_' + tid) ? 'lit' : ''}" onclick="go('t_${tid}')"><span class="k">${esc(t.lg)}</span>${esc(t.n)}</button>`).join('')}</div></details>` : `<p class="empty">No league teams in the database this year. The era notes are the way in.</p>`}`;
+  ${nClubs ? '' : `<p class="empty">No league teams in the database this year. The era notes are the way in.</p>`}`;
 }
 let TRACK_TYPES = [];
 function saveBox() {
@@ -640,7 +732,7 @@ function bioHTML(p, k, links, items, ed) {
   const m = p.mr, fmt = rel ? fmtS : fmtR;
   const h2 = `<h2>Biography <small class="find">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join(' · ')}</small></h2>`;
   const head = m ? `<div class="sub" style="margin-top:0">${m.rel ? `<span><b>${fmtS(m.r)}</b> per-batter rating</span>` : `<span title="${RATING}"><b>${fmtR(m.r)}</b> ${tierOf(m.r)}</span>`}</div>` : '';
-  const clubs = p.clubs && p.clubs.length ? `<h3 class="sm">Clubs</h3><div class="list">${p.clubs.map(c => c[4] ? `<button class="row" onclick="go('c_${c[4]}')"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></button>` : `<div class="row" style="cursor:default"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></div>`).join('')}</div>` : '';
+  const clubs = p.clubs && p.clubs.length ? `<h3 class="sm">Clubs</h3><div class="list">${p.clubs.map(c => c[4] ? `<button class="row" onclick="go('L_${c[4]}')"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></button>` : `<div class="row" style="cursor:default"><span class="yr">${esc(c[1])}</span><span class="rn">${esc(c[0])}</span></div>`).join('')}</div>` : '';
   const sy = ss.map(r => r[0]), y0 = sy.length ? Math.min(...sy) : p.st?.[0]?.[2], y1 = sy.length ? Math.max(...sy) : p.st?.length ? Math.max(...p.st.map(x => x[3])) : y0;
   const st = sortItems(items), inRun = o => o.y != null && o.y >= y0 && o.y <= y1, one = o => tlItem(o, p, ed);
   const before = st.filter(o => o.y != null && o.y < y0), after = st.filter(o => o.y == null || o.y > y1);
@@ -658,7 +750,7 @@ function bioHTML(p, k, links, items, ed) {
   const storyRows = y => (byY[y] || []).map(o => `<tr class="story"><td colspan="${ncol}">${one(o)}</td></tr>`).join('');
   const rows = yrs.map(y => { const rs = ss.filter(r => r[0] === y), a = by[y];
     if (!rs.length) return `<tr class="nostat"><td><a href="#" onclick="go('y_${y}');return false">${y}</a></td><td>${age(y)}</td><td colspan="${ncol - 2}">${esc(reads[y]?.[1] || '')}</td></tr>${readRow(y)}${storyRows(y)}`;
-    return rs.map((r, i) => `<tr><td>${i ? '' : `<a href="#" onclick="go('y_${y}');return false">${y}</a>`}</td><td>${i ? '' : age(y)}</td><td>${r[1] ? `<a href="#" onclick="go('t_${r[1]}');return false">${esc(r[2])}</a>` : r[5] ? `<a href="#" onclick="go('c_${r[5]}');return false">${esc(r[2])}</a>` : esc(r[2])}</td><td class="mdl">${!i && a ? fmt(a[1]) : ''}</td><td class="mdl">${i ? '' : rk(a)}</td>${main.map(c => `<td>${cell(r[mi], c)}</td>`).join('')}${second.map(c => `<td class="sec">${cell(r[si], c)}</td>`).join('')}</tr>`).join('') + readRow(y) + storyRows(y); }).join('');
+    return rs.map((r, i) => `<tr><td>${i ? '' : `<a href="#" onclick="go('y_${y}');return false">${y}</a>`}</td><td>${i ? '' : age(y)}</td><td>${r[1] ? `<a href="#" onclick="go('t_${r[1]}');return false">${esc(r[2])}</a>` : r[5] ? `<a href="#" onclick="go('L_${r[5]}');return false">${esc(r[2])}</a>` : esc(r[2])}</td><td class="mdl">${!i && a ? fmt(a[1]) : ''}</td><td class="mdl">${i ? '' : rk(a)}</td>${main.map(c => `<td>${cell(r[mi], c)}</td>`).join('')}${second.map(c => `<td class="sec">${cell(r[si], c)}</td>`).join('')}</tr>`).join('') + readRow(y) + storyRows(y); }).join('');
   const sum = (idx, i) => ss.reduce((t, r) => t + (r[idx] ? +r[idx][i] || 0 : 0), 0);
   const tot = c => primP ? ({ ERA: pit.ERA, IP: pit.IP }[c[0]] ?? sum(4, c[1])) : ({ AVG: bat.AVG, OBP: bat.OBP, SLG: bat.SLG }[c[0]] ?? sum(3, c[1]));
   const tot2 = c => c[1] === -1 ? `${pit.W}–${pit.L}` : primP ? bat[c[0]] : pit[c[0]];
@@ -765,14 +857,6 @@ function execRows(rows) {
   return rows.map(([grp, parts, yrs]) => `${grp !== g && (g = grp) ? `<div class="exg">${esc(grp)}</div>` : ''}<div class="exr"><span class="yr">${esc(yrs)}</span><span>${parts.map(x => Array.isArray(x)
     ? `<a href="https://en.wikipedia.org/wiki/${enc(x[1].replace(/ /g, '_'))}" target="_blank" rel="noopener">${esc(x[0])}</a>` : esc(x)).join('')}</span></div>`).join('');
 }
-function vClub() {  // clubs outside the database (NPB, Cuba, Mexico, Puerto Rico...): who of yours played there
-  const k = view.id, c = D.clubs[k]; if (!c) return notFound(); const key = 'c_' + k;
-  const pl = c.pl.filter(x => D.players[x[0]]).sort((a, b) => (a[1] || 9999) - (b[1] || 9999));
-  return `${crumbs('Club', key)}${banner()}<div class="eyebrow">${esc([c.c, c.cn].filter(Boolean).join(', '))}</div><h1 class="name">${esc(c.n)}</h1>
-   <h2>From the list <small>${pl.length} played here</small></h2><div class="list">${pl.map(([pk, y0, y1]) => { const p = D.players[pk];
-     return `<button class="row" onclick="go('p_${pk}')">${avatar(pk)}<span class="yr">${y0 ? y0 + (y1 !== y0 ? '–' + y1 : '') : ''}</span><span class="rn">${esc(nameOf(p))}<small>${esc(p.pos)}</small></span></button>`; }).join('')}</div>
-   ${section('The club', [['Wikipedia', wiki(c.n + ' baseball')], ['Photos', img(c.n + ' baseball')]])}`;
-}
 /* ---------------- leagues ----------------
    D.leagues[code].s: [year, season label, league, club, city, W, L, flag, team season or null, the list's players]. The US leagues
    come from the team seasons; Cuba, the Dominican Republic, Venezuela, Puerto Rico and Japan from the club census, where
@@ -833,7 +917,7 @@ function teamBox(s) {
 // the Wikipedia write-up of the game, linked to its section
 const gameStory = st => st && st.p ? `<div class="clip story">${st.p.map(x => `<p>${esc(x)}</p>`).join('')}<a class="src" href="${esc(st.url)}" target="_blank" rel="noopener">${esc(st.src)}, Wikipedia ↗</a></div>` : '';
 function vGame() {
-  const g = D.games[view.id]; if (!g) return notFound(); const key = 'g_' + g.rk, n = `${g.y} ${g.gt || g.g}`;
+  const g = D.games[view.id]; if (!g) return notFound(); const key = 'g_' + g.id, n = `${g.y} ${g.gt || g.g}`;
   if (!BOXES) boxLoad = boxLoad || getJSON('data/games.json', {}).then(b => { BOXES = b; if (view.type === 'g') render(false); });
   const rec = BOXES && BOXES[view.id], bx = rec && rec.v ? rec : null;
   const team = (s, full) => {
@@ -867,8 +951,30 @@ const RK = { players: { f: '', sort: 'rank', pos: 'All' }, games: { f: '', sort:
 const LGROUP = { AL: 'mlb', NL: 'mlb', NA: 'early', AA: 'early', UA: 'early', PL: 'early', FL: 'early',
   NNL: 'negro', NN2: 'negro', ECL: 'negro', ANL: 'negro', EWL: 'negro', NSL: 'negro', NAL: 'negro' };
 const GROUPS = [['mlb', 'American & National League'], ['early', '19th-century majors & Federal League'], ['negro', 'Negro Leagues'], ['ind', 'Independent clubs']];
+/* the Rankings home: the top ten players, team seasons and games side by side, one decade filter for all three;
+   each row's year opens that year on the map */
+const RB = { dec: 'all' };
+function vRankings() {
+  const d = RB.dec, inDec = y => d === 'all' || decadeOf(+y) === d;
+  const decs = ['all', ...Array.from({ length: 16 }, (_, i) => String(1870 + 10 * i))];
+  const row = (key, rank, lead, name, sub, y) => `<div class="rrow"><button class="row" onclick="go('${key}')">${lead}<span class="yr">${rank}</span><span class="rn">${name}${sub ? `<small>${sub}</small>` : ''}</span></button>${y ? `<button class="ylink" onclick="go('y_${y}')" title="${y} on the map">${y}</button>` : ''}</div>`;
+  const col = (title, n, rows, list) => `<section class="rcol"><h2>${title} <small>${n}</small></h2><div class="list">${rows.join('') || `<p class="empty">None from the ${decadeName(d)}.</p>`}</div><button class="btn ghost" onclick="go('r_${list}')">Full list ›</button></section>`;
+  const P = Object.entries(D.players).filter(([, p]) => inDec(p.pk)).sort((a, b) => (a[1].ovr || 999) - (b[1].ovr || 999));
+  const T = Object.entries(D.teams).filter(([, t]) => t.tr && inDec(t.y)).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
+  const G = Object.values(D.games).filter(g => inDec(g.y)).sort((a, b) => a.rk - b.rk);
+  return `${banner()}<div class="eyebrow">The model</div><h1 class="name">Rankings</h1>
+   <p class="note">Players, team seasons and games, each ranked by one model. A decade narrows all three; the year beside a row opens it on the map.</p>
+   <div class="chips" style="margin:10px 0 4px">${decs.map(x => `<button class="chip" aria-pressed="${d === x}" data-rdec="${x}">${x === 'all' ? 'All time' : decadeName(x)}</button>`).join('')}</div>
+   <div class="rcols">
+    ${col('Players', P.length, P.slice(0, 10).map(([k, p]) => row('p_' + k, '#' + (p.ovr || '?'), avatar(k), esc(nameOf(p)), `${esc(p.pos)} · peak ${p.pk}`, p.pk)), 'players')}
+    ${col('Team seasons', T.length, T.slice(0, 10).map(([tid, t]) => row('t_' + tid, '#' + t.tr.ar, badgeSm(t), esc(t.n), `${t.w}–${t.l}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ''}`, t.y)), 'teams')}
+    ${col('Games', G.length, G.slice(0, 10).map(g => row('g_' + g.id, '#' + g.rk, '', esc(g.gt || g.g), esc(g.d || ''), g.y)), 'games')}
+   </div>`;
+}
+const toRankings = `<a href="#" onclick="go('r_rankings');return false">Rankings</a> · `;
 function vList() {
   if (view.id === 'tracker') return vTracker();
+  if (view.id === 'rankings') return vRankings();
   const h = view.id === 'teams' || view.id === 'games' ? view.id : 'players', st = RK[h], f = st.f.toLowerCase();
   const filter = (ph, extra = '') => `<div class="r" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><input class="t" id="rkfilter" placeholder="${ph}" value="${esc(st.f)}">${extra}</div>`;
   const sortSel = yearLabel => `<select class="t" id="rksort" style="flex:0 0 auto"><option value="rank" ${st.sort === 'rank' ? 'selected' : ''}>List order</option><option value="peak" ${st.sort === 'peak' ? 'selected' : ''}>${yearLabel}</option>${editing() ? `<option value="lit" ${st.sort === 'lit' ? 'selected' : ''}>Drafts first</option>` : ''}</select>`;
@@ -878,14 +984,14 @@ function vList() {
     arr.sort({ rank: byRank, peak: (a, b) => (a[1].pk || 0) - (b[1].pk || 0), lit: (a, b) => litN('p_' + a[0]) - litN('p_' + b[0]) || byRank(a, b) }[st.sort] || byRank);
     const rows = arr.map(([k, p]) => { const rk = st.pos === 'All' ? rankLabel(p) : (typeof p.prk === 'number' ? '#' + p.prk : p.prk || '') + ' ' + p.pos;
       return `<button class="row" onclick="go('p_${k}')">${avatar(k)}<span class="yr">${esc(rk)}</span><span class="rn">${esc(nameOf(p))}<small>peak ${p.pk || '?'}</small></span></button>`; }).join('');
-    return `${banner()}<div class="eyebrow">The list · ${Object.keys(D.players).length} players</div><h1 class="name">Players</h1>
+    return `${banner()}<div class="eyebrow">${toRankings}${Object.keys(D.players).length} players</div><h1 class="name">Players</h1>
      <div class="chips" style="margin-bottom:8px">${['All', ...POSITIONS].map(p => `<button class="chip" aria-pressed="${st.pos === p}" data-pos="${p}">${p}</button>`).join('')}</div>
      ${filter('Filter by name…', sortSel('Peak year'))}<div class="list">${rows || '<p class="empty">No one matches.</p>'}</div>`;
   }
   if (h === 'games') {
     const arr = Object.values(D.games).filter(g => !f || (g.y + ' ' + g.g + ' ' + (g.gt || '') + ' ' + g.d).toLowerCase().includes(f));
-    arr.sort((a, b) => st.sort === 'lit' ? litN('g_' + a.rk) - litN('g_' + b.rk) || a.rk - b.rk : st.sort === 'peak' ? a.y - b.y : a.rk - b.rk);
-    return `${banner()}<div class="eyebrow">The list · ${Object.keys(D.games).length} games</div><h1 class="name">Games</h1>
+    arr.sort((a, b) => st.sort === 'lit' ? litN('g_' + a.id) - litN('g_' + b.id) || a.rk - b.rk : st.sort === 'peak' ? a.y - b.y : a.rk - b.rk);
+    return `${banner()}<div class="eyebrow">${toRankings}${Object.keys(D.games).length} games</div><h1 class="name">Games</h1>
      ${filter('Filter by year, series, description…', sortSel('Year'))}<div class="list">${arr.map(gameRow).join('') || '<p class="empty">No games match.</p>'}</div>`;
   }
   // teams: team seasons ranked by your model, or franchises with their name eras
@@ -894,7 +1000,7 @@ function vList() {
   const grpChips = `<div class="chips" style="margin:8px 0">${[['all', 'All'], ...GROUPS].map(([g, l]) => `<button class="chip" aria-pressed="${st.grp === g}" data-grp="${g}">${g === 'all' ? 'All' : l}</button>`).join('')}</div>`;
   if (ranked) {
     const arr = rated.filter(([, t]) => (st.grp === 'all' || (LGROUP[t.lg] || 'ind') === st.grp) && (!f || (t.y + ' ' + t.n).toLowerCase().includes(f))).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
-    return `${banner()}<div class="eyebrow">The model · ${rated.length} team seasons</div><h1 class="name">Teams</h1>
+    return `${banner()}<div class="eyebrow">${toRankings}${rated.length} team seasons</div><h1 class="name">Teams</h1>
      <p class="note">Each player’s projected WAR per game for that season, weighted by his games for the team, summed and put on a 162-game scale. That talent, measured against a typical team of its era (a smooth curve over time), makes up 80% of the score; Pythagorean record is 15% and actual record 5% (shrunk toward .500 in short seasons). All three are in wins over an average team per 162, scaled to how spread out teams were in that era.</p>
      ${modes}${grpChips}${filter('Filter by year or team name…')}
      <div class="list">${arr.slice(0, st.n).map(teamRankRow).join('') || '<p class="empty">No teams match.</p>'}</div>
@@ -909,7 +1015,7 @@ function vList() {
     const xs = frs.filter(x => x.grp === g).sort((a, b) => b.ts.length - a.ts.length); if (!xs.length) return '';
     return `<h2>${label} <small>${xs.length}</small></h2><div class="list">${xs.map(x => `<div class="row frow">${badgeSm(x.last)}<span class="yr">${x.ts[0].y}–${x.last.y}</span><span class="rn"><a href="#" onclick="go('f_${x.fid}');return false">${esc(x.last.n)}</a><small>${x.eras.length > 1 ? x.eras.map(e => `<a href="#" onclick="go('t_${e.tid}');return false">${esc(e.n)}</a> ${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}`).join(' · ') : `${x.ts.length} season${x.ts.length > 1 ? 's' : ''}`}</small></span>${editing() ? `<span class="meta" title="seasons locked">${x.fr.s.filter(tid => litN('t_' + tid)).length}/${x.ts.length}</span>` : ''}</div>`).join('')}</div>`;
   };
-  return `${banner()}<div class="eyebrow">${Object.keys(D.franch).length} franchises</div><h1 class="name">Teams</h1>
+  return `${banner()}<div class="eyebrow">${toRankings}${Object.keys(D.franch).length} franchises</div><h1 class="name">Teams</h1>
    <p class="note">Every franchise and the names it played under: one club in one city, plus the clubs joined to it.</p>
    ${modes}
    <h2>Leagues</h2><div class="chips" style="margin-bottom:8px">${Object.entries(D.leagues || {}).map(([k, l]) => `<button class="chip" onclick="go('L_${k}')">${esc(l.n)}</button>`).join('')}</div>
@@ -927,13 +1033,15 @@ const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.<
 function mapFor() {
   const t = view.type; highlight = null; focusPts = null; let fit = null;
   if (t === 'y') MAPMODE = 'teams';
-  if (t === 'y') { const lls = Object.values(D.teams).filter(x => x.y === YEAR && x.ll).map(x => x.ll); if (lls.length) fit = lls; }
-  if (t === 'd') { MAPMODE = 'teams'; const d0 = view.id === 'pre' ? 1845 : +view.id; if (YEAR < d0 || YEAR > (view.id === 'pre' ? 1870 : d0 + 9)) { YEAR = view.id === 'pre' ? 1870 : Math.max(d0, 1871); $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; } }
+  if (t === 'y') { const lls = yearLLs(YEAR); if (lls.length) fit = lls; }
+  if (t === 'd') { MAPMODE = 'teams'; const d0 = view.id === 'pre' ? 1845 : +view.id === 1870 ? 1869 : +view.id; if (YEAR < d0 || YEAR > (view.id === 'pre' ? 1868 : +view.id + 9)) { YEAR = view.id === 'pre' ? 1868 : d0; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; }
+    const lls = yearLLs(YEAR); if (lls.length) fit = lls; }
   if (t === 't') { const tm = D.teams[view.id]; if (tm) { MAPMODE = 'teams'; if (YEAR !== tm.y) { YEAR = tm.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; } highlight = 't_' + view.id; if (tm.ll) fit = [tm.ll]; } }
   if (t === 'f') { const fr = D.franch[view.id]; if (fr) { MAPMODE = 'teams'; const last = D.teams[fr.s[fr.s.length - 1]]; YEAR = last.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; highlight = 't_' + fr.s[fr.s.length - 1];
       focusPts = []; const seen = new Set(); for (const tid of fr.s) { const x = D.teams[tid]; if (x.ll && !seen.has(x.ll + '')) { seen.add(x.ll + ''); focusPts.push({ ll: x.ll, label: `${x.n} (${x.y})`, key: 't_' + tid, r: 6 }); } } fit = focusPts.map(x => x.ll); } }
   if (t === 'L') { const lg = D.leagues?.[view.id]; if (lg) { MAPMODE = 'teams'; const tids = lg.s.filter(r => r[8]).map(r => r[8]);
-      if (tids.length) { YEAR = lg.y1; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; const lls = tids.map(x => D.teams[x].ll).filter(Boolean); if (lls.length) fit = lls; } } }
+      YEAR = lg.y1; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR;
+      const lls = tids.length ? tids.map(x => D.teams[x].ll).filter(Boolean) : Object.values(lg.ll || {}); if (lls.length) fit = lls; } }
   if (t === 'c') { const c = D.clubs[view.id]; MAPMODE = 'teams'; if (c && c.ll) { focusPts = [{ ll: c.ll, label: c.n, r: 8 }]; fit = [c.ll]; } }
   if (t === 'g') { const g = D.games[view.id]; if (g) { MAPMODE = 'teams'; YEAR = g.y; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; if (g.tid) { highlight = 't_' + g.tid; const tm = D.teams[g.tid]; if (tm.ll) fit = [tm.ll]; } } }
   if (t === 'p') { MAPMODE = 'teams'; const p = D.players[view.id]; if (p) { focusPts = [];
@@ -948,12 +1056,14 @@ function mapFor() {
 function render(newView = true, opts = {}) {
   const panel = $('#panel'), t = view.type, st = panel.scrollTop, active = document.activeElement && document.activeElement.id;
   const drafts = {}; for (const id of ['tl-k', 'tl-t', 'tl-u', 'tl-src', 'tl-y', 'rkfilter']) { const el = document.getElementById(id); if (el) drafts[id] = el.value; }
-  const V = { d: vDecade, y: vYear, p: vPlayer, t: vTeam, g: vGame, f: vFranchise, c: vClub, r: vList, L: vLeague };
+  const V = { d: vDecade, y: vYear, p: vPlayer, t: vTeam, g: vGame, f: vFranchise, r: vList, L: vLeague };
   const lay = layoutOf(view), home = homeOf(view);
   document.body.classList.remove('lay-map', 'lay-page', 'lay-list'); document.body.classList.add('lay-' + lay);
   if (home) lastHome = home;
   for (const h of HOMES) { const b = $('#home-' + h); b.setAttribute('aria-current', h === home); b.classList.toggle('from', !home && h === lastHome); }
+  document.body.classList.toggle('wide', t === 'r' && view.id === 'rankings');
   panel.innerHTML = (V[t] || vYear)();
+  decStrip();
   if (!newView) { scroller().scrollTop = st; for (const [id, v] of Object.entries(drafts)) { const el = document.getElementById(id); if (el && !el.value) el.value = v; } if (active) document.getElementById(active)?.focus(); }
   wire();
   if (newView && !opts.keepMap) placeMap(opts.restore);
@@ -966,7 +1076,7 @@ function placeMap(restore) {
   if (want !== sizedFor) { sizedFor = want; sizeMap(); }
   const fit = mapFor(); refreshMap();
   if (restore && mapT && homeOf(view) === 'map') svg.call(zoom.transform, mapT);
-  else if (fit && fit.length) fitTo(fit, view.type === 't' || view.type === 'g' ? 5 : view.type === 'y' ? 14 : 30); else fitNorthAmerica();
+  else if (fit && fit.length) fitTo(fit, view.type === 't' || view.type === 'g' ? 5 : 'ydL'.includes(view.type) ? 14 : 30); else fitNorthAmerica();
 }
 function curKey() { return view.type + '_' + view.id; }
 function wire() {
@@ -979,6 +1089,7 @@ function wire() {
   const st = view.type === 'r' ? RK[view.id] : null;
   document.querySelectorAll('[data-pos]').forEach(b => b.addEventListener('click', () => { st.pos = b.dataset.pos; render(false); }));
   document.querySelectorAll('[data-grp]').forEach(b => b.addEventListener('click', () => { st.grp = b.dataset.grp; st.n = 100; render(false); }));
+  document.querySelectorAll('[data-rdec]').forEach(b => b.addEventListener('click', () => { RB.dec = b.dataset.rdec; render(false); }));
   document.querySelectorAll('[data-tmode]').forEach(b => b.addEventListener('click', () => { st.mode = b.dataset.tmode; render(false); }));
   $('#tmore')?.addEventListener('click', () => { st.n += 200; render(false); });
   $('#rksort')?.addEventListener('change', e => { st.sort = e.target.value; render(false); });
@@ -1008,7 +1119,6 @@ let IDX = [], selI = 0;
 function buildIndex() {
   IDX = [];
   for (const [k, p] of Object.entries(D.players)) IDX.push({ t: nameOf(p), s: `${p.pos} · peak ${p.pk}`, key: 'p_' + k, w: 3 });
-  for (const [k, c] of Object.entries(D.clubs || {})) IDX.push({ t: c.n, s: [c.c, c.cn].filter(Boolean).join(', ') || 'club', key: 'c_' + k, w: 1.5 });
   for (const [k, l] of Object.entries(D.leagues || {})) IDX.push({ t: l.n, s: `league · ${l.y0}–${l.y1}`, key: 'L_' + k, w: 3 });
   for (const [k, g] of Object.entries(D.games)) IDX.push({ t: `${g.y} ${g.gt || g.g} ${g.d}`, s: 'game #' + g.rk, key: 'g_' + k, w: 1 });
 }

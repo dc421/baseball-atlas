@@ -1,4 +1,4 @@
-# Living Atlas of Baseball: how we work
+# Move the Needle: how we work
 
 The site is being built page by page. The user spins a page, we iterate on it in chat until it's right, and the user locks it on the site. See README "Editing pages" for the mechanics.
 

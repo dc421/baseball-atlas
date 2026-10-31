@@ -340,26 +340,43 @@ for row in ck.values[19:]:
     eras.append([y0, y1, str(row[1]).strip(), str(row[2]).strip()])
 
 # ---------------------------------------------------------------- games
-gm = pd.read_csv(SRC / 'Games.csv').fillna('')
+# The ranked list is scripts/build_games.py's: every game with play-by-play, scored with the Games tab's formula. Each game
+# is keyed by its Retrosheet game id. data/overrides/games.csv, by that key: your label (g), description (d), the team a game is
+# filed under (tm, a Baseball-Reference code; else the winner), your "great" pick, drop=1 to leave a game off, and for games
+# with no play-by-play (before 1908, some Negro Leagues games, the latest season) the formula's inputs, so they rank with the rest.
 brmap = {}
 for tid, t in teams.items():
     if t['br']: brmap[(t['br'], t['y'])] = tid
     brmap.setdefault((t['fr'], t['y']), tid)
 BRFIX = {'MIL': 'MLN', 'MIA': 'FLA', 'WAS': 'WSH', 'LAA': 'ANA', 'TBR': 'TBD', 'MWB': 'MLN', 'BSB': 'BSN', 'BRK': 'BRO'}
-fl = lambda x: round(float(x), 3) if str(x).strip() not in ('',) else None
-games, rowi = {}, 0
-for r in gm.itertuples(index=False):
-    try: y = int(float(r[1]))
-    except ValueError: continue
-    rowi += 1
-    try: rk = int(float(r[0]))
-    except ValueError: rk = rowi
-    code = str(r[13]).strip()
+fl = lambda x: None if x is None or str(x).strip() == '' or x != x else round(float(x), 3)
+GOV = {r.key: r for r in pd.read_csv(OVR / 'games.csv', dtype=str).fillna('').itertuples()} if (OVR / 'games.csv').exists() else {}
+GR = pd.read_csv(SRC / 'games_ranked.csv', dtype={'gid': str, 'date': str}) if (SRC / 'games_ranked.csv').exists() else None
+if GR is None: print('games: no data/source/games_ranked.csv (run scripts/build_games.py)')
+def gscore(inn, ss9, ss, li, mx, ls, cw, w1, tie):  # build_games.py's formula, with the Games tab's defaults for blank cells
+    ss9 = 5 if ss9 is None else ss9
+    return (inn + ss9 + (ss9 if ss is None else ss) - 1) * (.4 + (1 if mx is None else mx) ** 3 + cw * li ** 2) ** 2 * (w1 if ls is None else ls) ** .5 * li
+RND = {'worldseries': 'WS', 'lcs': 'LCS', 'divisionseries': 'DS', 'wildcard': 'WC', 'championship': 'Champ'}
+cand = []
+for r in (GR.itertuples() if GR is not None else []):
+    lab = f"{RND.get(r.gt, r.gt)} G{int(r.n)}" if r.gt != 'regular' else f"{int(r.date[4:6])}/{int(r.date[6:])} {r.v}-{r.h}"
+    cand.append(dict(id=r.gid, y=int(r.y), g=lab, inn=int(r.inn), sc=r.score, cw=r.cwpa1, wpa=r.wpa1, li=r.gli, wn=r.h if r.hr > r.vr else r.v if r.vr > r.hr else None))
+auto = {c['id'] for c in cand}
+for k, o in GOV.items():  # games with no play-by-play, scored from their own columns
+    if k in auto or not o.inn: continue
+    v = {c: fl(getattr(o, c)) for c in ['inn', 'ss9', 'ss', 'gli', 'maxl', 'lastl', 'cwpa1', 'wpa1', 'tie']}
+    cand.append(dict(id=k, y=int(o.y), g=o.g, inn=int(v['inn']), sc=gscore(v['inn'], v['ss9'], v['ss'], v['gli'], v['maxl'], v['lastl'], v['cwpa1'], v['wpa1'], v['tie']),
+                     cw=v['cwpa1'], wpa=v['wpa1'], li=v['gli'], wn=None))
+cand = sorted((c for c in cand if not (c['id'] in GOV and GOV[c['id']].drop == '1')), key=lambda c: -c['sc'])
+games = {}
+for rk, c in enumerate(cand, start=1):
+    o, y = GOV.get(c['id']), c['y']
+    code = o.tm if o else ''
     tid = (brmap.get((code, y)) or brmap.get((BRFIX.get(code, code), y))) if code else None
     if code and not tid: tid = brmap.get(('WSN' if code == 'WAS' else code, y))
-    games[str(rk)] = dict(rk=rk, y=y, g=str(r[2]).strip(), inn=fl(r[3]), d=str(r[12]).strip(), sc=fl(r[11]), cw=fl(r[8]), wpa=fl(r[9]), li=fl(r[5]),
-                          tm=code or None, tid=tid, gr=1 if str(r[24]).strip() == 'great' else 0)
-    years.setdefault(y, {}).setdefault('games', []).append(str(rk))
+    games[c['id']] = dict(id=c['id'], rk=rk, y=y, g=(o.g if o and o.g else c['g']), inn=c['inn'], d=o.d if o else '', sc=fl(c['sc']), cw=fl(c['cw']), wpa=fl(c['wpa']),
+                          li=fl(c['li']), tm=code or None, tid=tid, gr=1 if o and o.great else 0, wn=c['wn'])
+    years.setdefault(y, {}).setdefault('games', []).append(c['id'])
 
 # ---------------------------------------------------------------- your rating model (scripts/export_ratings.R)
 # One rating everywhere: projected WAR per 150 games. The model's score is WAR/G above its era line (pitchers on the
@@ -390,15 +407,20 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
     RS['key'] = RS.playerID.map(pid2key)
 
     # tools on a 20-80 scale: z-score among regular seasons, then the player's top 4 rated seasons
-    tools = {'H': ['hit_tool', 'power', 'speed', 'fielding'], 'P': ['K_plus', 'BB_plus', 'dur']}
-    RS['dur'] = RS.BFP  # durability: batters faced per season, graded within SP or RP below
+    tools = {'H': ['hit_tool', 'power', 'speed', 'fielding', 'dur'], 'P': ['K_plus', 'BB_plus', 'dur']}
+    # durability: pitchers by batters faced per season, graded within SP or RP; hitters by PA per 162 team games,
+    # so short seasons (1870s, 1981, 2020) don't count against them
+    season_len = pd.to_numeric(T.G).groupby(T.yearID).max()
+    RS['dur'] = np.where(RS.kind == 'P', RS.BFP, RS.PA / RS.yearID.map(season_len) * 162)
+    RS['dur_g'] = np.nan
     for kind, cols in tools.items():
         reg = RS[(RS.kind == kind) & ((RS.PA >= 300) if kind == 'H' else (RS.BFP >= 300))]
         for c in cols:
             if c == 'dur':
-                grp = RS.POS.where(RS.POS == 'RP', 'SP')
-                m, sd = reg.groupby(grp[reg.index]).dur.agg(['mean', 'std']).reindex(grp).values.T
-                RS['dur_g'] = (50 + 10 * (RS.dur - m) / sd).clip(20, 80).where(RS.kind == 'P')
+                grp = RS.POS.where(RS.POS == 'RP', 'SP') if kind == 'P' else RS.kind
+                ref = reg if kind == 'P' else RS[(RS.kind == 'H') & (RS.dur >= 300)]
+                m, sd = ref.groupby(grp[ref.index]).dur.agg(['mean', 'std']).reindex(grp).values.T
+                RS.loc[RS.kind == kind, 'dur_g'] = (50 + 10 * (RS.dur - m) / sd).clip(20, 80)[RS.kind == kind]
                 continue
             z = (RS[c] - reg[c].mean()) / reg[c].std()
             RS[c + '_g'] = (50 + 10 * (-z if c == 'BB_plus' else z)).clip(20, 80)
@@ -411,7 +433,9 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
         best = g[g.kind == kind].nlargest(4, 's')
         w = (best.PA if kind == 'H' else best.BFP).fillna(1).clip(lower=1)
         ok = {c: best[c + '_g'].notna() for c in tools[kind]}
-        o['tools'] = {c: int(round(np.average(best[c + '_g'][ok[c]], weights=w[ok[c]]) / 5) * 5) for c in tools[kind] if ok[c].any()}
+        # durability needs two of the four seasons (Negro league lines have no PA, and one short MLB year misleads)
+        o['tools'] = {c: int(round(np.average(best[c + '_g'][ok[c]], weights=w[ok[c]]) / 5) * 5) for c in tools[kind]
+                      if ok[c].sum() >= (2 if c == 'dur' else 1)}
     for r in RP.itertuples():
         k = pid2key.get(r.playerID)
         if not k: continue
@@ -431,6 +455,14 @@ if (SRC / 'ratings_seasons.csv').exists() and (SRC / 'ratings_players.csv').exis
         o['arc'] = [[int(r.yearID), float(r.rs), int(r.rrk), 'R'] for r in g.sort_values('yearID').itertuples()]
         o['mr'] = dict(o.get('mr') or {}, r=round(career[pid], 2), rk=int(crk[pid]), prk=int(crk[pid]), pos='RP', rel=1,
                        pk=int(g.loc[g.rs.idxmax(), 'yearID']))
+
+    # the list's numbers follow the model: the sheet picks who is numbered overall and at each position, the model
+    # orders them (skill groups H/P/R/F/A/M keep their letters)
+    rk = lambda k: players[k].get('mr', {}).get('rk', 1e9)
+    for i, k in enumerate(sorted((k for k, o in players.items() if o['ovr']), key=rk), 1): players[k]['ovr'] = i
+    for pos in {o['pos'] for o in players.values()}:
+        ks = sorted((k for k, o in players.items() if o['pos'] == pos and isinstance(o['prk'], int)), key=rk)
+        for i, k in enumerate(ks, 1): players[k]['prk'] = i
 
     # which team seasons each player-season belongs to (for the year pages' model lists)
     app_t = {}
@@ -544,7 +576,7 @@ for pid, k in key_of.items():
     players[k]['ss'] = [[y, tkey.get((tm, y)), (teams.get(tkey.get((tm, y))) or {}).get('br') or tm, bk.get((pid, y, tm)), pk_.get((pid, y, tm))] for y, tm in rows]
 
 # players outside the database: year-by-year lines from your ratings sheet's other-league tabs
-# (scripts/export_other_leagues.py), and club pages for the clubs they played for (data/overrides/clubs.csv)
+# (scripts/export_other_leagues.py); the clubs they played for (data/overrides/clubs.csv) link to their country's league page
 CLUBS = {}  # slug -> {n, c, cn, ll, pl: {key: [y0, y1]}}
 slug = lambda n: re.sub(r'[^a-z0-9]+', '-', unicodedata.normalize('NFKD', n).encode('ascii', 'ignore').decode().lower()).strip('-')
 CL = {r.short: r for r in pd.read_csv(OVR / 'clubs.csv').itertuples()} if (OVR / 'clubs.csv').exists() else {}
@@ -599,8 +631,14 @@ for k, o in players.items():
     for c in o.get('clubs') or []:
         ck = club(c[0], c[1], c[2], c[3], (o.get('from') or {}).get('n')); c.append(ck)
         if k not in CLUBS[ck]['pl']: played(ck, k)
-clubs_out = {k: dict(n=c['n'], c=c['c'], cn=c['cn'], ll=c['ll'], pl=[[pk, *(yy or [None, None])] for pk, yy in c['pl'].items()]) for k, c in CLUBS.items() if c['pl']}
-print(f"other leagues: season lines for {len(other)} players; {len(clubs_out)} club pages")
+# clubs have no pages of their own: each one links to its country's league page, where there is one
+CLUB_LG = {'Japan': 'JPN', 'Cuba': 'CUB', 'Puerto Rico': 'PR', 'Dominican Republic': 'DOM', 'Venezuela': 'VEN'}
+club_lg = lambda ck: CLUB_LG.get(CLUBS[ck]['cn']) if ck else None
+for o in players.values():
+    for r in o.get('ss') or []:
+        if len(r) > 5: r[5] = club_lg(r[5])
+    for c in o.get('clubs') or []: c[4] = club_lg(c[4])
+print(f"other leagues: season lines for {len(other)} players; {len(CLUBS)} clubs linked to league pages")
 
 # team pages: lineup by position (most games there, each player once), rotation, bullpen, bench
 PN = {p: f"{f or ''} {l or ''}".strip() for p, f, l in zip(P.playerID, P.nameFirst, P.nameLast)}
@@ -672,6 +710,11 @@ if (OVR / 'manual_games.csv').exists():
         games[str(i)] = dict(rk=i, y=int(r.y), g=r.g, inn=nz(r.inn), d=r.d, sc=None, cw=None, wpa=None, li=None,
                              tm=teams[tid]['br'] if tid else None, tid=tid, gr=0, o=1)
         years.setdefault(int(r.y), {}).setdefault('games', []).append(str(i))
+# only tracked games have pages: the top of the ranked list, as many as tracked team seasons (the 'Others' row is out)
+n_games = sum(1 for t in teams.values() if t.get('top'))
+games = {k: g for k, g in games.items() if not g.get('o') and g['rk'] <= n_games}
+for yd in years.values():
+    if 'games' in yd: yd['games'] = [k for k in yd['games'] if k in games]
 
 # ---------------------------------------------------------------- game titles, line scores, lineups (Retrosheet)
 # Titles are written out ("World Series, Game 6"). Each game is matched to its Retrosheet game log row by year and
@@ -779,9 +822,28 @@ def negro_box(gi):
                 wp=nm(gi['wp']), lp=nm(gi['lp']), sv=nm(gi['save']), wpl=retro_who.get(gi['wp']), lpl=retro_who.get(gi['lp']), svl=retro_who.get(gi['save']), br=None)
 
 boxes, matched = {}, 0
+POSTIX = {r[6] + r[0] + r[1]: (f, r) for f in POST for r in POST[f]}  # Retrosheet game id -> (round's game log, row)
+NEGRO_PO = [r for r in zcsv('negroleagues.zip', 'gameinfo.csv') if r['gametype'] in ('championship', 'lcs', 'divisionseries', 'playoff')]
+NEGROIX = {gi['gid']: gi for gi in NEGRO_PO}  # every Negro Leagues postseason game, for the ranked list
+NLG = {'NNL': 'Negro National League', 'NN2': 'Negro National League', 'NAL': 'Negro American League', 'ECL': 'Eastern Colored League'}
 for key, g in games.items():
     y, lab = g['y'], g['g']; row = rnd = None; title = lab; srcz = 'postseason.zip'
-    if m := re.match(r'^(WS|ALCS|NLCS) G(\d+)$', lab):
+    if key in POSTIX:  # the ranked games carry their Retrosheet id
+        rnd, row = POSTIX[key]
+        rows = [r for f, r in series_rows([rnd], y, lambda r: {r[3], r[6]} == {row[3], row[6]})]; n = rows.index(row) + 1
+        title = (f"World Series, Game {n}" if rnd == 'glws.zip' else f"{LGN.get(row[7], '')} Wild Card Game".strip() if rnd == 'glwc.zip' and len(rows) == 1
+                 else f"{LGN.get(row[7], '')} {ROUND[rnd]}, Game {n}".strip())
+    elif key in NEGROIX:
+        gi = NEGROIX[key]; pair = {gi['visteam'], gi['hometeam']}
+        rows = sorted([r for r in NEGRO_PO if r['date'][:4] == str(y) and r['gametype'] == gi['gametype'] and {r['visteam'], r['hometeam']} == pair], key=lambda r: (r['date'], r['number']))
+        lg = NLG.get(teams.get(rtid(gi['hometeam'], y) or '', {}).get('lg'), 'Negro League')
+        title = f"{'Negro World Series' if gi['gametype'] == 'championship' else lg + ' Championship Series'}, Game {rows.index(gi) + 1}"
+        bx = negro_box(gi); bx['src'] = 'negroleagues.zip'
+        bx['ser'] = series(rows, gi, ('visteam', 'vruns'), ('hometeam', 'hruns'), lambda c: nick(t) if (t := rtid(c, y)) else RTEAM.get(c, c))
+        boxes[key] = bx; matched += 1
+    elif re.match(r'^[A-Z][A-Z0-9]{2}\d{9}$', key) and (row := next((r for r in reg_rows(y) if r[6] + r[0] + r[1] == key), None)):
+        title = f"{MONTHS[int(key[7:9]) - 1]} {int(key[9:11])}"; srcz = f'{y}csvs.zip'
+    elif m := re.match(r'^(WS|ALCS|NLCS) G(\d+)$', lab):
         lg = {'ALCS': 'AL', 'NLCS': 'NL'}.get(m[1])
         rows = series_rows(['glws.zip'] if m[1] == 'WS' else ['gllc.zip'], y, lambda r: not lg or r[7] == lg)
         title = f"{'World Series' if m[1] == 'WS' else LGN[lg] + ' Championship Series'}, Game {m[2]}"
@@ -821,6 +883,7 @@ for key, g in games.items():
     if key in boxes:
         bx = boxes[key]
         g['vs'] = f"{bx['v']['n']} at {bx['h']['n']}"; g['nm'] = [bx['v']['fn'], bx['h']['fn']]
+        if not g['tid'] and g['wn']: g['tid'] = retro2tid.get((g['wn'], y)) or rtid(g['wn'], y)  # filed under the winner
         if not (g['tid'] and teams.get(g['tid'], {}).get('top')) and bx['h']['tid']: g.setdefault('tid', bx['h']['tid'])
 
 # box scores: every batter's and pitcher's line, from Retrosheet's per-game CSVs (postseason, Negro Leagues, and each
@@ -854,13 +917,14 @@ for zname, gids in want.items():
                          'W' if r['wp'] == '1' else 'L' if r['lp'] == '1' else 'S' if r['save'] == '1' else '', *retro_who.get(r['id'], [None, None])] for r in prow]
             if s['bat']: s['lu'] = []; nbox += 1
 for bx in boxes.values(): bx.pop('gid', None)
+for g in games.values(): g.pop('wn', None)
 # a video per game: scripts/fetch_videos.py (data/source/game_videos.csv), or your pick (data/overrides/game_videos.csv)
 if (SRC / 'game_videos.csv').exists():
     for r in pd.read_csv(SRC / 'game_videos.csv', dtype=str).fillna('').itertuples():
-        if r.rk in games and r.video: games[r.rk]['yt'] = [r.video, r.title, r.channel, int(getattr(r, 'mins', '') or 0)]
+        if r.key in games and r.video: games[r.key]['yt'] = [r.video, r.title, r.channel, int(getattr(r, 'mins', '') or 0)]
 if (OVR / 'game_videos.csv').exists():
     for r in pd.read_csv(OVR / 'game_videos.csv', dtype=str).fillna('').itertuples():
-        if r.rk in games: games[r.rk]['yt'] = [r.video, r.note, '', 0, 1] if r.video else None
+        if r.key in games: games[r.key]['yt'] = [r.video, r.note, '', 0, 1] if r.video else None
 # the Wikipedia write-up of each postseason game (scripts/fetch_game_stories.py)
 if (SRC / 'game_stories.json').exists():
     for k, st in json.load(open(SRC / 'game_stories.json')).items():
@@ -925,6 +989,8 @@ LEAGUE_PAGES = {
     'NNL': ('Negro National League', ['NNL']), 'NN2': ('Negro National League (II)', ['NN2']), 'NAL': ('Negro American League', ['NAL']),
     'ECL': ('Eastern Colored League', ['ECL']), 'EWL': ('East-West League', ['EWL']),
     'CUB': ('Cuba', None), 'DOM': ('Dominican Republic', None), 'VEN': ('Venezuela', None), 'PR': ('Puerto Rico', None), 'JPN': ('Japan', None)}
+LEAGUE_COUNTRY = {'CUB': 'Cuba', 'DOM': 'D.R.', 'VEN': 'Venezuela', 'PR': 'P.R.', 'JPN': 'Japan'}
+LEAGUE_CITY = {r.city: [r.lat, r.lon] for r in pd.read_csv(OVR / 'league_cities.csv').itertuples()}  # where the geocoder guesses wrong
 LS = json.load(open(SRC / 'league_seasons.json'))['leagues'] if (SRC / 'league_seasons.json').exists() else {}
 leagues = {}
 for code, (name, lgs) in LEAGUE_PAGES.items():
@@ -936,6 +1002,9 @@ for code, (name, lgs) in LEAGUE_PAGES.items():
         src = LS[code]
         lg = dict(n=name, subs=src['subs'], s=[r[:8] + [None, [k for k in r[8] if k in players]] for r in src['seasons']],
                   also=[[r[0], r[1], r[2], r[3], r[4], [k for k in r[5] if k in players]] for r in src.get('also', [])])
+        # where the clubs played, for the map: city -> [lat, lon]
+        lg['ll'] = {c: LEAGUE_CITY.get(c) or ll for c in sorted({r[4] for r in lg['s'] if r[4]}) for _, ll, ap in [geocode(c, None, LEAGUE_COUNTRY[code])] if c in LEAGUE_CITY or (ll and not ap)}
+        print(f'  {code} cities without a location:', sorted({r[4] for r in lg['s'] if r[4]} - set(lg['ll'])))
     else:
         continue
     lg['s'].sort(key=lambda r: (r[0], r[2], -(r[5] or 0), r[3]))
@@ -947,7 +1016,7 @@ print('league pages:', {k: len(v['s']) for k, v in leagues.items()})
 logos = sorted(p.name for p in (ROOT / 'docs' / 'logos').glob('*') if p.suffix.lower() in ('.png', '.svg', '.jpg', '.jpeg', '.webp', '.none'))
 photos_manifest = ROOT / 'docs' / 'data' / 'photos.json'
 
-DATA = dict(clubs=clubs_out, players=players, teams=teams, franch=franch, leagues=leagues, fcol=COLORS, parks=parks, years={str(k): v for k, v in years.items()},
+DATA = dict(players=players, teams=teams, franch=franch, leagues=leagues, fcol=COLORS, parks=parks, years={str(k): v for k, v in years.items()},
             games=games, eras=eras, logos=logos)
 OUT.mkdir(parents=True, exist_ok=True)
 s = json.dumps(DATA, separators=(',', ':'), ensure_ascii=False)

@@ -6,7 +6,7 @@
 Run after build_data.py (it reads the written-out titles from docs/data/atlas.json), then rebuild.
 Searches "<year> <title> <teams> full game" and takes the first result that is about this game, can be played
 on other websites. Prefers broadcasts over 90 minutes, then shorter footage; duration does not prove completeness. To pick one yourself, put it in data/overrides/game_videos.csv
-(rk,video); it wins over the search. You can also paste a better link in the game page's Video section.
+(key,video); it wins over the search. You can also paste a better link in the game page's Video section.
 """
 import csv, json, re, sys, time
 from pathlib import Path
@@ -16,7 +16,7 @@ import requests
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / 'data' / 'source' / 'game_videos.csv'
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15'
-FIELDS = ['rk', 'video', 'title', 'channel', 'mins', 'query']
+FIELDS = ['key', 'video', 'title', 'channel', 'mins', 'query']
 FULL = 90  # prefer long broadcasts; duration alone cannot prove completeness
 
 
@@ -90,19 +90,19 @@ def pick(g, q):
 
 def main(redo):
     games = json.load(open(ROOT / 'docs' / 'data' / 'atlas.json'))['games']
-    have = {r['rk']: r for r in csv.DictReader(open(OUT))} if OUT.exists() else {}
+    have = {r['key']: r for r in csv.DictReader(open(OUT))} if OUT.exists() else {}
     overrides = ROOT / 'data' / 'overrides' / 'game_videos.csv'
-    manual = {r['rk'] for r in csv.DictReader(open(overrides))} if overrides.exists() else set()
-    todo = [g for g in sorted(games.values(), key=lambda g: g['rk']) if str(g['rk']) not in manual and (redo or str(g['rk']) not in have or not have[str(g['rk'])].get('video')
-            or not relevant(g, have[str(g['rk'])]['title']) or not embeddable(have[str(g['rk'])]['video']))]
+    manual = {r['key'] for r in csv.DictReader(open(overrides))} if overrides.exists() else set()
+    todo = [g for g in sorted(games.values(), key=lambda g: g['rk']) if g['id'] not in manual and (redo or g['id'] not in have or not have[g['id']].get('video')
+            or not relevant(g, have[g['id']]['title']) or not embeddable(have[g['id']]['video']))]
     print(f'{len(todo)} games to look up')
     for i, g in enumerate(todo):
         q = query(g)
         try: m = pick(g, q)
         except requests.RequestException as e: print('  failed:', q, e); m = None
-        have[str(g['rk'])] = dict(rk=g['rk'], video=m[0] if m else '', title=m[1] if m else '', channel=m[2] if m else '', mins=m[3] if m else '', query=q)
+        have[g['id']] = dict(key=g['id'], video=m[0] if m else '', title=m[1] if m else '', channel=m[2] if m else '', mins=m[3] if m else '', query=q)
         if i % 25 == 0:
-            print(f'  {i}/{len(todo)} {q[:60]} -> {have[str(g["rk"])]["title"][:60]}', flush=True)
+            print(f'  {i}/{len(todo)} {q[:60]} -> {have[g["id"]]["title"][:60]}', flush=True)
             write(have)
         time.sleep(1.2)
     write(have)
@@ -113,7 +113,7 @@ def main(redo):
 def write(have):
     with OUT.open('w', newline='') as f:
         w = csv.DictWriter(f, FIELDS, extrasaction='ignore', lineterminator='\n'); w.writeheader()
-        for r in sorted(have.values(), key=lambda r: int(r['rk'])): w.writerow(r)
+        for r in sorted(have.values(), key=lambda r: r['key']): w.writerow(r)
 
 
 if __name__ == '__main__':

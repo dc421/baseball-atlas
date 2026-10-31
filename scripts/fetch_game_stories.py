@@ -101,7 +101,7 @@ def main():
     for g in sorted(games.values(), key=lambda g: g['rk']):
         try: s = story(g)
         except (requests.RequestException, ValueError) as e: print('  failed:', g['rk'], e); s = None
-        if s and s[0]: out[str(g['rk'])] = dict(p=s[0], url=s[1], src=s[2])
+        if s and s[0]: out[g['id']] = dict(p=s[0], url=s[1], src=s[2])
         elif articles(g): print(f"  no section: #{g['rk']} {g['y']} {g.get('gt')}")
     OUT.write_text(json.dumps(out, indent=1, ensure_ascii=False))
     print(f'wrote {OUT.relative_to(ROOT)} ({len(out)} of {len(games)} games)')

@@ -22,3 +22,4 @@ Team marks sourced from Baseball-Reference franchise pages. Team marks belong to
 | Hartford Dark Blues | `HAR_1876.svg` (lettering reconstruction) | User-supplied team photograph |
 | Keokuk Westerns | `WES_1875.svg` (lettering reconstruction) | User-supplied team photograph |
 | Bismarck Club | `BIS_1935.svg` (diamond-and-letter reconstruction) | User-supplied image |
+| New Haven Elm Citys | `NHV_1875.svg` (generic cap illustration) | User-supplied reference photograph |

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="White 19th-century baseball cap">
+  <!-- A generic 19th-century cap based on the user-supplied reference. -->
+  <circle cx="50" cy="50" r="49" fill="#50645a"/>
+  <path d="M19 57c1-19 9-30 27-31 15-1 27 7 29 22l-2 10c-13-5-34-4-54 3z" fill="#f5f1e5" stroke="#d6d0c2" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M19 57c15-6 35-8 54-4 5 1 9 4 12 8 1 2-1 4-4 4-16-3-31-2-45 2-7 2-13 0-17-3z" fill="#e6e0d1" stroke="#d6d0c2" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M24 48c13-4 34-5 47 0" fill="none" stroke="#dfd9cc" stroke-width="1.5"/>
+</svg>

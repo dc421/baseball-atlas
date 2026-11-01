@@ -473,4 +473,4 @@ body.lay-list.wide aside.panel{padding-left:max(22px,calc((100% - 1160px)/2));pa
 
 .map-leader{stroke:var(--muted);stroke-opacity:.55;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
 
-body.home-zoomed .inset-jp{display:none}
+body.home-zoomed .inset-jp,body.home-zoomed .inset-hi{display:none}

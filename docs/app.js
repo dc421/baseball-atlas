@@ -457,13 +457,18 @@ function setYear(y) {
   const yk = pageKey('y_' + YEAR), cur = view.type + '_' + view.id;  // on a year page (or 1845–1868), the slider moves the page
   if ((view.type === 'y' || cur === 'd_pre') && yk !== cur) { view = { type: yk[0], id: yk.slice(2) }; setHash(); render(true, { keepMap: true }); } else drawBase();
   if (!moved && 'yd'.includes(view.type)) fitYear(YEAR);
-  decStrip();
+  decStrip(); decEdges();
 }
 // under the map: every decade, the one on show lit
 function decStrip() {
   const cur = view.type === 'h' ? null : view.type === 'd' ? view.id : decadeOf(YEAR);
   $('#decstrip').innerHTML = ['pre', ...Array.from({ length: 16 }, (_, i) => String(1870 + 10 * i))].map(d =>
     `<button onclick="go('d_${d}')" aria-current="${d === cur}"${view.type === 'd' && d === cur ? ' class="on"' : ''}>${d === 'pre' ? 'Before 1869' : d + 's'}</button>`).join('');
+}
+// fade whichever end of the strip has more decades scrolled past it
+function decEdges() {
+  const el = $('#decstrip'), end = el.scrollWidth - el.clientWidth - el.scrollLeft;
+  el.classList.toggle('more-l', el.scrollLeft > 1); el.classList.toggle('more-r', end > 1);
 }
 
 /* ================================================================ routing
@@ -1247,7 +1252,7 @@ function render(newView = true, opts = {}) {
   for (const h of HOMES) { const b = $('#home-' + h); b.setAttribute('aria-current', h === home); b.classList.toggle('from', !home && h === lastHome); }
   document.body.classList.toggle('wide', t === 'r' && view.id === 'rankings');
   panel.innerHTML = (V[t] || vYear)();
-  decStrip();
+  decStrip(); decEdges();
   if (!newView) { scroller().scrollTop = st; for (const [id, v] of Object.entries(drafts)) { const el = document.getElementById(id); if (el && !el.value) el.value = v; } if (active) document.getElementById(active)?.focus(); }
   wire();
   if (newView && !opts.keepMap) placeMap(opts.restore);
@@ -1336,7 +1341,8 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
   editUI();
   buildIndex();
   setupMap();
-  addEventListener('resize', () => { clearTimeout(window.__rs); window.__rs = setTimeout(() => placeMap(false), 200); });
+  addEventListener('resize', () => { clearTimeout(window.__rs); window.__rs = setTimeout(() => { placeMap(false); decEdges(); }, 200); });
+  $('#decstrip').addEventListener('scroll', decEdges, { passive: true });
   $('#yr').addEventListener('input', e => { stopPlay(); setYear(+e.target.value); });
   $('#play').addEventListener('click', () => { if (playT) { stopPlay(); return; } $('#play').textContent = '❚❚'; if (view.type !== 'y') go('y_' + YEAR); playT = setInterval(() => { if (YEAR >= 2025) { stopPlay(); return; } setYear(YEAR + 1); }, 650); });
   $('#q').addEventListener('input', e => doSearch(e.target.value));

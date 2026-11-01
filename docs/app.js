@@ -417,8 +417,15 @@ function fitTo(lls, maxK = 30) {
   const pad = Math.max(24, Math.min(W, H) * .1), bar = $('#mapbar').hidden ? 0 : 56;  // the year pill floats over the top of the map
   const foot = getComputedStyle($('#decstrip')).display === 'none' ? 0 : 40;  // and the decade strip along the bottom
   const k = Math.min(maxK, Math.min((W - 2 * pad) / Math.max(x1 - x0, 20), (H - 2 * pad - bar - foot) / Math.max(y1 - y0, 20)));
+  let tx = W / 2 - k * (x0 + x1) / 2;
+  if (view.type === 'h') {
+    // Reserve room west of the mainland for the Pacific insets, even if the eastern edge is cropped.
+    const insetWidth = $('#insets').getBoundingClientRect().width;
+    const west = allTimePins().filter(p => onMain(p.ll) && p.ll[1] < -110).map(p => tx + k * XY(p.ll)[0]);
+    if (insetWidth && west.length) tx += Math.min(W * .25, Math.max(0, insetWidth + 32 - Math.min(...west)));
+  }
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
-  svg.transition().duration(reduce ? 0 : 600).call(zoom.transform, d3.zoomIdentity.translate(W / 2 - k * (x0 + x1) / 2, (H + bar - foot) / 2 - k * (y0 + y1) / 2).scale(k));
+  svg.transition().duration(reduce ? 0 : 600).call(zoom.transform, d3.zoomIdentity.translate(tx, (H + bar - foot) / 2 - k * (y0 + y1) / 2).scale(k));
 }
 const fitNorthAmerica = () => fitTo([[50, -125], [24, -66]], 6);
 const fitYear = y => { const lls = yearLLs(y); if (lls.length) fitTo(lls, 14); else fitNorthAmerica(); };

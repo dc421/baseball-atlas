@@ -190,6 +190,7 @@ function leagueClubs(y) {
   return out;
 }
 // The all-time map links only to franchise pages; international leagues use country highlights.
+const franchiseScore = teams => { const seasons = new Set(teams.map(t => t.y)).size, titles = teams.filter(t => t.ws && (t.lg === 'AL' || t.lg === 'NL')).length; return { seasons, titles, score: seasons + 5 * titles }; };
 const LEAGUE_COUNTRIES = { Cuba: 'CUB', 'Dominican Rep.': 'DOM', 'Puerto Rico': 'PR', Venezuela: 'VEN', Japan: 'JPN' };
 function allTimePins() {
   const pins = [];
@@ -200,7 +201,7 @@ function allTimePins() {
       const counts = new Map(); for (const x of seasons) { const city = [x.pl?.c, x.pl?.r, x.pl?.n].join('|'); counts.set(city, (counts.get(city) || 0) + 1); }
       const max = Math.max(...counts.values()), anchor = [...seasons].reverse().find(x => counts.get([x.pl?.c, x.pl?.r, x.pl?.n].join('|')) === max);
       const ll = PARK_LOCATIONS.ids?.[anchor.pk] || PARK_LOCATIONS.names?.[anchor.park] || anchor.ll;
-      pins.push({ tid, t, ll, key: 'f_' + fid, seasons: new Set(fr.s.map(id => D.teams[id].y)).size });
+      pins.push({ tid, t, ll, key: 'f_' + fid, ...franchiseScore(fr.s.map(id => D.teams[id])) });
     }
   }
   return pins;
@@ -302,8 +303,9 @@ function drawBase() {
     const items = [];
     if (view.type === 'h') {
       // Spread badges across nearby cities as well as identical coordinates, keeping their locations as anchors.
+      const maxScore = Math.max(2, ...pins.map(p => p.score));
       for (const p of pins) {
-        const [x, y] = XY(p.ll), r = 4.5 + 12.5 * Math.sqrt(Math.min(Math.max(p.seasons - 1, 0), 99) / 99);
+        const [x, y] = XY(p.ll), r = 4.5 + 12.5 * Math.sqrt(Math.max(p.score - 1, 0) / (maxScore - 1));
         items.push({ ...p, x, y, ox: 0, oy: 0, r, px: x, py: y });
       }
       // Solve progressively from the overview to close zooms, keeping the same ordering throughout.
@@ -344,7 +346,7 @@ function drawBase() {
       if (logo) el.append('image').attr('href', 'logos/' + logo).attr('x', -radius * .76).attr('y', -radius * .76).attr('width', radius * 1.52).attr('height', radius * 1.52);
       else el.append('text').attr('fill', fg).attr('font-size', Math.min((d.t.br || d.t.tm).length > 2 ? 6.4 : 7.5, radius * .7)).text(d.t.br || d.t.tm);
       el.attr('opacity', highlight && !sel ? .45 : 1);
-      el.append('title').text(d.key ? `${d.t.n} · ${d.seasons} recorded seasons` : `${d.t.y} ${d.t.n}`);
+      el.append('title').text(d.key ? `${d.t.n} · ${d.seasons} recorded seasons · ${d.titles} MLB World Series title${d.titles === 1 ? '' : 's'}` : `${d.t.y} ${d.t.n}`);
     });
   }
   rescale(); drawInsets();
@@ -1138,7 +1140,7 @@ function updateHomeVisibility() {
 function vHome() {
   const franchises = Object.entries(D.franch).map(([id, fr]) => {
     const teams = fr.s.map(tid => D.teams[tid]), t = teams[teams.length - 1], years = [...new Set(teams.map(x => x.y))];
-    const titles = teams.filter(x => x.ws && (x.lg === 'AL' || x.lg === 'NL')).length;
+    const { score } = franchiseScore(teams);
     const groups = new Map();
     for (const x of teams) { if (!groups.has(x.fr)) groups.set(x.fr, []); groups.get(x.fr).push(x); }
     const own = groups.get(t.fr) || teams, ownYears = [...new Set(own.map(x => x.y))];
@@ -1146,7 +1148,7 @@ function vHome() {
       const last = ts[ts.length - 1], ys = ts.map(x => x.y), first = Math.min(...ys), end = Math.max(...ys);
       return { name: last.n, years: `${first}${first === end ? '' : '–' + end}`, count: new Set(ys).size };
     }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-    return { id, t, name: fr.n || t.n, years: ownYears, included, score: years.length + 5 * titles, type: 'franchise' };
+    return { id, t, name: fr.n || t.n, years: ownYears, included, score, type: 'franchise' };
   });
   const leagues = CLUB_LEAGUES.filter(id => D.leagues?.[id]).map(id => {
     const lg = D.leagues[id], years = [...new Set(lg.s.map(row => row[0]))];
@@ -1154,7 +1156,7 @@ function vHome() {
   });
   const entries = [...franchises, ...leagues].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
   return `<div class="eyebrow">Baseball through the years</div><h1 class="name">Baseball Atlas</h1>
-    <p class="note">Explore the franchises and international leagues visible on the map. Larger badges represent more recorded seasons. Choose a decade below the map to explore a particular era.</p>
+    <p class="note">Explore the franchises and international leagues visible on the map. Badge size reflects recorded seasons plus five for each MLB World Series title. Choose a decade below the map to explore a particular era.</p>
     <h2>Franchises &amp; leagues <small id="home-franchise-count">${entries.length}</small></h2><div class="list home-entries" id="home-franchises">${entries.map(e => {
       const league = e.type === 'league', first = Math.min(...e.years), last = Math.max(...e.years), range = e.years.length ? (first === last ? String(first) : `${first}–${last}`) : '';
       return `<button class="row home-entry${league ? ' home-league-row league-' + e.id : ''}" data-home-${e.type}="${esc(e.id)}" onclick="go('${league ? 'L' : 'f'}_${e.id}')">${league ? `<span class="home-league-mark" aria-hidden="true">L</span>` : badgeSm(e.t)}<span class="rn">${esc(e.name)}${e.included?.length ? `<small class="home-includes">Includes: ${esc(e.included[0].name)} (${e.included[0].years})${e.included.length > 1 ? ' &amp; others' : ''}</small>` : ''}</span><span class="home-years">${esc(range)}</span></button>`;

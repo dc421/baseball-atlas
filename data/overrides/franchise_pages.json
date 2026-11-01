@@ -255,13 +255,6 @@
     "negro:Brooklyn_Brown_Dodgers:New_York"
    ]
   },
-  "CSW-Havana": {
-   "n": "Cuban Stars of Havana",
-   "root": "negro:CSW:Havana",
-   "runs": [
-    "negro:CSW:Havana"
-   ]
-  },
   "ABC": {
    "n": "Indianapolis ABCs",
    "root": "negro:ABC:Indianapolis",
@@ -319,6 +312,7 @@
    "n": "Cuban Stars West",
    "root": "negro:CSW:Cincinnati",
    "runs": [
+    "negro:CSW:Havana",
     "negro:CSW:Cincinnati"
    ]
   },
@@ -1979,16 +1973,16 @@
   "CSE-1927": "NYC",
   "CSE-1928": "NYC",
   "CSE-1929": "NYC",
-  "CSH-1906": "CSW-Havana",
-  "CSH-1907": "CSW-Havana",
-  "CSH-1908": "CSW-Havana",
-  "CSH-1909": "CSW-Havana",
-  "CSH-1910": "CSW-Havana",
-  "CSH-1911": "CSW-Havana",
-  "CSH-1912": "CSW-Havana",
-  "CSH-1913": "CSW-Havana",
-  "CSH-1914": "CSW-Havana",
-  "CSH-1915": "CSW-Havana",
+  "CSH-1906": "CSW",
+  "CSH-1907": "CSW",
+  "CSH-1908": "CSW",
+  "CSH-1909": "CSW",
+  "CSH-1910": "CSW",
+  "CSH-1911": "CSW",
+  "CSH-1912": "CSW",
+  "CSH-1913": "CSW",
+  "CSH-1914": "CSW",
+  "CSH-1915": "CSW",
   "CSW-1916": "CSW",
   "CSW-1917": "CSW",
   "CSW-1918": "CSW",

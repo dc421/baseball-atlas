@@ -194,7 +194,13 @@ function allTimePins() {
   const pins = [];
   for (const [fid, fr] of Object.entries(D.franch)) {
     const tid = [...fr.s].reverse().find(id => D.teams[id]?.ll);
-    if (tid) { const t = D.teams[tid], ll = PARK_LOCATIONS.ids?.[t.pk] || PARK_LOCATIONS.names?.[t.park] || t.ll; pins.push({ tid, t, ll, key: 'f_' + fid, seasons: fr.s.length }); }
+    if (tid) {
+      const t = D.teams[tid], seasons = fr.s.map(id => D.teams[id]).filter(x => x.ll);
+      const counts = new Map(); for (const x of seasons) { const city = [x.pl?.c, x.pl?.r, x.pl?.n].join('|'); counts.set(city, (counts.get(city) || 0) + 1); }
+      const max = Math.max(...counts.values()), anchor = [...seasons].reverse().find(x => counts.get([x.pl?.c, x.pl?.r, x.pl?.n].join('|')) === max);
+      const ll = PARK_LOCATIONS.ids?.[anchor.pk] || PARK_LOCATIONS.names?.[anchor.park] || anchor.ll;
+      pins.push({ tid, t, ll, key: 'f_' + fid, seasons: fr.s.length });
+    }
   }
   return pins;
 }
@@ -228,15 +234,13 @@ const sc = () => 1 / Math.pow(K, 0.75);
 function rescale() {
   const s = sc();
   if (view.type === 'h') {
-    const badges = gBase.selectAll('g.badge-t'), items = badges.data();
-    if (items.length) {
-      // Re-solve in map coordinates at the current zoom: badges return to their parks when they fit.
-      for (const p of items) { p.x = p.px; p.y = p.py; p.vx = p.vy = 0; }
-      d3.forceSimulation(items).randomSource(d3.randomLcg(0.42))
-        .force('x', d3.forceX(d => d.px).strength(.16)).force('y', d3.forceY(d => d.py).strength(.16))
-        .force('collision', d3.forceCollide(d => (d.r + 3) * s).iterations(4)).stop().tick(140);
-      for (const p of items) { p.ox = (p.x - p.px) / s; p.oy = (p.y - p.py) / s; p.x = p.px; p.y = p.py; }
-    }
+    // Interpolate precomputed layouts, so zooming never restarts the collision solver.
+    const step = Math.max(0, Math.min(13, Math.log2(K) * 2)), i = Math.min(12, Math.floor(step)), f = step - i;
+    gBase.selectAll('g.badge-t').each(function (p) {
+      if (!p.layouts) return;
+      const a = p.layouts[i], b = p.layouts[i + 1];
+      p.ox = (a[0] * (1 - f) + b[0] * f) / s; p.oy = (a[1] * (1 - f) + b[1] * f) / s;
+    });
   }
   gBase.selectAll('g.badge-t').attr('transform', d => `translate(${d.x + d.ox * s},${d.y + d.oy * s}) scale(${s})`);
   gBase.selectAll('line.map-leader').attr('x1', d => d.x).attr('y1', d => d.y).attr('x2', d => d.x + d.ox * s).attr('y2', d => d.y + d.oy * s).attr('display', d => Math.hypot(d.ox, d.oy) > 3 ? null : 'none');
@@ -281,6 +285,17 @@ function drawBase() {
         const [x, y] = XY(p.ll), r = 4.5 + 12.5 * Math.sqrt(Math.min(Math.max(p.seasons - 1, 0), 99) / 99);
         items.push({ ...p, x, y, ox: 0, oy: 0, r, px: x, py: y });
       }
+      // Solve progressively from the overview to close zooms, keeping the same ordering throughout.
+      for (const p of items) p.layouts = [];
+      for (let level = 0; level <= 13; level++) {
+        const scale = Math.pow(2, -level * .375);
+        for (const p of items) { p.vx = p.vy = 0; }
+        d3.forceSimulation(items).randomSource(d3.randomLcg(0.42))
+          .force('x', d3.forceX(d => d.px).strength(.16)).force('y', d3.forceY(d => d.py).strength(.16))
+          .force('collision', d3.forceCollide(d => (d.r + 3) * scale).iterations(4)).stop().tick(140);
+        for (const p of items) p.layouts.push([p.x - p.px, p.y - p.py]);
+      }
+      for (const p of items) { p.x = p.px; p.y = p.py; }
       gBase.selectAll('line.map-leader').data(items).enter().append('line').attr('class', 'map-leader');
     } else {
       for (const ps of Object.values(byLL)) ps.forEach((p, i) => {

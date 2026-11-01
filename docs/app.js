@@ -267,7 +267,7 @@ function drawBase() {
     if (view.type === 'h') {
       // Spread badges across nearby cities as well as identical coordinates, keeping their locations as anchors.
       for (const p of pins.filter(p => !insetOf(p.ll))) {
-        const [x, y] = XY(p.ll), r = 9 + 8 * Math.sqrt(Math.min(p.seasons, 100) / 100);
+        const [x, y] = XY(p.ll), r = 4.5 + 12.5 * Math.sqrt(Math.min(Math.max(p.seasons - 1, 0), 99) / 99);
         items.push({ ...p, x, y, ox: 0, oy: 0, r, px: x, py: y });
       }
       const simulation = d3.forceSimulation(items).randomSource(d3.randomLcg(0.42))
@@ -300,7 +300,7 @@ function drawBase() {
         .attr('stroke', lit || sel ? 'var(--lit)' : 'var(--water)').attr('stroke-width', lit || sel ? 2.5 : 1.2)
         .style('filter', lit ? 'drop-shadow(0 0 4px var(--lit))' : null);
       if (logo) el.append('image').attr('href', 'logos/' + logo).attr('x', -radius * .76).attr('y', -radius * .76).attr('width', radius * 1.52).attr('height', radius * 1.52);
-      else el.append('text').attr('fill', fg).attr('font-size', (d.t.br || d.t.tm).length > 2 ? 6.4 : 7.5).text(d.t.br || d.t.tm);
+      else el.append('text').attr('fill', fg).attr('font-size', Math.min((d.t.br || d.t.tm).length > 2 ? 6.4 : 7.5, radius * .7)).text(d.t.br || d.t.tm);
       el.attr('opacity', highlight && !sel ? .45 : 1);
       el.append('title').text(d.key ? `${d.t.n} · ${d.seasons} recorded seasons` : `${d.t.y} ${d.t.n}`);
     });

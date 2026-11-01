@@ -20,3 +20,4 @@ Team marks sourced from Baseball-Reference franchise pages. Team marks belong to
 | Fort Wayne Kekiongas | `KEK_1871.jpg` | [Retroseasons, supplied by user](https://www.retroseasons.com/retroimages/0000-logo-1_AIgycwzqTh7-Ow2NjflbQg.jpg) |
 | Troy Trojans | `TRO_1879.svg` (lettering reconstruction) | User-supplied team photograph |
 | Hartford Dark Blues | `HAR_1876.svg` (lettering reconstruction) | User-supplied team photograph |
+| Keokuk Westerns | `WES_1875.svg` (lettering reconstruction) | User-supplied team photograph |

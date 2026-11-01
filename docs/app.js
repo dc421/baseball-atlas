@@ -265,6 +265,26 @@ function logoFor(t) {
   }
   return best && !best.endsWith('.none') ? best : null;
 }
+// Match solid image backgrounds to the surrounding badge, keeping transparent images on white.
+const LOGO_BG = new Map();
+function logoBackground(logo) {
+  if (LOGO_BG.has(logo)) return LOGO_BG.get(logo);
+  LOGO_BG.set(logo, '#fff');
+  const img = new Image();
+  img.onload = () => {
+    try {
+      const c = document.createElement('canvas'); c.width = c.height = 16;
+      const ctx = c.getContext('2d', { willReadFrequently: true }); ctx.drawImage(img, 0, 0, 16, 16);
+      const at = (x, y) => [...ctx.getImageData(x, y, 1, 1).data], corners = [at(0, 0), at(15, 0), at(0, 15), at(15, 15)], first = corners[0];
+      if (corners.every(v => v[3] >= 250 && v.slice(0, 3).every((n, i) => Math.abs(n - first[i]) <= 12))) {
+        const color = '#' + first.slice(0, 3).map(n => n.toString(16).padStart(2, '0')).join(''); LOGO_BG.set(logo, color);
+        document.querySelectorAll('[data-logo-bg]').forEach(el => { if (el.dataset.logoBg === logo) { if (el.namespaceURI === 'http://www.w3.org/2000/svg') el.setAttribute('fill', color); else el.style.backgroundColor = color; } });
+      }
+    } catch (e) { /* Keep the white background if an image cannot be sampled. */ }
+  };
+  img.src = 'logos/' + logo;
+  return '#fff';
+}
 function teamColors(t) { const c = D.fcol?.[t.fr] || D.franch[t.fp]?.col; return c || ['#53635b', '#eef1ea']; }
 
 // a country-league club's badge: the initials of its name ("Tigres del Licey" -> TL, "Almendares" -> ALM)
@@ -318,7 +338,7 @@ function drawBase() {
       const lit = litN('t_' + d.tid), [bg, fg] = teamColors(d.t), sel = highlight === 't_' + d.tid;
       const logo = logoFor(d.t);
       const radius = d.r || (sel ? 13 : 10.5);
-      el.append('circle').attr('r', radius).attr('fill', logo ? '#fff' : bg)
+      el.append('circle').attr('r', radius).attr('fill', logo ? logoBackground(logo) : bg).attr('data-logo-bg', logo || null)
         .attr('stroke', lit || sel ? 'var(--lit)' : 'var(--water)').attr('stroke-width', lit || sel ? 2.5 : 1.2)
         .style('filter', lit ? 'drop-shadow(0 0 4px var(--lit))' : null);
       if (logo) el.append('image').attr('href', 'logos/' + logo).attr('x', -radius * .76).attr('y', -radius * .76).attr('width', radius * 1.52).attr('height', radius * 1.52);
@@ -344,7 +364,7 @@ function drawInsets() {
       const badge = s.pins.append('g').attr('class', 'pin').attr('transform', `translate(${x + off * Math.sin(a)},${y - off * Math.cos(a)})`)
         .style('cursor', p.key ? 'pointer' : null).on('click', () => p.key && go(p.key));
       const logo = p.t && logoFor(p.t), radius = p.t ? 9 : 5;
-      badge.append('circle').attr('r', radius).attr('fill', logo ? '#fff' : p.fill).attr('stroke', 'var(--water)').attr('stroke-width', 1);
+      badge.append('circle').attr('r', radius).attr('fill', logo ? logoBackground(logo) : p.fill).attr('data-logo-bg', logo || null).attr('stroke', 'var(--water)').attr('stroke-width', 1);
       if (logo) badge.append('image').attr('href', 'logos/' + logo).attr('x', -7).attr('y', -7).attr('width', 14).attr('height', 14);
       else if (p.t) { const [, fg] = teamColors(p.t); badge.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central').attr('fill', fg).attr('font-size', 5.5).text(p.t.br || p.t.tm); }
       badge.append('title').text(p.label);
@@ -561,7 +581,7 @@ function avatar(k) { const p = D.players[k], ph = PHOTOS[k]; return `<span class
 function playerChip(k) { const p = D.players[k]; return p ? `<button class="chip ${litN('p_' + k) ? 'lit' : ''}" onclick="go('p_${k}')"><span class="k">${esc(p.pos)}</span>${esc(nameOf(p))}</button>` : ''; }
 function teamBadge(t) {
   const logo = logoFor(t), [bg, fg] = teamColors(t);
-  return logo ? `<span class="teambadge"><img src="logos/${esc(logo)}" alt=""></span>` : `<span class="teambadge" style="background:${bg};color:${fg}">${esc(t.br || t.tm)}</span>`;
+  return logo ? `<span class="teambadge" data-logo-bg="${esc(logo)}" style="background:${logoBackground(logo)}"><img src="logos/${esc(logo)}" alt=""></span>` : `<span class="teambadge" style="background:${bg};color:${fg}">${esc(t.br || t.tm)}</span>`;
 }
 const crumbs = (label, key) => `<div class="crumbs">${depth() ? `<button id="backbtn">← Back</button><span>·</span>` : ''}<span>${esc(label)}</span>${key ? `<span class="grow"></span>${lockHTML(key)}` : ''}</div>`;
 const pagebar = key => { const d = lockHTML(key); return d ? `<div class="crumbs"><span class="grow"></span>${d}</div>` : ''; };
@@ -1092,7 +1112,7 @@ function vList() {
 }
 function badgeSm(t) {
   const logo = logoFor(t), [bg, fg] = teamColors(t);
-  return logo ? `<span class="avatar tb"><img src="logos/${esc(logo)}" alt=""></span>` : `<span class="avatar tb" style="background:${bg};color:${fg}">${esc(t.br || t.tm)}</span>`;
+  return logo ? `<span class="avatar tb" data-logo-bg="${esc(logo)}" style="background:${logoBackground(logo)}"><img src="logos/${esc(logo)}" alt=""></span>` : `<span class="avatar tb" style="background:${bg};color:${fg}">${esc(t.br || t.tm)}</span>`;
 }
 
 let homeVisibilityFrame = null;
@@ -1137,7 +1157,7 @@ function vHome() {
     <p class="note">Explore the franchises and international leagues visible on the map. Larger badges represent more recorded seasons. Choose a decade below the map to explore a particular era.</p>
     <h2>Franchises &amp; leagues <small id="home-franchise-count">${entries.length}</small></h2><div class="list home-entries" id="home-franchises">${entries.map(e => {
       const league = e.type === 'league', first = Math.min(...e.years), last = Math.max(...e.years), range = e.years.length ? (first === last ? String(first) : `${first}–${last}`) : '';
-      return `<button class="row home-entry" data-home-${e.type}="${esc(e.id)}" onclick="go('${league ? 'L' : 'f'}_${e.id}')">${league ? `<span class="home-league-mark league-${e.id}" aria-hidden="true"></span>` : badgeSm(e.t)}<span class="rn">${esc(e.name)}${e.included?.length ? `<small class="home-includes">Includes: ${esc(e.included[0].name)} (${e.included[0].years})${e.included.length > 1 ? ' &amp; others' : ''}</small>` : ''}</span><span class="home-years">${esc(range)}</span></button>`;
+      return `<button class="row home-entry${league ? ' home-league-row league-' + e.id : ''}" data-home-${e.type}="${esc(e.id)}" onclick="go('${league ? 'L' : 'f'}_${e.id}')">${league ? `<span class="home-league-mark" aria-hidden="true">L</span>` : badgeSm(e.t)}<span class="rn">${esc(e.name)}${e.included?.length ? `<small class="home-includes">Includes: ${esc(e.included[0].name)} (${e.included[0].years})${e.included.length > 1 ? ' &amp; others' : ''}</small>` : ''}</span><span class="home-years">${esc(range)}</span></button>`;
     }).join('')}</div><p class="empty" id="home-franchise-empty" hidden>No franchises or leagues in view.</p>`;
 }
 

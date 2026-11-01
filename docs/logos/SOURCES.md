@@ -17,3 +17,4 @@ Team marks sourced from Baseball-Reference franchise pages. Team marks belong to
 | Cuban Stars West | `CSW_1922.png` | [SportsLogos.Net](https://www.sportslogos.net/logos/view/679919461922/Cuban-Stars-West-Logo/1922/Primary-Logo) |
 | St. Louis Stars | `SLS_1922.png`, `SNS_1940.png` (franchise representation) | [SportsLogos.Net](https://www.sportslogos.net/logos/view/679465311922/St-Louis-Stars-Logo/1922/Primary-Logo) |
 | Rockford Forest Citys | `ROK_1871.svg` (clean reconstruction) | [Uniform photograph and identification](https://www.toddradom.com/blog/5380) |
+| Fort Wayne Kekiongas | `KEK_1871.jpg` | [Retroseasons, supplied by user](https://www.retroseasons.com/retroimages/0000-logo-1_AIgycwzqTh7-Ow2NjflbQg.jpg) |

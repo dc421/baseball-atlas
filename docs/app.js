@@ -194,7 +194,7 @@ function allTimePins() {
   const pins = [];
   for (const [fid, fr] of Object.entries(D.franch)) {
     const tid = [...fr.s].reverse().find(id => D.teams[id]?.ll);
-    if (tid) pins.push({ tid, t: D.teams[tid], ll: D.teams[tid].ll, key: 'f_' + fid });
+    if (tid) pins.push({ tid, t: D.teams[tid], ll: D.teams[tid].ll, key: 'f_' + fid, seasons: fr.s.length });
   }
   return pins;
 }
@@ -228,6 +228,7 @@ const sc = () => 1 / Math.pow(K, 0.75);
 function rescale() {
   const s = sc();
   gBase.selectAll('g.badge-t').attr('transform', d => `translate(${d.x + d.ox * s},${d.y + d.oy * s}) scale(${s})`);
+  gBase.selectAll('line.map-leader').attr('x1', d => d.x).attr('y1', d => d.y).attr('x2', d => d.x + d.ox * s).attr('y2', d => d.y + d.oy * s);
   gBase.selectAll('circle.dot').attr('r', d => d.r * s).attr('stroke-width', s);
   gFocus.selectAll('circle').attr('r', d => d.r * s).attr('stroke-width', 1.5 * s);
   gLab.selectAll('text').attr('font-size', 11 * s).attr('stroke-width', 3 * s).attr('dx', 9 * s).attr('dy', -9 * s);
@@ -263,10 +264,24 @@ function drawBase() {
       (byLL[p.ll.join()] = byLL[p.ll.join()] || []).push(p);
     }
     const items = [];
-    for (const ps of Object.values(byLL)) ps.forEach((p, i) => {
-      const [x, y] = XY(p.ll), ring = view.type === 'h' ? Math.floor((Math.sqrt(1 + 4 * i / 3) - 1) / 2) + 1 : 1, start = 3 * ring * (ring - 1), count = view.type === 'h' ? Math.min(6 * ring, ps.length - start) : ps.length, a = (view.type === 'h' ? i - start : i) * 2 * Math.PI / count, off = ps.length > 1 ? 18 * ring : 0;
-      items.push({ ...p, x, y, ox: off * Math.sin(a), oy: -off * Math.cos(a) });
-    });
+    if (view.type === 'h') {
+      // Spread badges across nearby cities as well as identical coordinates, keeping their locations as anchors.
+      for (const p of pins.filter(p => !insetOf(p.ll))) {
+        const [x, y] = XY(p.ll), r = 9 + 8 * Math.sqrt(Math.min(p.seasons, 100) / 100);
+        items.push({ ...p, x, y, ox: 0, oy: 0, r, px: x, py: y });
+      }
+      const simulation = d3.forceSimulation(items).randomSource(d3.randomLcg(0.42))
+        .force('x', d3.forceX(d => d.px).strength(.12)).force('y', d3.forceY(d => d.py).strength(.12))
+        .force('collision', d3.forceCollide(d => d.r + 3).iterations(4)).stop();
+      simulation.tick(250);
+      for (const p of items) { p.ox = p.x - p.px; p.oy = p.y - p.py; p.x = p.px; p.y = p.py; }
+      gBase.selectAll('line.map-leader').data(items.filter(p => Math.hypot(p.ox, p.oy) > 5)).enter().append('line').attr('class', 'map-leader');
+    } else {
+      for (const ps of Object.values(byLL)) ps.forEach((p, i) => {
+        const [x, y] = XY(p.ll), a = i * 2 * Math.PI / ps.length, off = ps.length > 1 ? 12 : 0;
+        items.push({ ...p, x, y, ox: off * Math.sin(a), oy: -off * Math.cos(a) });
+      });
+    }
     const g = gBase.selectAll('g.badge-t').data(items).enter().append('g').attr('class', 'badge-t pin').style('cursor', 'pointer')
       .on('click', (ev, d) => go(d.t ? (d.key || 't_' + d.tid) : d.c.key));
     g.each(function (d) {
@@ -280,13 +295,14 @@ function drawBase() {
       }
       const lit = litN('t_' + d.tid), [bg, fg] = teamColors(d.t), sel = highlight === 't_' + d.tid;
       const logo = logoFor(d.t);
-      el.append('circle').attr('r', sel ? 13 : 10.5).attr('fill', logo ? '#fff' : bg)
+      const radius = d.r || (sel ? 13 : 10.5);
+      el.append('circle').attr('r', radius).attr('fill', logo ? '#fff' : bg)
         .attr('stroke', lit || sel ? 'var(--lit)' : 'var(--water)').attr('stroke-width', lit || sel ? 2.5 : 1.2)
         .style('filter', lit ? 'drop-shadow(0 0 4px var(--lit))' : null);
-      if (logo) el.append('image').attr('href', 'logos/' + logo).attr('x', -8).attr('y', -8).attr('width', 16).attr('height', 16);
+      if (logo) el.append('image').attr('href', 'logos/' + logo).attr('x', -radius * .76).attr('y', -radius * .76).attr('width', radius * 1.52).attr('height', radius * 1.52);
       else el.append('text').attr('fill', fg).attr('font-size', (d.t.br || d.t.tm).length > 2 ? 6.4 : 7.5).text(d.t.br || d.t.tm);
       el.attr('opacity', highlight && !sel ? .45 : 1);
-      el.append('title').text(d.key ? d.t.n : `${d.t.y} ${d.t.n}`);
+      el.append('title').text(d.key ? `${d.t.n} · ${d.seasons} recorded seasons` : `${d.t.y} ${d.t.n}`);
     });
   }
   rescale(); drawInsets();
@@ -1057,7 +1073,7 @@ function vHome() {
     return { id, t, name: fr.n || t.n };
   }).sort((a, b) => a.name.localeCompare(b.name));
   return `<div class="eyebrow">Baseball through the years</div><h1 class="name">Baseball Atlas</h1>
-    <p class="note">Explore franchises and leagues across baseball history. Choose a decade below the map to explore a particular era.</p>
+    <p class="note">Explore franchises and leagues across baseball history. Larger badges represent more recorded seasons. Choose a decade below the map to explore a particular era.</p>
     <h2>Leagues <small>${Object.keys(D.leagues || {}).length}</small></h2><div class="chips">${Object.entries(D.leagues || {}).sort((a, b) => a[1].n.localeCompare(b[1].n)).map(([id, lg]) => `<button class="chip${CLUB_LEAGUES.includes(id) ? ' league-key league-' + id : ''}" onclick="go('L_${id}')">${esc(lg.n)}</button>`).join('')}</div>
     <h2>Franchises <small>${franchises.length}</small></h2><div class="list">${franchises.map(({ id, t, name }) => `<button class="row" onclick="go('f_${id}')">${badgeSm(t)}<span class="rn">${esc(name)}</span></button>`).join('')}</div>`;
 }

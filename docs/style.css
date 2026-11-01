@@ -470,3 +470,5 @@ body.lay-list.wide aside.panel{padding-left:max(22px,calc((100% - 1160px)/2));pa
 .league-country{fill:var(--league-color);fill-opacity:.65;stroke:var(--league-color);stroke-width:1;vector-effect:non-scaling-stroke;cursor:pointer}
 .league-country:hover{fill-opacity:.75}
 .league-key::before{content:"";display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:50%;background:var(--league-color);vertical-align:middle}
+
+.map-leader{stroke:var(--muted);stroke-opacity:.55;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}

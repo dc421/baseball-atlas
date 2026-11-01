@@ -28,3 +28,4 @@ Team marks sourced from Baseball-Reference franchise pages. Team marks belong to
 | Syracuse Stars | `SYS_1890.svg` (lettering reconstruction) | User-supplied team photograph |
 | Worcester Ruby Legs | `WOR_1880.svg` (blackletter reconstruction) | User-supplied uniform image |
 | 25th Infantry Wreckers | `W25_1914.svg` (jersey numeral reconstruction) | User-supplied team photograph |
+| Harrisburg Giants | `HBG_1924.svg`, `HSS_1943.svg` (franchise representation) | User-supplied team photograph |

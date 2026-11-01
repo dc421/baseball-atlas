@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Harrisburg Giants HG">
+  <!-- Block HG based on the user-supplied team photograph. -->
+  <g fill="#263a35">
+    <path d="M8 18h13v26h19V18h13v64H40V56H21v26H8z"/>
+    <path d="M91 34H78c-1-5-3-7-7-7-6 0-8 7-8 23s2 23 8 23c5 0 7-4 7-14v-2h-8V45h21v37H81l-1-6c-3 5-7 7-13 7-12 0-18-11-18-33s7-33 22-33c12 0 19 6 20 17z"/>
+  </g>
+</svg>

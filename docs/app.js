@@ -1106,21 +1106,26 @@ function updateHomeVisibility() {
   }
   document.querySelectorAll('[data-home-franchise]').forEach(row => { row.hidden = !franchises.has(row.dataset.homeFranchise); });
   document.querySelectorAll('[data-home-league]').forEach(row => { row.hidden = !leagues.has(row.dataset.homeLeague); });
-  $('#home-franchise-count').textContent = franchises.size;
-  $('#home-league-count').textContent = leagues.size;
-  $('#home-franchise-empty').hidden = franchises.size > 0;
-  $('#home-league-empty').hidden = leagues.size > 0;
+  $('#home-franchise-count').textContent = franchises.size + leagues.size;
+  $('#home-franchise-empty').hidden = franchises.size + leagues.size > 0;
 }
 function vHome() {
   const franchises = Object.entries(D.franch).map(([id, fr]) => {
-    const t = D.teams[fr.s[fr.s.length - 1]], years = new Set(fr.s.map(tid => D.teams[tid].y)).size;
-    return { id, t, years, name: fr.n || t.n };
-  }).sort((a, b) => b.years - a.years || a.name.localeCompare(b.name));
-  const leagues = CLUB_LEAGUES.filter(id => D.leagues?.[id]).sort((a, b) => D.leagues[a].n.localeCompare(D.leagues[b].n));
+    const teams = fr.s.map(tid => D.teams[tid]), t = teams[teams.length - 1], years = [...new Set(teams.map(x => x.y))];
+    const top = teams.filter(x => x.tr?.ar <= 156).length;
+    return { id, t, name: fr.n || t.n, years, score: years.length + top, type: 'franchise' };
+  });
+  const leagues = CLUB_LEAGUES.filter(id => D.leagues?.[id]).map(id => {
+    const lg = D.leagues[id], years = [...new Set(lg.s.map(row => row[0]))];
+    return { id, name: lg.n, years, score: years.length, type: 'league' };
+  });
+  const entries = [...franchises, ...leagues].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
   return `<div class="eyebrow">Baseball through the years</div><h1 class="name">Baseball Atlas</h1>
     <p class="note">Explore the franchises and international leagues visible on the map. Larger badges represent more recorded seasons. Choose a decade below the map to explore a particular era.</p>
-    <h2>Leagues <small id="home-league-count">${leagues.length}</small></h2><div class="chips">${leagues.map(id => `<button class="chip league-key league-${id}" data-home-league="${id}" onclick="go('L_${id}')">${esc(D.leagues[id].n)}</button>`).join('')}</div><p class="empty" id="home-league-empty" hidden>No international leagues in view.</p>
-    <h2>Franchises <small id="home-franchise-count">${franchises.length}</small></h2><div class="list" id="home-franchises">${franchises.map(({ id, t, name, years }) => `<button class="row" data-home-franchise="${esc(id)}" onclick="go('f_${id}')">${badgeSm(t)}<span class="rn">${esc(name)}<small>${years} recorded season${years === 1 ? '' : 's'}</small></span></button>`).join('')}</div><p class="empty" id="home-franchise-empty" hidden>No franchises in view.</p>`;
+    <h2>Franchises &amp; leagues <small id="home-franchise-count">${entries.length}</small></h2><div class="list home-entries" id="home-franchises">${entries.map(e => {
+      const league = e.type === 'league', first = Math.min(...e.years), last = Math.max(...e.years), range = e.years.length ? (first === last ? String(first) : `${first}–${last}`) : '';
+      return `<button class="row home-entry" data-home-${e.type}="${esc(e.id)}" onclick="go('${league ? 'L' : 'f'}_${e.id}')">${league ? `<span class="home-league-mark league-${e.id}" aria-hidden="true"></span>` : badgeSm(e.t)}<span class="rn">${esc(e.name)}</span><span class="home-years">${esc(range)}</span></button>`;
+    }).join('')}</div><p class="empty" id="home-franchise-empty" hidden>No franchises or leagues in view.</p>`;
 }
 
 const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.</p>`;

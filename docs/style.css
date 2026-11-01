@@ -474,3 +474,9 @@ body.lay-list.wide aside.panel{padding-left:max(22px,calc((100% - 1160px)/2));pa
 .map-leader{stroke:var(--muted);stroke-opacity:.55;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
 
 body.home-zoomed .inset-jp,body.home-zoomed .inset-hi{display:none}
+
+.home-entry{gap:8px;padding:3px 0;min-height:34px}
+.home-entry .avatar{width:27px;height:27px;flex:0 0 27px}
+.home-entry .rn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.home-years{flex:none;color:var(--muted);font-family:var(--f-mono);font-size:11px;white-space:nowrap}
+.home-league-mark{width:27px;height:27px;flex:0 0 27px;border-radius:50%;background:var(--league-color);opacity:.7}

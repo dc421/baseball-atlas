@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="25th Infantry Wreckers 25">
+  <!-- Block numerals based on the user-supplied team photograph. -->
+  <g fill="#263a35">
+    <path d="M8 28c0-12 7-19 18-19 12 0 18 7 18 18 0 9-3 15-10 23L21 67h23v15H8V69l17-23c4-6 6-10 6-16 0-5-2-7-5-7s-5 2-5 7v6H8z"/>
+    <path d="M54 10h36v14H67l-1 14c3-3 6-4 10-4 11 0 16 9 16 23 0 17-7 26-20 26-12 0-19-8-19-21v-4h13v4c0 5 2 7 6 7s6-4 6-11c0-8-2-11-6-11-3 0-5 2-6 6l-12-1z"/>
+  </g>
+</svg>

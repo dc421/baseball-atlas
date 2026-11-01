@@ -27,3 +27,4 @@ Team marks sourced from Baseball-Reference franchise pages. Team marks belong to
 | Providence Grays | `PRO_1878.svg` (generic gray cap illustration) | User-supplied reference photograph |
 | Syracuse Stars | `SYS_1890.svg` (lettering reconstruction) | User-supplied team photograph |
 | Worcester Ruby Legs | `WOR_1880.svg` (blackletter reconstruction) | User-supplied uniform image |
+| 25th Infantry Wreckers | `W25_1914.svg` (jersey numeral reconstruction) | User-supplied team photograph |

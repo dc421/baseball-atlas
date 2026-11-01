@@ -175,7 +175,7 @@ const lockHTML = key => editing() && trackKeys().all.has(key)
    that played). Japan and Hawaii are insets in the corner, shown only when something on the map is there. */
 let svg, gRoot, gLand, gCountry, gBase, gFocus, gLab, proj, path, W = 800, H = 600, K = 1, LAND = null, moved = false;
 let homeZoomBase = 1;
-const zoom = d3.zoom().scaleExtent([1, 80]).on('zoom', ev => { gRoot.attr('transform', ev.transform); K = ev.transform.k; if (ev.sourceEvent) moved = true; else if (view.type === 'h') homeZoomBase = K; document.body.classList.toggle('home-zoomed', view.type === 'h' && K > homeZoomBase * 1.2); rescale(); });
+const zoom = d3.zoom().scaleExtent([1, 80]).on('zoom', ev => { gRoot.attr('transform', ev.transform); K = ev.transform.k; if (ev.sourceEvent) moved = true; else if (view.type === 'h') homeZoomBase = K; document.body.classList.toggle('home-zoomed', view.type === 'h' && K > homeZoomBase * 1.2); rescale(); scheduleHomeVisibility(); });
 const INSETS = [  // box: [lon, lat] corners; in: which points it takes
   { id: 'jp', name: 'Japan', lg: 'JPN', box: [[129.5, 31.2], [145.8, 45.5]], w: 150, h: 170, in: ll => ll[1] > 100 },
   { id: 'hi', name: 'Hawaii', box: [[-160.3, 22.3], [-154.8, 18.9]], w: 150, h: 84, in: ll => ll[1] < -150 }];
@@ -200,7 +200,7 @@ function allTimePins() {
       const counts = new Map(); for (const x of seasons) { const city = [x.pl?.c, x.pl?.r, x.pl?.n].join('|'); counts.set(city, (counts.get(city) || 0) + 1); }
       const max = Math.max(...counts.values()), anchor = [...seasons].reverse().find(x => counts.get([x.pl?.c, x.pl?.r, x.pl?.n].join('|')) === max);
       const ll = PARK_LOCATIONS.ids?.[anchor.pk] || PARK_LOCATIONS.names?.[anchor.park] || anchor.ll;
-      pins.push({ tid, t, ll, key: 'f_' + fid, seasons: fr.s.length });
+      pins.push({ tid, t, ll, key: 'f_' + fid, seasons: new Set(fr.s.map(id => D.teams[id].y)).size });
     }
   }
   return pins;
@@ -261,7 +261,7 @@ function logoFor(t) {
     const rank = code === (t.br || '').toUpperCase() || code === t.tm ? 2 : code === t.fr ? 1 : -1;
     if (rank < 0 || yr > t.y) continue;
     const score = rank * 10000 + yr;
-    if (score > bestScore) { bestScore = score; best = f; }
+    if (score > bestScore || (score === bestScore && best?.endsWith('.none') && !f.endsWith('.none'))) { bestScore = score; best = f; }
   }
   return best && !best.endsWith('.none') ? best : null;
 }
@@ -382,7 +382,7 @@ function refreshMap() {
   })).enter().append('path').attr('class', f => 'league-country league-' + LEAGUE_COUNTRIES[f.properties.name]).attr('d', path)
     .on('click', (ev, f) => go('L_' + LEAGUE_COUNTRIES[f.properties.name]))
     .append('title').text(f => D.leagues[LEAGUE_COUNTRIES[f.properties.name]].n);
-  drawBase(); drawFocus();
+  drawBase(); drawFocus(); scheduleHomeVisibility();
 }
 function setYear(y) {
   YEAR = Math.max(1845, Math.min(2025, y | 0)); $('#yr').value = YEAR; $('#bigyear').textContent = YEAR;
@@ -1089,15 +1089,38 @@ function badgeSm(t) {
   return logo ? `<span class="avatar tb"><img src="logos/${esc(logo)}" alt=""></span>` : `<span class="avatar tb" style="background:${bg};color:${fg}">${esc(t.br || t.tm)}</span>`;
 }
 
+let homeVisibilityFrame = null;
+function scheduleHomeVisibility() {
+  if (view.type !== 'h' || homeVisibilityFrame != null) return;
+  homeVisibilityFrame = requestAnimationFrame(() => { homeVisibilityFrame = null; updateHomeVisibility(); });
+}
+function updateHomeVisibility() {
+  if (view.type !== 'h' || !svg || !$('#home-franchises')) return;
+  const map = $('#map').getBoundingClientRect(), intersects = r => r.width > 0 && r.height > 0 && r.right >= map.left && r.left <= map.right && r.bottom >= map.top && r.top <= map.bottom;
+  const franchises = new Set(), leagues = new Set();
+  gBase.selectAll('g.badge-t').each(function (d) { if (d.key && intersects(this.getBoundingClientRect())) franchises.add(d.key.slice(2)); });
+  gCountry.selectAll('path.league-country').each(function (d) { if (intersects(this.getBoundingClientRect())) leagues.add(LEAGUE_COUNTRIES[d.properties.name]); });
+  for (const inset of INSETS) if (inset.el && intersects(inset.el.node().getBoundingClientRect())) {
+    if (inset.lg) leagues.add(inset.lg);
+    for (const p of INSET_PTS) if (!p.focus && p.key?.startsWith('f_') && inset.in(p.ll)) franchises.add(p.key.slice(2));
+  }
+  document.querySelectorAll('[data-home-franchise]').forEach(row => { row.hidden = !franchises.has(row.dataset.homeFranchise); });
+  document.querySelectorAll('[data-home-league]').forEach(row => { row.hidden = !leagues.has(row.dataset.homeLeague); });
+  $('#home-franchise-count').textContent = franchises.size;
+  $('#home-league-count').textContent = leagues.size;
+  $('#home-franchise-empty').hidden = franchises.size > 0;
+  $('#home-league-empty').hidden = leagues.size > 0;
+}
 function vHome() {
   const franchises = Object.entries(D.franch).map(([id, fr]) => {
-    const t = D.teams[fr.s[fr.s.length - 1]];
-    return { id, t, name: fr.n || t.n };
-  }).sort((a, b) => a.name.localeCompare(b.name));
+    const t = D.teams[fr.s[fr.s.length - 1]], years = new Set(fr.s.map(tid => D.teams[tid].y)).size;
+    return { id, t, years, name: fr.n || t.n };
+  }).sort((a, b) => b.years - a.years || a.name.localeCompare(b.name));
+  const leagues = CLUB_LEAGUES.filter(id => D.leagues?.[id]).sort((a, b) => D.leagues[a].n.localeCompare(D.leagues[b].n));
   return `<div class="eyebrow">Baseball through the years</div><h1 class="name">Baseball Atlas</h1>
-    <p class="note">Explore franchises and leagues across baseball history. Larger badges represent more recorded seasons. Choose a decade below the map to explore a particular era.</p>
-    <h2>Leagues <small>${Object.keys(D.leagues || {}).length}</small></h2><div class="chips">${Object.entries(D.leagues || {}).sort((a, b) => a[1].n.localeCompare(b[1].n)).map(([id, lg]) => `<button class="chip${CLUB_LEAGUES.includes(id) ? ' league-key league-' + id : ''}" onclick="go('L_${id}')">${esc(lg.n)}</button>`).join('')}</div>
-    <h2>Franchises <small>${franchises.length}</small></h2><div class="list">${franchises.map(({ id, t, name }) => `<button class="row" onclick="go('f_${id}')">${badgeSm(t)}<span class="rn">${esc(name)}</span></button>`).join('')}</div>`;
+    <p class="note">Explore the franchises and international leagues visible on the map. Larger badges represent more recorded seasons. Choose a decade below the map to explore a particular era.</p>
+    <h2>Leagues <small id="home-league-count">${leagues.length}</small></h2><div class="chips">${leagues.map(id => `<button class="chip league-key league-${id}" data-home-league="${id}" onclick="go('L_${id}')">${esc(D.leagues[id].n)}</button>`).join('')}</div><p class="empty" id="home-league-empty" hidden>No international leagues in view.</p>
+    <h2>Franchises <small id="home-franchise-count">${franchises.length}</small></h2><div class="list" id="home-franchises">${franchises.map(({ id, t, name, years }) => `<button class="row" data-home-franchise="${esc(id)}" onclick="go('f_${id}')">${badgeSm(t)}<span class="rn">${esc(name)}<small>${years} recorded season${years === 1 ? '' : 's'}</small></span></button>`).join('')}</div><p class="empty" id="home-franchise-empty" hidden>No franchises in view.</p>`;
 }
 
 const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.</p>`;
@@ -1124,7 +1147,6 @@ function mapFor() {
       for (const c of p.clubs || []) focusPts.push({ ll: [+c[2], +c[3]], label: c[0], r: 5 });
       fit = focusPts.map(x => x.ll); } }
   $('#mapbar').hidden = t === 'h' || MAPMODE !== 'teams' || (layoutOf(view) !== 'map' && !FULL);
-  $('#maphint').textContent = t === 'h' ? 'Click a franchise badge or highlighted league country.' : { teams: highlight ? `Every team on the field in ${YEAR}` : `Every team on the field in ${YEAR}. Click a badge.` }[MAPMODE];
   return fit;
 }
 function render(newView = true, opts = {}) {

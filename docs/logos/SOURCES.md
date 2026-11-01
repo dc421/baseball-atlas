@@ -16,3 +16,4 @@ Team marks sourced from Baseball-Reference franchise pages. Team marks belong to
 | Cincinnati-Cleveland Buckeyes | `CCB_1942.png` | [Baseball-Reference](https://www.baseball-reference.com/teams/CBE/index.shtml) |
 | Cuban Stars West | `CSW_1922.png` | [SportsLogos.Net](https://www.sportslogos.net/logos/view/679919461922/Cuban-Stars-West-Logo/1922/Primary-Logo) |
 | St. Louis Stars | `SLS_1922.png`, `SNS_1940.png` (franchise representation) | [SportsLogos.Net](https://www.sportslogos.net/logos/view/679465311922/St-Louis-Stars-Logo/1922/Primary-Logo) |
+| Rockford Forest Citys | `ROK_1871.svg` (clean reconstruction) | [Uniform photograph and identification](https://www.toddradom.com/blog/5380) |

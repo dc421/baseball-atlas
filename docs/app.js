@@ -174,7 +174,8 @@ const lockHTML = key => editing() && trackKeys().all.has(key)
    North America, the Caribbean and Venezuela on one map, zoomed to fit whatever the view is about (a year: every club
    that played). Japan and Hawaii are insets in the corner, shown only when something on the map is there. */
 let svg, gRoot, gLand, gCountry, gBase, gFocus, gLab, proj, path, W = 800, H = 600, K = 1, LAND = null, moved = false;
-const zoom = d3.zoom().scaleExtent([1, 80]).on('zoom', ev => { gRoot.attr('transform', ev.transform); K = ev.transform.k; if (ev.sourceEvent) moved = true; rescale(); });
+let homeZoomBase = 1;
+const zoom = d3.zoom().scaleExtent([1, 80]).on('zoom', ev => { gRoot.attr('transform', ev.transform); K = ev.transform.k; if (ev.sourceEvent) moved = true; else if (view.type === 'h') homeZoomBase = K; document.body.classList.toggle('home-zoomed', view.type === 'h' && K > homeZoomBase * 1.2); rescale(); });
 const INSETS = [  // box: [lon, lat] corners; in: which points it takes
   { id: 'jp', name: 'Japan', lg: 'JPN', box: [[129.5, 31.2], [145.8, 45.5]], w: 150, h: 170, in: ll => ll[1] > 100 },
   { id: 'hi', name: 'Hawaii', box: [[-160.3, 22.3], [-154.8, 18.9]], w: 150, h: 84, in: ll => ll[1] < -150 }];
@@ -210,7 +211,7 @@ function setupMap() {
   LAND = { type: 'FeatureCollection', features: topojson.feature(WORLD, WORLD.objects.countries).features.filter(f => f.properties?.name !== 'Antarctica') };
   const box = d3.select('#insets');
   for (const s of INSETS) {
-    s.el = box.append('div').attr('class', 'inset').attr('hidden', true);
+    s.el = box.append('div').attr('class', 'inset inset-' + s.id).attr('hidden', true);
     s.proj = d3.geoMercator().fitExtent([[4, 4], [s.w - 4, s.h - 4]], { type: 'MultiPoint', coordinates: s.box }).clipExtent([[0, 0], [s.w, s.h]]);
     const g = s.el.append('svg').attr('viewBox', `0 0 ${s.w} ${s.h}`).attr('width', s.w).attr('height', s.h).attr('role', 'img').attr('aria-label', s.name);
     g.append('path').datum(LAND).attr('class', 'land').attr('d', d3.geoPath(s.proj));
@@ -1103,7 +1104,7 @@ const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.<
 
 /* ================================================================ render */
 function mapFor() {
-  const t = view.type; highlight = null; focusPts = null; let fit = null;
+  const t = view.type; document.body.classList.toggle('home-zoomed', t === 'h' && K > homeZoomBase * 1.2); highlight = null; focusPts = null; let fit = null;
   if (t === 'h') { MAPMODE = 'teams'; fit = [...allTimePins().map(p => p.ll), [21.5, -79.5], [19, -70.5], [18.2, -66.5], [8, -66]]; }
   if (t === 'y') MAPMODE = 'teams';
   if (t === 'y') { const lls = yearLLs(YEAR); if (lls.length) fit = lls; }

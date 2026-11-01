@@ -1135,7 +1135,7 @@ function vHome() {
     <p class="note">Explore the franchises and international leagues visible on the map. Larger badges represent more recorded seasons. Choose a decade below the map to explore a particular era.</p>
     <h2>Franchises &amp; leagues <small id="home-franchise-count">${entries.length}</small></h2><div class="list home-entries" id="home-franchises">${entries.map(e => {
       const league = e.type === 'league', first = Math.min(...e.years), last = Math.max(...e.years), range = e.years.length ? (first === last ? String(first) : `${first}–${last}`) : '';
-      return `<button class="row home-entry" data-home-${e.type}="${esc(e.id)}" onclick="go('${league ? 'L' : 'f'}_${e.id}')">${league ? `<span class="home-league-mark league-${e.id}" aria-hidden="true"></span>` : badgeSm(e.t)}<span class="rn">${esc(e.name)}${e.included?.length ? `<small class="home-includes">Includes: ${e.included.map(x => `${esc(x.name)} (${x.years})`).join('; ')}</small>` : ''}</span><span class="home-years">${esc(range)}</span></button>`;
+      return `<button class="row home-entry" data-home-${e.type}="${esc(e.id)}" onclick="go('${league ? 'L' : 'f'}_${e.id}')">${league ? `<span class="home-league-mark league-${e.id}" aria-hidden="true"></span>` : badgeSm(e.t)}<span class="rn">${esc(e.name)}${e.included?.length ? `<small class="home-includes">Includes: ${esc(e.included[0].name)} (${e.included[0].years})${e.included.length > 1 ? ' &amp; others' : ''}</small>` : ''}</span><span class="home-years">${esc(range)}</span></button>`;
     }).join('')}</div><p class="empty" id="home-franchise-empty" hidden>No franchises or leagues in view.</p>`;
 }
 

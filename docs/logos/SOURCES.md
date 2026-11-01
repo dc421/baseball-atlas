@@ -21,3 +21,4 @@ Team marks sourced from Baseball-Reference franchise pages. Team marks belong to
 | Troy Trojans | `TRO_1879.svg` (lettering reconstruction) | User-supplied team photograph |
 | Hartford Dark Blues | `HAR_1876.svg` (lettering reconstruction) | User-supplied team photograph |
 | Keokuk Westerns | `WES_1875.svg` (lettering reconstruction) | User-supplied team photograph |
+| Bismarck Club | `BIS_1935.svg` (diamond-and-letter reconstruction) | User-supplied image |

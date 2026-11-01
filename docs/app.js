@@ -175,7 +175,7 @@ const lockHTML = key => editing() && trackKeys().all.has(key)
    that played). Japan and Hawaii are insets in the corner, shown only when something on the map is there. */
 let svg, gRoot, gLand, gCountry, gBase, gFocus, gLab, proj, path, W = 800, H = 600, K = 1, LAND = null, moved = false;
 let homeZoomBase = 1;
-const zoom = d3.zoom().scaleExtent([1, 80]).on('zoom', ev => { gRoot.attr('transform', ev.transform); K = ev.transform.k; if (ev.sourceEvent) moved = true; else if (view.type === 'h') homeZoomBase = K; document.body.classList.toggle('home-zoomed', view.type === 'h' && K > homeZoomBase * 1.2); rescale(); scheduleHomeVisibility(); });
+const zoom = d3.zoom().scaleExtent([.5, 80]).on('zoom', ev => { gRoot.attr('transform', ev.transform); K = ev.transform.k; if (ev.sourceEvent) moved = true; else if (view.type === 'h') homeZoomBase = K; document.body.classList.toggle('home-zoomed', view.type === 'h' && K > homeZoomBase * 1.2); rescale(); scheduleHomeVisibility(); });
 const INSETS = [  // box: [lon, lat] corners; in: which points it takes
   { id: 'jp', name: 'Japan', lg: 'JPN', box: [[129.5, 31.2], [145.8, 45.5]], w: 150, h: 170, in: ll => ll[1] > 100 },
   { id: 'hi', name: 'Hawaii', box: [[-160.3, 22.3], [-154.8, 18.9]], w: 150, h: 84, in: ll => ll[1] < -150 }];
@@ -225,6 +225,7 @@ function setupMap() {
 }
 function sizeMap() {
   const r = $('#map').getBoundingClientRect(); W = r.width || 800; H = r.height || 500;
+  $('#insets').style.setProperty('--inset-width', `${Math.round(Math.max(60, Math.min(150, W * .17, H * .28)))}px`);
   // zoomed all the way out: the lower 48 down to Venezuela
   proj = d3.geoConicEqualArea().parallels([20, 45]).rotate([96, 0]).fitExtent([[0, 0], [W, H]], { type: 'MultiPoint', coordinates: [[-125, 49.5], [-60, 47], [-60, 8], [-125, 24]] });
   path = d3.geoPath(proj);
@@ -238,7 +239,7 @@ function rescale() {
   const s = sc();
   if (view.type === 'h') {
     // Interpolate precomputed layouts, so zooming never restarts the collision solver.
-    const step = Math.max(0, Math.min(13, Math.log2(K) * 2)), i = Math.min(12, Math.floor(step)), f = step - i;
+    const step = Math.max(0, Math.min(15, Math.log2(K) * 2 + 2)), i = Math.min(14, Math.floor(step)), f = step - i;
     gBase.selectAll('g.badge-t').each(function (p) {
       if (!p.layouts) return;
       const a = p.layouts[i], b = p.layouts[i + 1];
@@ -312,7 +313,7 @@ function drawBase() {
       }
       // Solve progressively from the overview to close zooms, keeping the same ordering throughout.
       for (const p of items) p.layouts = [];
-      for (let level = 0; level <= 13; level++) {
+      for (let level = -2; level <= 13; level++) {
         const scale = Math.pow(2, -level * .375);
         for (const p of items) { p.vx = p.vy = 0; }
         d3.forceSimulation(items).randomSource(d3.randomLcg(0.42))
@@ -416,13 +417,18 @@ function fitTo(lls, maxK = 30) {
   const xs = lls.map(XY); let [x0, x1] = d3.extent(xs, d => d[0]), [y0, y1] = d3.extent(xs, d => d[1]);
   const pad = Math.max(24, Math.min(W, H) * .1), bar = $('#mapbar').hidden ? 0 : 56;  // the year pill floats over the top of the map
   const foot = getComputedStyle($('#decstrip')).display === 'none' ? 0 : 40;  // and the decade strip along the bottom
-  const k = Math.min(maxK, Math.min((W - 2 * pad) / Math.max(x1 - x0, 20), (H - 2 * pad - bar - foot) / Math.max(y1 - y0, 20)));
+  let k = Math.min(maxK, Math.min((W - 2 * pad) / Math.max(x1 - x0, 20), (H - 2 * pad - bar - foot) / Math.max(y1 - y0, 20)));
+  if (view.type === 'h') k = Math.max(.5, k * Math.max(.82, Math.min(1, W / 1000)));
   let tx = W / 2 - k * (x0 + x1) / 2;
   if (view.type === 'h') {
-    // Reserve room west of the mainland for the Pacific insets, even if the eastern edge is cropped.
+    // Account for the actual displaced badges, not just the cities beneath them.
+    document.body.classList.remove('home-zoomed');
     const insetWidth = $('#insets').getBoundingClientRect().width;
-    const west = allTimePins().filter(p => onMain(p.ll) && p.ll[1] < -110).map(p => tx + k * XY(p.ll)[0]);
-    if (insetWidth && west.length) tx += Math.min(W * .25, Math.max(0, insetWidth + 32 - Math.min(...west)));
+    const step = Math.max(0, Math.min(15, Math.log2(k) * 2 + 2)), i = Math.min(14, Math.floor(step)), f = step - i;
+    const west = gBase.selectAll('g.badge-t').data().filter(p => onMain(p.ll) && p.ll[1] < -110 && p.layouts)
+      .map(p => { const dx = p.layouts[i][0] * (1 - f) + p.layouts[i + 1][0] * f;
+        return tx + k * (p.px + dx) - p.r * Math.pow(k, .25); });
+    if (insetWidth && west.length) tx += Math.min(W * .45, Math.max(0, insetWidth + 24 - Math.min(...west)));
   }
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
   svg.transition().duration(reduce ? 0 : 600).call(zoom.transform, d3.zoomIdentity.translate(tx, (H + bar - foot) / 2 - k * (y0 + y1) / 2).scale(k));

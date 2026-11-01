@@ -497,3 +497,6 @@ body.home-zoomed .inset-jp,body.home-zoomed .inset-hi{display:none}
   .inset .cap{padding:2px 5px;font-size:11px}
   .inset .cap small{font-size:9px}
 }
+
+/* Scale Pacific inset maps with the available map area, including desktop split views. */
+.inset svg{width:var(--inset-width,150px);height:auto}

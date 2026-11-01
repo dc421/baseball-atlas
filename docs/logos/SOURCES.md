@@ -19,3 +19,4 @@ Team marks sourced from Baseball-Reference franchise pages. Team marks belong to
 | Rockford Forest Citys | `ROK_1871.svg` (clean reconstruction) | [Uniform photograph and identification](https://www.toddradom.com/blog/5380) |
 | Fort Wayne Kekiongas | `KEK_1871.jpg` | [Retroseasons, supplied by user](https://www.retroseasons.com/retroimages/0000-logo-1_AIgycwzqTh7-Ow2NjflbQg.jpg) |
 | Troy Trojans | `TRO_1879.svg` (lettering reconstruction) | User-supplied team photograph |
+| Hartford Dark Blues | `HAR_1876.svg` (lettering reconstruction) | User-supplied team photograph |

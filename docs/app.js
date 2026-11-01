@@ -420,18 +420,26 @@ function fitTo(lls, maxK = 30) {
   let k = Math.min(maxK, Math.min((W - 2 * pad) / Math.max(x1 - x0, 20), (H - 2 * pad - bar - foot) / Math.max(y1 - y0, 20)));
   if (view.type === 'h') k = Math.max(.5, k * Math.max(.82, Math.min(1, W / 1000)));
   let tx = W / 2 - k * (x0 + x1) / 2;
+  const ty = (H + bar - foot) / 2 - k * (y0 + y1) / 2;
   if (view.type === 'h') {
-    // Account for the actual displaced badges, not just the cities beneath them.
+    // Shift east only as far as the western badges level with an inset need to clear it
+    // (on phones the insets sit in a row below the mainland, so usually nothing moves).
     document.body.classList.remove('home-zoomed');
-    const insetWidth = $('#insets').getBoundingClientRect().width;
+    const m = $('#map').getBoundingClientRect();
+    const boxes = [...document.querySelectorAll('#insets .inset')].map(el => el.getBoundingClientRect()).filter(r => r.width)
+      .map(r => ({ top: r.top - m.top, right: r.right - m.left }));
     const step = Math.max(0, Math.min(15, Math.log2(k) * 2 + 2)), i = Math.min(14, Math.floor(step)), f = step - i;
-    const west = gBase.selectAll('g.badge-t').data().filter(p => onMain(p.ll) && p.ll[1] < -110 && p.layouts)
-      .map(p => { const dx = p.layouts[i][0] * (1 - f) + p.layouts[i + 1][0] * f;
-        return tx + k * (p.px + dx) - p.r * Math.pow(k, .25); });
-    if (insetWidth && west.length) tx += Math.min(W * .45, Math.max(0, insetWidth + 24 - Math.min(...west)));
+    let need = 0;
+    for (const p of gBase.selectAll('g.badge-t').data()) {
+      if (!onMain(p.ll) || p.ll[1] >= -110 || !p.layouts) continue;
+      const [a, b] = [p.layouts[i], p.layouts[i + 1]], rad = p.r * Math.pow(k, .25);
+      const x = tx + k * (p.px + a[0] * (1 - f) + b[0] * f) - rad, y = ty + k * (p.py + a[1] * (1 - f) + b[1] * f) + rad;
+      for (const r of boxes) if (y > r.top - 12) need = Math.max(need, r.right + 12 - x);
+    }
+    tx += Math.min(W * .45, need);
   }
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
-  svg.transition().duration(reduce ? 0 : 600).call(zoom.transform, d3.zoomIdentity.translate(tx, (H + bar - foot) / 2 - k * (y0 + y1) / 2).scale(k));
+  svg.transition().duration(reduce ? 0 : 600).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
 }
 const fitNorthAmerica = () => fitTo([[50, -125], [24, -66]], 6);
 const fitYear = y => { const lls = yearLLs(y); if (lls.length) fitTo(lls, 14); else fitNorthAmerica(); };
@@ -468,13 +476,14 @@ const homeOf = v => 'hyld'.includes(v.type) ? 'map' : v.type === 'r' ? (v.id ===
 const layoutOf = v => 'hyld'.includes(v.type) ? 'map' : v.type === 'r' || v.type === 'g' ? 'list' : 'page';  // game pages: no map
 let lastHome = 'map', lastMap = { type: 'h', id: 'all' }, mapT = null, FULL = false, sizedFor = '';
 const homeScroll = {};
-const hashOf = v => '#' + v.type + '-' + v.id;
+const hashOf = v => '#' + v.type + '-' + v.id + (v.type === 'r' && v.id !== 'tracker' ? rkQuery(v.id) : '');
 const setHash = () => { try { history.replaceState(history.state, '', hashOf(view)); } catch (e) { } };
 const depth = () => history.state?.d || 0;
 function viewFromHash() {
-  const m = (location.hash || '').slice(1).match(/^([hptgfyardL])-(.+)$/); if (!m) return null;
-  const pk = pageKey(m[1] + '_' + m[2]);
-  return { type: pk[0], id: pk[0] === 'r' && !LISTS.includes(pk.slice(2)) ? 'rankings' : pk.slice(2) };
+  const m = (location.hash || '').slice(1).match(/^([hptgfyardL])-([^?]+)(\?.*)?$/); if (!m) return null;
+  const pk = pageKey(m[1] + '_' + m[2]), v = { type: pk[0], id: pk[0] === 'r' && !LISTS.includes(pk.slice(2)) ? 'rankings' : pk.slice(2) };
+  if (v.type === 'r' && v.id !== 'tracker') rkApply(v.id, m[3] || '');  // a list's filters ride in the hash
+  return v;
 }
 const scroller = () => innerWidth <= 820 ? document.scrollingElement : $('#panel');
 function leave() {  // remember the home we're leaving
@@ -571,7 +580,7 @@ function everyPage([label, keys]) {
 }
 function vTracker() {
   const K = trackKeys(), done = keys => keys.filter(isLocked).length, edited = keys => keys.filter(k => pg(k) && !isLocked(k)).length;
-  const types = [['Players', K.P, 'the list'], ['Team seasons', K.T, `the top ${K.T.length} by the model, one per season played (1869 included)`], ['Games', K.G, `the top ${K.G.length}`],
+  const types = [['Players', K.P, 'the list'], ['Teams', K.T, `the top ${K.T.length} by the model, one per season played (1869 included)`], ['Games', K.G, `the top ${K.G.length}`],
     ['Years', K.Y, 'every season since 1869'], ['Decades', K.Dc, '1845–1868 is one page'], ['Franchises', K.F, 'one club in one city, plus the clubs joined to it'], ['Leagues', K.Lg, 'the other major leagues, the Negro leagues, and Cuba, the Dominican Republic, Venezuela, Puerto Rico and Japan']];
   const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
   const bar = (d, n) => `<div class="tbar" title="${d} of ${n} locked"><i class="d" style="width:${100 * d / (n || 1)}%"></i></div>`;
@@ -608,7 +617,7 @@ function vTracker() {
    <table class="track">${byPos.map(([pos, ks]) => row([pos, ks])).join('')}</table>
    <h2>Next up <small>the highest-ranked not yet locked</small></h2>
    ${nP.length ? `<h3 class="sm">Players, by the list</h3><div class="list">${nP.map(nextRow).join('')}</div>` : ''}
-   ${nT.length ? `<h3 class="sm">Team seasons, best first by the model</h3><div class="list">${nT.map(nextRow).join('')}</div>` : ''}
+   ${nT.length ? `<h3 class="sm">Teams, best first by the model</h3><div class="list">${nT.map(nextRow).join('')}</div>` : ''}
    ${nG.length ? `<h3 class="sm">Games, by the list</h3><div class="list">${nG.map(nextRow).join('')}</div>` : ''}
    <h2>Every page <small>locked ones lit</small></h2>${types.map(everyPage).join('')}
    ${saveBox()}`;
@@ -627,7 +636,7 @@ const section = (title, links = [], body = '', sub = false) => body || editing()
 const banner = () => `<div class="banner" id="dbnote" ${note ? '' : 'hidden'}>${esc(note)}</div>`;
 // unranked games (games.csv extra=1) have pages but no number on the list; they sort after the ranked ones
 const gRank = g => g.rk ? '#' + g.rk : 'Unranked', gOrd = g => g.rk ?? 1e9;
-function gameRow(g) { return `<button class="row" onclick="go('g_${g.id}')"><span class="yr">${g.y}</span><span class="rn">${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}<small>${g.rk ? `#${g.rk} on the list` : 'Unranked'}</small></span></button>`; }
+function gameRow(g) { return `<button class="row" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}</span></button>`; }
 
 /* ================================================================ views */
 /* ---------------- your notes (docs/data/notes.json, from scripts/build_notes.py) ---------------- */
@@ -715,7 +724,7 @@ function vYear() {
   return `${pagebar('y_' + y)}${banner()}<div class="eyebrow">${y} · <a href="#" onclick="go('d_${decadeOf(y)}');return false">the ${decadeName(decadeOf(y))}</a></div>
   <div class="sub" style="margin-top:4px"><span><b>${nClubs}</b> clubs</span>${editing() ? `<span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> locked</span>` : ''}${lgs.length ? `<span>${lgs.map(l => esc(l)).join(' · ')}</span>` : ''}</div>
   ${ws.length || pen.length ? `<h2>Champions</h2><div class="list">${[...ws, ...pen].map(champ).join('')}</div>` : ''}
-  ${nClubs ? `<h2>Clubs <small>${nClubs}, by league</small></h2>${clubsHTML(y, tms)}<p class="note"><a href="#" onclick="RK.teams.mode='franch';go('r_teams');return false">Every franchise ›</a></p>` : ''}
+  ${nClubs ? `<h2>Clubs <small>${nClubs}, by league</small></h2>${clubsHTML(y, tms)}<p class="note"><a href="#" onclick="go('h_all');return false">Every franchise ›</a></p>` : ''}
   ${tms.some(([, t]) => t.tr) ? `<h2>Teams by the model <small>talent and results</small></h2><div class="list">${tms.filter(([, t]) => t.tr).sort((a, b) => a[1].tr.yr - b[1].tr.yr).slice(0, 8).map((e, i) => teamRankRow(e, i, false)).join('')}</div>` : ''}
   ${mH.length ? `<h2>Top 5 <small>position players</small></h2>${modelList(mH.slice(0, 5))}` : ''}
   ${mP.length ? `<h2>Top 5 <small>pitchers</small></h2>${modelList(mP.slice(0, 5))}${yd.mRP ? modelList([yd.mRP], 0, true) : ''}` : ''}
@@ -896,7 +905,7 @@ function vTeam() {
   const i = seasons.indexOf(tid), prev = seasons[i - 1], next = seasons[i + 1];
   const park = t.pk && D.parks[t.pk], ro = t.ro || [], gms = Object.values(D.games).filter(g => g.tid === tid);
   const eras = []; for (const s of seasons) { const x = D.teams[s], city = x.pl?.c || ''; const last = eras[eras.length - 1]; if (last && last.n === x.n && last.c === city) last.y1 = x.y; else eras.push({ n: x.n, c: city, y0: x.y, y1: x.y, tid: s }); }
-  return `${crumbs('Team season', key)}${banner()}
+  return `${crumbs('Team', key)}${banner()}
    <div class="hero">${teamBadge(t)}<div class="who"><div class="eyebrow">${leagueOf(t) ? `<a href="#" onclick="go('L_${t.lg}');return false">${esc(LG[t.lg] || t.lg)}</a>` : esc(LG[t.lg] || t.lg)}${t.dv ? ' · ' + esc(t.dv) + ' division' : ''}</div>
    <div style="display:flex;align-items:center;gap:8px">${prev ? `<button class="iconbtn" onclick="go('t_${prev}')" aria-label="Previous season">‹</button>` : ''}<h1 class="name" style="margin:0">${t.y} ${esc(t.n)}</h1>${next ? `<button class="iconbtn" onclick="go('t_${next}')" aria-label="Next season">›</button>` : ''}</div></div></div>
    <div class="sub" style="margin-top:8px"><span><b>${t.w ?? '?'}–${t.l ?? '?'}</b></span>${t.rk ? `<span>finished <b>${ordinal(t.rk)}</b></span>` : ''}${t.ws ? '<span class="badge gold">World Series champions</span>' : t.pen ? '<span class="badge gold">Pennant</span>' : ''}${t.pl?.c ? `<span>${esc([t.pl.c, t.pl.n !== 'United States' ? t.pl.n : t.pl.r].filter(Boolean).join(', '))}</span>` : ''}<span><a href="#" onclick="go('y_${t.y}');return false">The ${t.y} season</a></span></div>
@@ -1070,32 +1079,57 @@ function vGame() {
    ${section('Game story', [['Wikipedia', rec?.sto?.url || wikiQ]], gameStory(rec?.sto))}`;
 }
 
-/* ---------------- homes: players, games, teams ---------------- */
-const RK = { players: { f: '', sort: 'rank', pos: 'All' }, games: { f: '', sort: 'rank' }, teams: { f: '', grp: 'all', mode: 'rank', n: 100 } };
+/* ---------------- Rankings: the overview plus players, teams and games ---------------- */
+// one decade for all four pages; each list keeps its own filters. All of it rides in the hash (#r-players?dec=1950&pos=SS),
+// so a filtered list can be bookmarked or sent, and Back steps through filter changes.
+const RB = { dec: 'all' };
+const RK = { players: { f: '', sort: 'rank', pos: 'All', n: 100 }, games: { f: '', sort: 'rank', n: 100 }, teams: { f: '', grp: 'all', n: 100 } };
+const RK_DEF = { f: '', sort: 'rank', pos: 'All', grp: 'all' }, RK_Q = { f: 'q', sort: 'sort', pos: 'pos', grp: 'grp' };
+function rkQuery(id) {
+  const q = new URLSearchParams(), st = RK[id];
+  if (RB.dec !== 'all') q.set('dec', RB.dec);
+  if (st) for (const [k, name] of Object.entries(RK_Q)) if (k in st && st[k] !== RK_DEF[k]) q.set(name, st[k]);
+  const s = q.toString(); return s ? '?' + s : '';
+}
+function rkApply(id, qs) {  // the hash is the truth: anything it leaves out goes back to its default
+  const q = new URLSearchParams(qs), st = RK[id];
+  RB.dec = q.get('dec') || 'all';
+  if (st) { for (const [k, name] of Object.entries(RK_Q)) if (k in st) st[k] = q.get(name) || RK_DEF[k]; st.n = 100; }
+}
+function rkNav(push) { try { history[push ? 'pushState' : 'replaceState']({ d: depth() + (push ? 1 : 0) }, '', hashOf(view)); } catch (e) { } }
 const LGROUP = { AL: 'mlb', NL: 'mlb', NA: 'early', AA: 'early', UA: 'early', PL: 'early', FL: 'early',
   NNL: 'negro', NN2: 'negro', ECL: 'negro', ANL: 'negro', EWL: 'negro', NSL: 'negro', NAL: 'negro' };
 const GROUPS = [['mlb', 'American & National League'], ['early', '19th-century majors & Federal League'], ['negro', 'Negro Leagues'], ['ind', 'Independent clubs']];
-/* the Rankings home: the top ten players, team seasons and games side by side, one decade filter for all three;
-   each row's year opens that year on the map */
-const RB = { dec: 'all' };
-function vRankings() {
-  const d = RB.dec, inDec = y => d === 'all' || decadeOf(+y) === d;
-  const decs = ['all', ...Array.from({ length: 16 }, (_, i) => String(1870 + 10 * i))];
-  const row = (key, rank, lead, name, sub, y) => `<div class="rrow"><button class="row" onclick="go('${key}')">${lead}<span class="yr">${rank}</span><span class="rn">${name}${sub ? `<small>${sub}</small>` : ''}</span></button>${y ? `<button class="ylink" onclick="go('y_${y}')" title="${y} on the map">${y}</button>` : ''}</div>`;
-  const col = (title, n, rows, list) => `<section class="rcol"><h2>${title} <small>${n}</small></h2><div class="list">${rows.join('') || `<p class="empty">None from the ${decadeName(d)}.</p>`}</div><button class="btn ghost" onclick="go('r_${list}')">Full list ›</button></section>`;
-  const P = Object.entries(D.players).filter(([, p]) => inDec(p.pk)).sort((a, b) => (a[1].ovr || 999) - (b[1].ovr || 999));
-  const T = Object.entries(D.teams).filter(([, t]) => t.tr && inDec(t.y)).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
-  const G = Object.values(D.games).filter(g => g.rk && inDec(g.y)).sort((a, b) => a.rk - b.rk);
+const inDec = y => RB.dec === 'all' || (y != null && decadeOf(+y) === RB.dec);
+const rkPlayers = () => Object.entries(D.players).filter(([, p]) => inDec(p.pk));
+const rkTeams = () => Object.entries(D.teams).filter(([, t]) => t.tr && inDec(t.y));
+const rkGames = () => Object.values(D.games).filter(g => inDec(g.y));
+const pRating = p => p.mr && !p.mr.rel ? `<span class="meta" title="${RATING}">${fmtR(p.mr.r)}</span>` : '';
+const mainTeam = p => [...(p.st || [])].sort((a, b) => b[4] - a[4])[0]?.[1] || '';
+// the head of all four pages: tabs, then the decade (one row that scrolls sideways on a phone)
+function rkHead(id) {
+  const decs = ['all', ...Array.from({ length: 16 }, (_, i) => String(1870 + 10 * i))], n = x => x.toLocaleString();
+  const tabs = [['rankings', 'Overview'], ['players', 'Players', rkPlayers().length], ['teams', 'Teams', rkTeams().length], ['games', 'Games', rkGames().filter(g => g.rk).length]];
   return `${banner()}<div class="eyebrow">The model</div><h1 class="name">Rankings</h1>
-   <p class="note">Players, team seasons and games, each ranked by one model. A decade narrows all three; the year beside a row opens it on the map.</p>
-   <div class="chips" style="margin:10px 0 4px">${decs.map(x => `<button class="chip" aria-pressed="${d === x}" data-rdec="${x}">${x === 'all' ? 'All time' : decadeName(x)}</button>`).join('')}</div>
+   <nav class="rtabs">${tabs.map(([k, l, c]) => `<button onclick="go('r_${k}')" aria-current="${k === id}">${l}${c != null ? `<b>${n(c)}</b>` : ''}</button>`).join('')}</nav>
+   <div class="chips rdecs">${decs.map(x => `<button class="chip" aria-pressed="${RB.dec === x}" data-rdec="${x}">${x === 'all' ? 'All time' : decadeName(x)}</button>`).join('')}</div>`;
+}
+const more = (st, left) => left > 0 ? `<button class="btn ghost" id="rkmore" style="margin-top:10px">Show more (${left} left)</button>` : '';
+function vRankings() {
+  const d = RB.dec;
+  const row = (key, rank, lead, name, sub, meta, y, top) => `<div class="rrow${top ? ' top' : ''}"><button class="row" onclick="go('${key}')">${lead}<span class="yr">${rank}</span><span class="rn">${name}${sub ? `<small>${sub}</small>` : ''}</span>${meta}</button>${y ? `<button class="ylink" onclick="go('y_${y}')" title="${y} on the map">${y}</button>` : ''}</div>`;
+  const col = (title, n, rows, list) => `<section class="rcol"><h2>${title} <small>${n.toLocaleString()}</small></h2><div class="list">${rows.join('') || `<p class="empty">None from the ${decadeName(d)}.</p>`}</div><button class="btn ghost" onclick="go('r_${list}')">Full list ›</button></section>`;
+  const P = rkPlayers().sort((a, b) => (a[1].ovr || 999) - (b[1].ovr || 999));
+  const T = rkTeams().sort((a, b) => a[1].tr.ar - b[1].tr.ar);
+  const G = rkGames().filter(g => g.rk).sort((a, b) => a.rk - b.rk);
+  return `${rkHead('rankings')}
+   <p class="note">Players, teams and games, each ranked by one model. The year beside a row opens it on the map.</p>
    <div class="rcols">
-    ${col('Players', P.length, P.slice(0, 10).map(([k, p]) => row('p_' + k, '#' + (p.ovr || '?'), avatar(k), esc(nameOf(p)), `${esc(p.pos)} · peak ${p.pk}`, p.pk)), 'players')}
-    ${col('Team seasons', T.length, T.slice(0, 10).map(([tid, t]) => row('t_' + tid, '#' + t.tr.ar, badgeSm(t), esc(t.n), `${t.w}–${t.l}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ''}`, t.y)), 'teams')}
-    ${col('Games', G.length, G.slice(0, 10).map(g => row('g_' + g.id, '#' + g.rk, '', esc(g.gt || g.g), esc(g.d || ''), g.y)), 'games')}
+    ${col('Players', P.length, P.slice(0, 10).map(([k, p], i) => row('p_' + k, '#' + (p.ovr || '?'), avatar(k), esc(nameOf(p)), esc(p.pos), pRating(p), p.pk, i < 3)), 'players')}
+    ${col('Teams', T.length, T.slice(0, 10).map(([tid, t], i) => row('t_' + tid, '#' + t.tr.ar, badgeSm(t), esc(t.n), `${t.w}–${t.l}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ''}`, `<span class="meta">${fmtS(t.tr.a)}</span>`, t.y, i < 3)), 'teams')}
+    ${col('Games', G.length, G.slice(0, 10).map((g, i) => row('g_' + g.id, '#' + g.rk, '', esc(g.gt || g.g), esc(g.d || ''), '', g.y, i < 3)), 'games')}
    </div>`;
 }
-const toRankings = `<a href="#" onclick="go('r_rankings');return false">Rankings</a> · `;
 function vList() {
   if (view.id === 'tracker') return vTracker();
   if (view.id === 'rankings') return vRankings();
@@ -1103,48 +1137,27 @@ function vList() {
   const filter = (ph, extra = '') => `<div class="r" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><input class="t" id="rkfilter" placeholder="${ph}" value="${esc(st.f)}">${extra}</div>`;
   const sortSel = yearLabel => `<select class="t" id="rksort" style="flex:0 0 auto"><option value="rank" ${st.sort === 'rank' ? 'selected' : ''}>List order</option><option value="peak" ${st.sort === 'peak' ? 'selected' : ''}>${yearLabel}</option>${editing() ? `<option value="lit" ${st.sort === 'lit' ? 'selected' : ''}>Drafts first</option>` : ''}</select>`;
   if (h === 'players') {
-    const arr = Object.entries(D.players).filter(([, p]) => (st.pos === 'All' || p.pos === st.pos) && (!f || nameOf(p).toLowerCase().includes(f)));
+    const arr = rkPlayers().filter(([, p]) => (st.pos === 'All' || p.pos === st.pos) && (!f || nameOf(p).toLowerCase().includes(f)));
     const byRank = (a, b) => st.pos === 'All' ? (a[1].ovr || 999) - (b[1].ovr || 999) : (typeof a[1].prk === 'number' ? a[1].prk : 999) - (typeof b[1].prk === 'number' ? b[1].prk : 999);
     arr.sort({ rank: byRank, peak: (a, b) => (a[1].pk || 0) - (b[1].pk || 0), lit: (a, b) => litN('p_' + a[0]) - litN('p_' + b[0]) || byRank(a, b) }[st.sort] || byRank);
-    const rows = arr.map(([k, p]) => { const rk = st.pos === 'All' ? rankLabel(p) : (typeof p.prk === 'number' ? '#' + p.prk : p.prk || '') + ' ' + p.pos;
-      return `<button class="row" onclick="go('p_${k}')">${avatar(k)}<span class="yr">${esc(rk)}</span><span class="rn">${esc(nameOf(p))}<small>peak ${p.pk || '?'}</small></span></button>`; }).join('');
-    return `${banner()}<div class="eyebrow">${toRankings}${Object.keys(D.players).length} players</div><h1 class="name">Players</h1>
+    const rows = arr.slice(0, st.n).map(([k, p]) => { const rk = st.pos === 'All' ? rankLabel(p) : (typeof p.prk === 'number' ? '#' + p.prk : p.prk || '') + ' ' + p.pos;
+      return `<button class="row" onclick="go('p_${k}')">${avatar(k)}<span class="yr">${esc(rk)}</span><span class="rn">${esc(nameOf(p))}<small>${[esc(mainTeam(p)), p.pk ? 'peak ' + p.pk : ''].filter(Boolean).join(' · ')}</small></span>${pRating(p)}</button>`; }).join('');
+    return `${rkHead('players')}
      <div class="chips" style="margin-bottom:8px">${['All', ...POSITIONS].map(p => `<button class="chip" aria-pressed="${st.pos === p}" data-pos="${p}">${p}</button>`).join('')}</div>
-     ${filter('Filter by name…', sortSel('Peak year'))}<div class="list">${rows || '<p class="empty">No one matches.</p>'}</div>`;
+     ${filter('Filter by name…', sortSel('Peak year'))}<div class="list">${rows || '<p class="empty">No one matches.</p>'}</div>${more(st, arr.length - st.n)}`;
   }
   if (h === 'games') {
-    const arr = Object.values(D.games).filter(g => !f || (g.y + ' ' + g.g + ' ' + (g.gt || '') + ' ' + g.d).toLowerCase().includes(f));
+    const arr = rkGames().filter(g => !f || (g.y + ' ' + g.g + ' ' + (g.gt || '') + ' ' + g.d).toLowerCase().includes(f));
     arr.sort((a, b) => st.sort === 'lit' ? litN('g_' + a.id) - litN('g_' + b.id) || gOrd(a) - gOrd(b) : st.sort === 'peak' ? a.y - b.y : gOrd(a) - gOrd(b));
-    return `${banner()}<div class="eyebrow">${toRankings}${Object.keys(D.games).length} games</div><h1 class="name">Games</h1>
-     ${filter('Filter by year, series, description…', sortSel('Year'))}<div class="list">${arr.map(gameRow).join('') || '<p class="empty">No games match.</p>'}</div>`;
+    return `${rkHead('games')}
+     ${filter('Filter by year, series, description…', sortSel('Year'))}<div class="list">${arr.slice(0, st.n).map(gameRow).join('') || '<p class="empty">No games match.</p>'}</div>${more(st, arr.length - st.n)}`;
   }
-  // teams: team seasons ranked by your model, or franchises with their name eras
-  const rated = Object.entries(D.teams).filter(([, t]) => t.tr), ranked = rated.length && st.mode === 'rank';
-  const modes = rated.length ? `<div class="chips" style="margin:8px 0">${[['rank', 'Ranked seasons'], ['franch', 'Franchises']].map(([m, l]) => `<button class="chip" aria-pressed="${st.mode === m}" data-tmode="${m}">${l}</button>`).join('')}</div>` : '';
-  const grpChips = `<div class="chips" style="margin:8px 0">${[['all', 'All'], ...GROUPS].map(([g, l]) => `<button class="chip" aria-pressed="${st.grp === g}" data-grp="${g}">${g === 'all' ? 'All' : l}</button>`).join('')}</div>`;
-  if (ranked) {
-    const arr = rated.filter(([, t]) => (st.grp === 'all' || (LGROUP[t.lg] || 'ind') === st.grp) && (!f || (t.y + ' ' + t.n).toLowerCase().includes(f))).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
-    return `${banner()}<div class="eyebrow">${toRankings}${rated.length} team seasons</div><h1 class="name">Teams</h1>
-     <p class="note">Each player’s projected WAR per game for that season, weighted by his games for the team, summed and put on a 162-game scale. That talent, measured against a typical team of its era (a smooth curve over time), makes up 80% of the score; Pythagorean record is 15% and actual record 5% (shrunk toward .500 in short seasons). All three are in wins over an average team per 162, scaled to how spread out teams were in that era.</p>
-     ${modes}${grpChips}${filter('Filter by year or team name…')}
-     <div class="list">${arr.slice(0, st.n).map(teamRankRow).join('') || '<p class="empty">No teams match.</p>'}</div>
-     ${arr.length > st.n ? `<button class="btn ghost" id="tmore" style="margin-top:10px">Show more (${arr.length - st.n} left)</button>` : ''}`;
-  }
-  const frs = Object.entries(D.franch).map(([fid, fr]) => {
-    const ts = fr.s.map(x => D.teams[x]), last = ts[ts.length - 1], eras = [];
-    for (const [i, t] of ts.entries()) { const e = eras[eras.length - 1]; if (e && e.n === t.n) e.y1 = t.y; else eras.push({ n: t.n, y0: t.y, y1: t.y, tid: fr.s[i] }); }
-    return { fid, fr, ts, last, eras, grp: LGROUP[last.lg] || 'ind' };
-  }).filter(x => (st.grp === 'all' || x.grp === st.grp) && (!f || x.eras.some(e => e.n.toLowerCase().includes(f))));
-  const block = ([g, label]) => {
-    const xs = frs.filter(x => x.grp === g).sort((a, b) => b.ts.length - a.ts.length); if (!xs.length) return '';
-    return `<h2>${label} <small>${xs.length}</small></h2><div class="list">${xs.map(x => `<div class="row frow">${badgeSm(x.last)}<span class="yr">${x.ts[0].y}–${x.last.y}</span><span class="rn"><a href="#" onclick="go('f_${x.fid}');return false">${esc(x.last.n)}</a><small>${x.eras.length > 1 ? x.eras.map(e => `<a href="#" onclick="go('t_${e.tid}');return false">${esc(e.n)}</a> ${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}`).join(' · ') : `${x.ts.length} season${x.ts.length > 1 ? 's' : ''}`}</small></span>${editing() ? `<span class="meta" title="seasons locked">${x.fr.s.filter(tid => litN('t_' + tid)).length}/${x.ts.length}</span>` : ''}</div>`).join('')}</div>`;
-  };
-  return `${banner()}<div class="eyebrow">${toRankings}${Object.keys(D.franch).length} franchises</div><h1 class="name">Teams</h1>
-   <p class="note">Every franchise and the names it played under: one club in one city, plus the clubs joined to it.</p>
-   ${modes}
-   <h2>Leagues</h2><div class="chips" style="margin-bottom:8px">${Object.entries(D.leagues || {}).map(([k, l]) => `<button class="chip" onclick="go('L_${k}')">${esc(l.n)}</button>`).join('')}</div>
-   ${grpChips}
-   ${filter('Filter by team name…')}${GROUPS.map(block).join('') || '<p class="empty">No teams match.</p>'}`;
+  const arr = rkTeams().filter(([, t]) => (st.grp === 'all' || (LGROUP[t.lg] || 'ind') === st.grp) && (!f || (t.y + ' ' + t.n).toLowerCase().includes(f))).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
+  return `${rkHead('teams')}
+   <details class="method"><summary>How teams are scored</summary><p class="note">Each player’s projected WAR per game for that season, weighted by his games for the team, summed and put on a 162-game scale. That talent, measured against a typical team of its era (a smooth curve over time), makes up 80% of the score; Pythagorean record is 15% and actual record 5% (shrunk toward .500 in short seasons). All three are in wins over an average team per 162, scaled to how spread out teams were in that era.</p></details>
+   <div class="chips" style="margin:8px 0">${[['all', 'All'], ...GROUPS].map(([g, l]) => `<button class="chip" aria-pressed="${st.grp === g}" data-grp="${g}">${l}</button>`).join('')}</div>
+   ${filter('Filter by year or team name…')}
+   <div class="list">${arr.slice(0, st.n).map(teamRankRow).join('') || '<p class="empty">No teams match.</p>'}</div>${more(st, arr.length - st.n)}`;
 }
 function badgeSm(t) {
   const logo = logoFor(t), [bg, fg] = teamColors(t);
@@ -1194,7 +1207,8 @@ function vHome() {
     <h2>Franchises &amp; leagues <small id="home-franchise-count">${entries.length}</small></h2><div class="list home-entries" id="home-franchises">${entries.map(e => {
       const league = e.type === 'league', first = Math.min(...e.years), last = Math.max(...e.years), range = e.years.length ? (first === last ? String(first) : `${first}–${last}`) : '';
       return `<button class="row home-entry${league ? ' home-league-row league-' + e.id : ''}" data-home-${e.type}="${esc(e.id)}" onclick="go('${league ? 'L' : 'f'}_${e.id}')">${league ? `<span class="home-league-mark" aria-hidden="true"></span>` : badgeSm(e.t)}<span class="rn">${esc(e.name)}${e.included?.length ? `<small class="home-includes">Includes: ${esc(e.included[0].name)} (${e.included[0].years})${e.included.length > 1 ? ' &amp; others' : ''}</small>` : ''}</span><span class="home-years">${esc(range)}</span></button>`;
-    }).join('')}</div><p class="empty" id="home-franchise-empty" hidden>No franchises or leagues in view.</p>`;
+    }).join('')}</div><p class="empty" id="home-franchise-empty" hidden>No franchises or leagues in view.</p>
+    <h2>More leagues</h2><div class="chips">${Object.entries(D.leagues || {}).filter(([k]) => !CLUB_LEAGUES.includes(k)).map(([k, l]) => `<button class="chip" onclick="go('L_${k}')">${esc(l.n)}</button>`).join('')}</div>`;
 }
 
 const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.</p>`;
@@ -1256,14 +1270,15 @@ function wire() {
   document.querySelectorAll('[data-tl]').forEach(b => b.addEventListener('click', () => { const [act, id] = b.dataset.tl.split(':'); timelineAct(key, act, id); }));
   document.querySelectorAll('form.tlform').forEach(f => f.addEventListener('submit', e => { e.preventDefault(); timelineSave(key, f); }));
   // home lists
-  const st = view.type === 'r' ? RK[view.id] : null;
-  document.querySelectorAll('[data-pos]').forEach(b => b.addEventListener('click', () => { st.pos = b.dataset.pos; render(false); }));
-  document.querySelectorAll('[data-grp]').forEach(b => b.addEventListener('click', () => { st.grp = b.dataset.grp; st.n = 100; render(false); }));
-  document.querySelectorAll('[data-rdec]').forEach(b => b.addEventListener('click', () => { RB.dec = b.dataset.rdec; render(false); }));
-  document.querySelectorAll('[data-tmode]').forEach(b => b.addEventListener('click', () => { st.mode = b.dataset.tmode; render(false); }));
-  $('#tmore')?.addEventListener('click', () => { st.n += 200; render(false); });
-  $('#rksort')?.addEventListener('change', e => { st.sort = e.target.value; render(false); });
-  $('#rkfilter')?.addEventListener('input', e => { st.f = e.target.value; clearTimeout(window.__rf); window.__rf = setTimeout(() => render(false), 150); });
+  const st = view.type === 'r' ? RK[view.id] : null, refilter = push => { if (st) st.n = 100; render(false); rkNav(push); };
+  document.querySelectorAll('[data-pos]').forEach(b => b.addEventListener('click', () => { st.pos = b.dataset.pos; refilter(true); }));
+  document.querySelectorAll('[data-grp]').forEach(b => b.addEventListener('click', () => { st.grp = b.dataset.grp; refilter(true); }));
+  document.querySelectorAll('[data-rdec]').forEach(b => b.addEventListener('click', () => { RB.dec = b.dataset.rdec; refilter(true); }));
+  const decs = $('.rdecs'), on = decs?.querySelector('[aria-pressed="true"]');
+  if (on && decs.scrollWidth > decs.clientWidth) decs.scrollLeft = on.offsetLeft - (decs.clientWidth - on.offsetWidth) / 2;
+  $('#rkmore')?.addEventListener('click', () => { st.n += 100; render(false); });
+  $('#rksort')?.addEventListener('change', e => { st.sort = e.target.value; refilter(false); });
+  $('#rkfilter')?.addEventListener('input', e => { st.f = e.target.value; clearTimeout(window.__rf); window.__rf = setTimeout(() => refilter(false), 150); });
   // lock a page (or unlock it); a player page locks with its own copy of the timeline
   document.querySelectorAll('[data-lock]').forEach(b => b.addEventListener('click', () => { TL_EDIT = null;
     mutate(b.dataset.lock, cur => { if (cur.locked) delete cur.locked; else { if (b.dataset.lock.startsWith('p_') && !cur.items) cur.items = seedItems(b.dataset.lock.slice(2)); cur.locked = Date.now(); } }); scheduleSync(0); }));  // locking saves at once

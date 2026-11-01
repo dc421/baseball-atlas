@@ -460,6 +460,21 @@ body.lay-list.wide aside.panel{padding-left:max(22px,calc((100% - 1160px)/2));pa
 .rrow .row .yr{min-width:38px}
 .ylink{border:0;background:none;font-family:var(--f-mono);font-size:12px;color:var(--lit);cursor:pointer;padding:4px 0}
 .ylink:hover{text-decoration:underline}
+.rrow.top .row .yr{color:var(--lit);font-weight:500;font-size:13px}
+.rrow.top .row .rn{font-weight:600;font-size:16px}
+.rrow.top .row .meta{color:var(--ink)}
+.rrow .row .meta{margin-left:auto}
+/* Rankings: tabs between the four pages, one decade row under them */
+.rtabs{display:flex;border-bottom:1px solid var(--line);margin:10px 0 8px;overflow-x:auto;scrollbar-width:none}
+.rtabs button{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:7px 14px;cursor:pointer;color:var(--muted);font-weight:500;white-space:nowrap}
+.rtabs button:hover{color:var(--ink)}
+.rtabs button[aria-current="true"]{color:var(--ink);border-bottom-color:var(--lit)}
+.rtabs b{font-family:var(--f-mono);font-weight:400;font-size:11px;color:var(--muted);margin-left:6px}
+.rdecs{position:relative;margin:0 0 8px}
+@media (max-width:820px){.rdecs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}}
+details.method{margin:2px 0 6px}
+details.method summary{cursor:pointer;font-size:13px;width:max-content}
+details.method summary::marker{color:var(--lit)}
 
 /* International league countries on the all-time map. */
 .league-CUB{--league-color:#d47b62}

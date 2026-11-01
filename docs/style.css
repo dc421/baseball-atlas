@@ -462,5 +462,11 @@ body.lay-list.wide aside.panel{padding-left:max(22px,calc((100% - 1160px)/2));pa
 .ylink:hover{text-decoration:underline}
 
 /* International league countries on the all-time map. */
-.league-country{fill:var(--lit);fill-opacity:.48;stroke:var(--lit);stroke-width:1;vector-effect:non-scaling-stroke;cursor:pointer}
+.league-CUB{--league-color:#d47b62}
+.league-DOM{--league-color:#6a9fd2}
+.league-PR{--league-color:#b187c5}
+.league-VEN{--league-color:#d0ac52}
+.league-JPN{--league-color:#69b59a}
+.league-country{fill:var(--league-color);fill-opacity:.65;stroke:var(--league-color);stroke-width:1;vector-effect:non-scaling-stroke;cursor:pointer}
 .league-country:hover{fill-opacity:.75}
+.league-key::before{content:"";display:inline-block;width:9px;height:9px;margin-right:6px;border-radius:50%;background:var(--league-color);vertical-align:middle}

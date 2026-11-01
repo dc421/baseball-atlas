@@ -297,7 +297,7 @@ function drawInsets() {
     const pts = INSET_PTS.filter(p => s.in(p.ll)), country = view.type === 'h' && s.lg === 'JPN' && D.leagues?.JPN;
     s.el.attr('hidden', pts.length || country ? null : true);
     s.countries.selectAll('*').remove();
-    if (country) s.countries.selectAll('path').data(LAND.features.filter(f => LEAGUE_COUNTRIES[f.properties?.name] === 'JPN')).enter().append('path').attr('class', 'league-country').attr('d', d3.geoPath(s.proj)).on('click', () => go('L_JPN')).append('title').text(country.n);
+    if (country) s.countries.selectAll('path').data(LAND.features.filter(f => LEAGUE_COUNTRIES[f.properties?.name] === 'JPN')).enter().append('path').attr('class', 'league-country league-JPN').attr('d', d3.geoPath(s.proj)).on('click', () => go('L_JPN')).append('title').text(country.n);
     if (!pts.length && !country) continue;
     s.pins.selectAll('*').remove();
     const byLL = {}; for (const p of pts) (byLL[p.ll.join()] = byLL[p.ll.join()] || []).push(p);
@@ -341,7 +341,7 @@ function refreshMap() {
   gCountry.selectAll('*').remove();
   if (view.type === 'h') gCountry.selectAll('path').data(LAND.features.filter(f => {
     const code = LEAGUE_COUNTRIES[f.properties?.name]; return code && code !== 'JPN' && D.leagues?.[code];
-  })).enter().append('path').attr('class', 'league-country').attr('d', path)
+  })).enter().append('path').attr('class', f => 'league-country league-' + LEAGUE_COUNTRIES[f.properties.name]).attr('d', path)
     .on('click', (ev, f) => go('L_' + LEAGUE_COUNTRIES[f.properties.name]))
     .append('title').text(f => D.leagues[LEAGUE_COUNTRIES[f.properties.name]].n);
   drawBase(); drawFocus();
@@ -1058,7 +1058,7 @@ function vHome() {
   }).sort((a, b) => a.name.localeCompare(b.name));
   return `<div class="eyebrow">Baseball through the years</div><h1 class="name">Baseball Atlas</h1>
     <p class="note">Explore franchises and leagues across baseball history. Choose a decade below the map to explore a particular era.</p>
-    <h2>Leagues <small>${Object.keys(D.leagues || {}).length}</small></h2><div class="chips">${Object.entries(D.leagues || {}).sort((a, b) => a[1].n.localeCompare(b[1].n)).map(([id, lg]) => `<button class="chip" onclick="go('L_${id}')">${esc(lg.n)}</button>`).join('')}</div>
+    <h2>Leagues <small>${Object.keys(D.leagues || {}).length}</small></h2><div class="chips">${Object.entries(D.leagues || {}).sort((a, b) => a[1].n.localeCompare(b[1].n)).map(([id, lg]) => `<button class="chip${CLUB_LEAGUES.includes(id) ? ' league-key league-' + id : ''}" onclick="go('L_${id}')">${esc(lg.n)}</button>`).join('')}</div>
     <h2>Franchises <small>${franchises.length}</small></h2><div class="list">${franchises.map(({ id, t, name }) => `<button class="row" onclick="go('f_${id}')">${badgeSm(t)}<span class="rn">${esc(name)}</span></button>`).join('')}</div>`;
 }
 

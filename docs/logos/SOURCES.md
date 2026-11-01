@@ -14,3 +14,4 @@ Team marks sourced from Baseball-Reference franchise pages. Team marks belong to
 | Memphis Red Sox | `MRS_1948.png` | [Baseball-Reference](https://www.baseball-reference.com/teams/MRS/index.shtml) |
 | Newark Eagles | `NE_1948.png` | [Baseball-Reference](https://www.baseball-reference.com/teams/NE/index.shtml) |
 | Cincinnati-Cleveland Buckeyes | `CCB_1942.png` | [Baseball-Reference](https://www.baseball-reference.com/teams/CBE/index.shtml) |
+| Cuban Stars West | `CSW_1922.png` | [SportsLogos.Net](https://www.sportslogos.net/logos/view/679919461922/Cuban-Stars-West-Logo/1922/Primary-Logo) |

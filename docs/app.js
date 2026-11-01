@@ -206,6 +206,7 @@ function allTimePins() {
   }
   return pins;
 }
+const franchiseRadius = (score, maxScore) => 4.5 + 12.5 * Math.sqrt(Math.max(score - 1, 0) / (maxScore - 1));
 const yearLLs = y => [...Object.values(D.teams).filter(t => t.y === y && t.ll).map(t => t.ll), ...leagueClubs(y).map(c => c.ll)];
 function setupMap() {
   svg = d3.select('#map'); gRoot = svg.append('g'); gLand = gRoot.append('g'); gCountry = gRoot.append('g'); gBase = gRoot.append('g'); gFocus = gRoot.append('g'); gLab = gRoot.append('g');
@@ -244,6 +245,7 @@ function rescale() {
       p.ox = (a[0] * (1 - f) + b[0] * f) / s; p.oy = (a[1] * (1 - f) + b[1] * f) / s;
     });
   }
+  sizeInsetBadges();
   gBase.selectAll('g.badge-t').attr('transform', d => `translate(${d.x + d.ox * s},${d.y + d.oy * s}) scale(${s})`);
   gBase.selectAll('line.map-leader').attr('x1', d => d.x).attr('y1', d => d.y).attr('x2', d => d.x + d.ox * s).attr('y2', d => d.y + d.oy * s).attr('display', d => Math.hypot(d.ox, d.oy) > 3 ? null : 'none');
   gBase.selectAll('circle.dot').attr('r', d => d.r * s).attr('stroke-width', s);
@@ -297,7 +299,7 @@ function drawBase() {
     const pins = view.type === 'h' ? allTimePins() : [...Object.entries(D.teams).filter(([, t]) => t.y === YEAR && t.ll).map(([tid, t]) => ({ tid, t, ll: t.ll })), ...leagueClubs(YEAR).map(c => ({ c, ll: c.ll }))];
     const byLL = {};
     for (const p of pins) {
-      if (insetOf(p.ll)) { INSET_PTS.push({ ll: p.ll, key: p.t ? (p.key || 't_' + p.tid) : p.c.key, label: p.t ? (p.key ? p.t.n : `${p.t.y} ${p.t.n}`) : `${p.c.n} · ${D.leagues[p.c.lg].n}`, fill: p.t ? teamColors(p.t)[0] : 'var(--chalk)', t: p.t }); if (view.type !== 'h') continue; }
+      if (insetOf(p.ll)) { INSET_PTS.push({ ll: p.ll, key: p.t ? (p.key || 't_' + p.tid) : p.c.key, label: p.t ? (p.key ? p.t.n : `${p.t.y} ${p.t.n}`) : `${p.c.n} · ${D.leagues[p.c.lg].n}`, fill: p.t ? teamColors(p.t)[0] : 'var(--chalk)', t: p.t, score: p.score }); if (view.type !== 'h') continue; }
       (byLL[p.ll.join()] = byLL[p.ll.join()] || []).push(p);
     }
     const items = [];
@@ -305,7 +307,7 @@ function drawBase() {
       // Spread badges across nearby cities as well as identical coordinates, keeping their locations as anchors.
       const maxScore = Math.max(2, ...pins.map(p => p.score));
       for (const p of pins) {
-        const [x, y] = XY(p.ll), r = 4.5 + 12.5 * Math.sqrt(Math.max(p.score - 1, 0) / (maxScore - 1));
+        const [x, y] = XY(p.ll), r = franchiseRadius(p.score, maxScore);
         items.push({ ...p, x, y, ox: 0, oy: 0, r, px: x, py: y });
       }
       // Solve progressively from the overview to close zooms, keeping the same ordering throughout.
@@ -353,6 +355,7 @@ function drawBase() {
 }
 // Japan and Hawaii: shown only when there's something to put in them
 function drawInsets() {
+  const maxScore = view.type === 'h' ? Math.max(2, ...allTimePins().map(p => p.score)) : 2;
   for (const s of INSETS) {
     const pts = INSET_PTS.filter(p => s.in(p.ll)), country = view.type === 'h' && s.lg === 'JPN' && D.leagues?.JPN;
     s.el.attr('hidden', pts.length || country ? null : true);
@@ -363,9 +366,10 @@ function drawInsets() {
     const byLL = {}; for (const p of pts) (byLL[p.ll.join()] = byLL[p.ll.join()] || []).push(p);
     for (const ps of Object.values(byLL)) ps.forEach((p, i) => {
       const [x, y] = s.proj([p.ll[1], p.ll[0]]), a = i * 2 * Math.PI / ps.length, off = ps.length > 1 ? 6 : 0;
-      const badge = s.pins.append('g').attr('class', 'pin').attr('transform', `translate(${x + off * Math.sin(a)},${y - off * Math.cos(a)})`)
+      const badge = s.pins.append('g').datum(p).attr('class', 'pin inset-badge').attr('transform', `translate(${x + off * Math.sin(a)},${y - off * Math.cos(a)})`)
         .style('cursor', p.key ? 'pointer' : null).on('click', () => p.key && go(p.key));
-      const logo = p.t && logoFor(p.t), radius = p.t ? 9 : 5;
+      const logo = p.t && logoFor(p.t), radius = view.type === 'h' && p.score != null ? franchiseRadius(p.score, maxScore) : p.t ? 9 : 5;
+      p.insetRadius = radius;
       badge.append('circle').attr('r', radius).attr('fill', logo ? logoBackground(logo) : p.fill).attr('data-logo-bg', logo || null).attr('stroke', 'var(--water)').attr('stroke-width', 1);
       if (logo) badge.append('image').attr('href', 'logos/' + logo).attr('x', -7).attr('y', -7).attr('width', 14).attr('height', 14);
       else if (p.t) { const [, fg] = teamColors(p.t); badge.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central').attr('fill', fg).attr('font-size', 5.5).text(p.t.br || p.t.tm); }
@@ -373,6 +377,23 @@ function drawInsets() {
     });
     const clubs = pts.filter(p => !p.focus).length, lg = s.lg && D.leagues?.[s.lg];
     s.cap.html(`${lg ? `<a href="#" onclick="go('L_${s.lg}');return false">${esc(s.name)} ›</a>` : `<span>${esc(s.name)}</span>`}${clubs ? `<small>${clubs} club${clubs > 1 ? 's' : ''}</small>` : ''}`);
+  }
+  sizeInsetBadges();
+}
+// Keep inset badges the same screen size as their main-map counterparts.
+function sizeInsetBadges() {
+  if (view.type !== 'h') return;
+  for (const inset of INSETS) {
+    if (!inset.pins) continue;
+    const width = inset.pins.node().ownerSVGElement.getBoundingClientRect().width; if (!width) continue;
+    const factor = K * sc() * inset.w / width;
+    inset.pins.selectAll('g.inset-badge').each(function (p) {
+      if (p.score == null) return;
+      const r = p.insetRadius * factor, badge = d3.select(this);
+      badge.select('circle').attr('r', r);
+      badge.select('image').attr('x', -r * .76).attr('y', -r * .76).attr('width', r * 1.52).attr('height', r * 1.52);
+      badge.select('text').attr('font-size', Math.min(7.5, r * .7));
+    });
   }
 }
 function drawFocus() {

@@ -188,6 +188,23 @@ function leagueClubs(y) {
     for (const r of lg.s) if (r[0] === y && lg.ll?.[r[4]]) out.push({ key: 'L_' + code, n: r[3], lg: code, city: r[4], ll: lg.ll[r[4]] }); }
   return out;
 }
+// One representative location per franchise, and each country-league club across its recorded seasons.
+function allTimePins() {
+  const pins = [];
+  for (const [fid, fr] of Object.entries(D.franch)) {
+    const tid = [...fr.s].reverse().find(id => D.teams[id]?.ll);
+    if (tid) pins.push({ tid, t: D.teams[tid], ll: D.teams[tid].ll, key: 'f_' + fid });
+  }
+  const seen = new Set();
+  for (const code of CLUB_LEAGUES) {
+    const lg = D.leagues?.[code]; if (!lg) continue;
+    for (const r of lg.s) {
+      const ll = lg.ll?.[r[4]], id = [code, r[3], r[4]].join('|');
+      if (ll && !seen.has(id)) { seen.add(id); pins.push({ c: { key: 'L_' + code, n: r[3], lg: code, city: r[4], ll }, ll }); }
+    }
+  }
+  return pins;
+}
 const yearLLs = y => [...Object.values(D.teams).filter(t => t.y === y && t.ll).map(t => t.ll), ...leagueClubs(y).map(c => c.ll)];
 function setupMap() {
   svg = d3.select('#map'); gRoot = svg.append('g'); gLand = gRoot.append('g'); gBase = gRoot.append('g'); gFocus = gRoot.append('g'); gLab = gRoot.append('g');
@@ -245,19 +262,19 @@ let INSET_PTS = [];  // what drawBase and drawFocus put in the insets: { ll, key
 function drawBase() {
   gBase.selectAll('*').remove(); INSET_PTS = INSET_PTS.filter(p => p.focus);
   if (MAPMODE === 'teams') {
-    const pins = [...Object.entries(D.teams).filter(([, t]) => t.y === YEAR && t.ll).map(([tid, t]) => ({ tid, t, ll: t.ll })), ...leagueClubs(YEAR).map(c => ({ c, ll: c.ll }))];
+    const pins = view.type === 'h' ? allTimePins() : [...Object.entries(D.teams).filter(([, t]) => t.y === YEAR && t.ll).map(([tid, t]) => ({ tid, t, ll: t.ll })), ...leagueClubs(YEAR).map(c => ({ c, ll: c.ll }))];
     const byLL = {};
     for (const p of pins) {
-      if (insetOf(p.ll)) { INSET_PTS.push({ ll: p.ll, key: p.t ? 't_' + p.tid : p.c.key, label: p.t ? `${p.t.y} ${p.t.n}` : `${p.c.n} · ${D.leagues[p.c.lg].n}`, fill: p.t ? teamColors(p.t)[0] : 'var(--chalk)' }); continue; }
+      if (insetOf(p.ll)) { INSET_PTS.push({ ll: p.ll, key: p.t ? (p.key || 't_' + p.tid) : p.c.key, label: p.t ? (p.key ? p.t.n : `${p.t.y} ${p.t.n}`) : `${p.c.n} · ${D.leagues[p.c.lg].n}`, fill: p.t ? teamColors(p.t)[0] : 'var(--chalk)' }); continue; }
       (byLL[p.ll.join()] = byLL[p.ll.join()] || []).push(p);
     }
     const items = [];
     for (const ps of Object.values(byLL)) ps.forEach((p, i) => {
-      const [x, y] = XY(p.ll), a = i * 2 * Math.PI / ps.length, off = ps.length > 1 ? 12 : 0;
+      const [x, y] = XY(p.ll), ring = view.type === 'h' ? Math.floor((Math.sqrt(1 + 4 * i / 3) - 1) / 2) + 1 : 1, start = 3 * ring * (ring - 1), count = view.type === 'h' ? Math.min(6 * ring, ps.length - start) : ps.length, a = (view.type === 'h' ? i - start : i) * 2 * Math.PI / count, off = ps.length > 1 ? 18 * ring : 0;
       items.push({ ...p, x, y, ox: off * Math.sin(a), oy: -off * Math.cos(a) });
     });
     const g = gBase.selectAll('g.badge-t').data(items).enter().append('g').attr('class', 'badge-t pin').style('cursor', 'pointer')
-      .on('click', (ev, d) => go(d.t ? 't_' + d.tid : d.c.key));
+      .on('click', (ev, d) => go(d.t ? (d.key || 't_' + d.tid) : d.c.key));
     g.each(function (d) {
       const el = d3.select(this);
       if (d.c) {  // a club in Cuba, the Dominican Republic, Puerto Rico, Venezuela or Japan: opens its league
@@ -275,7 +292,7 @@ function drawBase() {
       if (logo) el.append('image').attr('href', 'logos/' + logo).attr('x', -8).attr('y', -8).attr('width', 16).attr('height', 16);
       else el.append('text').attr('fill', fg).attr('font-size', (d.t.br || d.t.tm).length > 2 ? 6.4 : 7.5).text(d.t.br || d.t.tm);
       el.attr('opacity', highlight && !sel ? .45 : 1);
-      el.append('title').text(`${d.t.y} ${d.t.n}`);
+      el.append('title').text(d.key ? d.t.n : `${d.t.y} ${d.t.n}`);
     });
   }
   rescale(); drawInsets();
@@ -333,7 +350,7 @@ function setYear(y) {
 }
 // under the map: every decade, the one on show lit
 function decStrip() {
-  const cur = view.type === 'd' ? view.id : decadeOf(YEAR);
+  const cur = view.type === 'h' ? null : view.type === 'd' ? view.id : decadeOf(YEAR);
   $('#decstrip').innerHTML = ['pre', ...Array.from({ length: 16 }, (_, i) => String(1870 + 10 * i))].map(d =>
     `<button onclick="go('d_${d}')" aria-current="${d === cur}"${view.type === 'd' && d === cur ? ' class="on"' : ''}>${d === 'pre' ? 'Before 1869' : d + 's'}</button>`).join('');
 }
@@ -342,17 +359,17 @@ function decStrip() {
    Two homes, the map and the rankings (plus the tracker while editing), each remember where you left them; every other view is a page.
    Each page you open is a browser history entry (state.d = how deep you are, state.sc = where you'd scrolled),
    so the browser's back and forward buttons and swipes work like the ← Back button. */
-let view = { type: 'y', id: '2025' };
+let view = { type: 'h', id: 'all' };
 const HOMES = ['map', 'rankings', 'tracker'], LISTS = ['rankings', 'players', 'teams', 'games', 'tracker'];  // the full lists open from Rankings
-const homeOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' ? (v.id === 'tracker' ? 'tracker' : 'rankings') : null;
-const layoutOf = v => 'yld'.includes(v.type) ? 'map' : v.type === 'r' || v.type === 'g' ? 'list' : 'page';  // game pages: no map
-let lastHome = 'map', lastMap = { type: 'y', id: '2025' }, mapT = null, FULL = false, sizedFor = '';
+const homeOf = v => 'hyld'.includes(v.type) ? 'map' : v.type === 'r' ? (v.id === 'tracker' ? 'tracker' : 'rankings') : null;
+const layoutOf = v => 'hyld'.includes(v.type) ? 'map' : v.type === 'r' || v.type === 'g' ? 'list' : 'page';  // game pages: no map
+let lastHome = 'map', lastMap = { type: 'h', id: 'all' }, mapT = null, FULL = false, sizedFor = '';
 const homeScroll = {};
 const hashOf = v => '#' + v.type + '-' + v.id;
 const setHash = () => { try { history.replaceState(history.state, '', hashOf(view)); } catch (e) { } };
 const depth = () => history.state?.d || 0;
 function viewFromHash() {
-  const m = (location.hash || '').slice(1).match(/^([ptgfyardL])-(.+)$/); if (!m) return null;
+  const m = (location.hash || '').slice(1).match(/^([hptgfyardL])-(.+)$/); if (!m) return null;
   const pk = pageKey(m[1] + '_' + m[2]);
   return { type: pk[0], id: pk[0] === 'r' && !LISTS.includes(pk.slice(2)) ? 'rankings' : pk.slice(2) };
 }
@@ -381,7 +398,7 @@ function go(key, push = true) {
   scroller().scrollTop = 0;
 }
 function goHome(h) {
-  if (h === 'map') { go(lastMap.type + '_' + lastMap.id); return render(true, { restore: true }); }
+  if (h === 'map') { go('h_all'); return; }
   go('r_' + h);
   if (homeScroll[h]) scroller().scrollTop = homeScroll[h];
 }
@@ -1029,11 +1046,23 @@ function badgeSm(t) {
   return logo ? `<span class="avatar tb"><img src="logos/${esc(logo)}" alt=""></span>` : `<span class="avatar tb" style="background:${bg};color:${fg}">${esc(t.br || t.tm)}</span>`;
 }
 
+function vHome() {
+  const franchises = Object.entries(D.franch).map(([id, fr]) => {
+    const t = D.teams[fr.s[fr.s.length - 1]];
+    return { id, t, name: fr.n || t.n };
+  }).sort((a, b) => a.name.localeCompare(b.name));
+  return `<div class="eyebrow">Baseball through the years</div><h1 class="name">Baseball Atlas</h1>
+    <p class="note">Explore franchises and leagues across baseball history. Choose a decade below the map to explore a particular era.</p>
+    <h2>Leagues <small>${Object.keys(D.leagues || {}).length}</small></h2><div class="chips">${Object.entries(D.leagues || {}).sort((a, b) => a[1].n.localeCompare(b[1].n)).map(([id, lg]) => `<button class="chip" onclick="go('L_${id}')">${esc(lg.n)}</button>`).join('')}</div>
+    <h2>Franchises <small>${franchises.length}</small></h2><div class="list">${franchises.map(({ id, t, name }) => `<button class="row" onclick="go('f_${id}')">${badgeSm(t)}<span class="rn">${esc(name)}</span></button>`).join('')}</div>`;
+}
+
 const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.</p>`;
 
 /* ================================================================ render */
 function mapFor() {
   const t = view.type; highlight = null; focusPts = null; let fit = null;
+  if (t === 'h') { MAPMODE = 'teams'; fit = allTimePins().map(p => p.ll); }
   if (t === 'y') MAPMODE = 'teams';
   if (t === 'y') { const lls = yearLLs(YEAR); if (lls.length) fit = lls; }
   if (t === 'd') { MAPMODE = 'teams'; const d0 = view.id === 'pre' ? 1845 : +view.id === 1870 ? 1869 : +view.id; if (YEAR < d0 || YEAR > (view.id === 'pre' ? 1868 : +view.id + 9)) { YEAR = view.id === 'pre' ? 1868 : d0; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; }
@@ -1051,14 +1080,14 @@ function mapFor() {
       for (const s of p.st || []) { const tm = D.teams[s[5]]; if (tm && tm.ll) focusPts.push({ ll: tm.ll, label: `${s[2]} ${s[1]}`, key: 't_' + s[5], r: 5 }); }
       for (const c of p.clubs || []) focusPts.push({ ll: [+c[2], +c[3]], label: c[0], r: 5 });
       fit = focusPts.map(x => x.ll); } }
-  $('#mapbar').hidden = MAPMODE !== 'teams' || (layoutOf(view) !== 'map' && !FULL);
-  $('#maphint').textContent = { teams: highlight ? `Every team on the field in ${YEAR}` : `Every team on the field in ${YEAR}. Click a badge.` }[MAPMODE];
+  $('#mapbar').hidden = t === 'h' || MAPMODE !== 'teams' || (layoutOf(view) !== 'map' && !FULL);
+  $('#maphint').textContent = t === 'h' ? 'Franchises and league clubs across baseball history. Click a badge.' : { teams: highlight ? `Every team on the field in ${YEAR}` : `Every team on the field in ${YEAR}. Click a badge.` }[MAPMODE];
   return fit;
 }
 function render(newView = true, opts = {}) {
   const panel = $('#panel'), t = view.type, st = panel.scrollTop, active = document.activeElement && document.activeElement.id;
   const drafts = {}; for (const id of ['tl-k', 'tl-t', 'tl-u', 'tl-src', 'tl-y', 'rkfilter']) { const el = document.getElementById(id); if (el) drafts[id] = el.value; }
-  const V = { d: vDecade, y: vYear, p: vPlayer, t: vTeam, g: vGame, f: vFranchise, r: vList, L: vLeague };
+  const V = { h: vHome, d: vDecade, y: vYear, p: vPlayer, t: vTeam, g: vGame, f: vFranchise, r: vList, L: vLeague };
   const lay = layoutOf(view), home = homeOf(view);
   document.body.classList.remove('lay-map', 'lay-page', 'lay-list'); document.body.classList.add('lay-' + lay);
   if (home) lastHome = home;

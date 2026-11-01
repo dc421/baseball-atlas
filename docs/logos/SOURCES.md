@@ -24,3 +24,4 @@ Team marks sourced from Baseball-Reference franchise pages. Team marks belong to
 | Bismarck Club | `BIS_1935.svg` (diamond-and-letter reconstruction) | User-supplied image |
 | New Haven Elm Citys | `NHV_1875.svg` (generic cap illustration) | User-supplied reference photograph |
 | Indianapolis Hoosiers | `IND_1914.svg` (stylized I reconstruction) | User-supplied shirt image; [The Shop Indy](https://theshopindy.com/products/indianapolis-hoosiers) |
+| Providence Grays | `PRO_1878.svg` (generic gray cap illustration) | User-supplied reference photograph |

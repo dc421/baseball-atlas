@@ -9,7 +9,7 @@ const enc = encodeURIComponent;
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
 
 let ROSTERS = null, rosterLoad = null, BOXES = null, boxLoad = null;  // + data/games.json (line scores), on first game page  // data/rosters.json, fetched when a team page first opens
-let D, WORLD, STATES, PHOTOS = {}, PARKS = {}, NOTES = { pre: [], years: {}, decades: {}, players: {} };
+let D, WORLD, STATES, PHOTOS = {}, PARKS = {}, PARK_LOCATIONS = {}, NOTES = { pre: [], years: {}, decades: {}, players: {} };
 const LG = { NA: 'National Association', NL: 'National League', AL: 'American League', AA: 'American Association', UA: 'Union Association', PL: "Players' League", FL: 'Federal League', NNL: 'Negro National League', NN2: 'Negro National League (II)', ECL: 'Eastern Colored League', ANL: 'American Negro League', EWL: 'East-West League', NSL: 'Negro Southern League', NAL: 'Negro American League', EAS: 'Eastern independent clubs', WES: 'Western independent clubs', IND: 'Independent clubs', NAC: 'Negro American (Cuban) clubs', INT: 'Interracial independents' };
 const POSP = new Set(['SP', 'RP']);
 const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'SP', 'RP'];
@@ -194,7 +194,7 @@ function allTimePins() {
   const pins = [];
   for (const [fid, fr] of Object.entries(D.franch)) {
     const tid = [...fr.s].reverse().find(id => D.teams[id]?.ll);
-    if (tid) pins.push({ tid, t: D.teams[tid], ll: D.teams[tid].ll, key: 'f_' + fid, seasons: fr.s.length });
+    if (tid) { const t = D.teams[tid], ll = PARK_LOCATIONS.ids?.[t.pk] || PARK_LOCATIONS.names?.[t.park] || t.ll; pins.push({ tid, t, ll, key: 'f_' + fid, seasons: fr.s.length }); }
   }
   return pins;
 }
@@ -227,8 +227,19 @@ const XY = ll => proj([ll[1], ll[0]]);
 const sc = () => 1 / Math.pow(K, 0.75);
 function rescale() {
   const s = sc();
+  if (view.type === 'h') {
+    const badges = gBase.selectAll('g.badge-t'), items = badges.data();
+    if (items.length) {
+      // Re-solve in map coordinates at the current zoom: badges return to their parks when they fit.
+      for (const p of items) { p.x = p.px; p.y = p.py; p.vx = p.vy = 0; }
+      d3.forceSimulation(items).randomSource(d3.randomLcg(0.42))
+        .force('x', d3.forceX(d => d.px).strength(.16)).force('y', d3.forceY(d => d.py).strength(.16))
+        .force('collision', d3.forceCollide(d => (d.r + 3) * s).iterations(4)).stop().tick(140);
+      for (const p of items) { p.ox = (p.x - p.px) / s; p.oy = (p.y - p.py) / s; p.x = p.px; p.y = p.py; }
+    }
+  }
   gBase.selectAll('g.badge-t').attr('transform', d => `translate(${d.x + d.ox * s},${d.y + d.oy * s}) scale(${s})`);
-  gBase.selectAll('line.map-leader').attr('x1', d => d.x).attr('y1', d => d.y).attr('x2', d => d.x + d.ox * s).attr('y2', d => d.y + d.oy * s);
+  gBase.selectAll('line.map-leader').attr('x1', d => d.x).attr('y1', d => d.y).attr('x2', d => d.x + d.ox * s).attr('y2', d => d.y + d.oy * s).attr('display', d => Math.hypot(d.ox, d.oy) > 3 ? null : 'none');
   gBase.selectAll('circle.dot').attr('r', d => d.r * s).attr('stroke-width', s);
   gFocus.selectAll('circle').attr('r', d => d.r * s).attr('stroke-width', 1.5 * s);
   gLab.selectAll('text').attr('font-size', 11 * s).attr('stroke-width', 3 * s).attr('dx', 9 * s).attr('dy', -9 * s);
@@ -270,12 +281,7 @@ function drawBase() {
         const [x, y] = XY(p.ll), r = 4.5 + 12.5 * Math.sqrt(Math.min(Math.max(p.seasons - 1, 0), 99) / 99);
         items.push({ ...p, x, y, ox: 0, oy: 0, r, px: x, py: y });
       }
-      const simulation = d3.forceSimulation(items).randomSource(d3.randomLcg(0.42))
-        .force('x', d3.forceX(d => d.px).strength(.12)).force('y', d3.forceY(d => d.py).strength(.12))
-        .force('collision', d3.forceCollide(d => d.r + 3).iterations(4)).stop();
-      simulation.tick(250);
-      for (const p of items) { p.ox = p.x - p.px; p.oy = p.y - p.py; p.x = p.px; p.y = p.py; }
-      gBase.selectAll('line.map-leader').data(items.filter(p => Math.hypot(p.ox, p.oy) > 5)).enter().append('line').attr('class', 'map-leader');
+      gBase.selectAll('line.map-leader').data(items).enter().append('line').attr('class', 'map-leader');
     } else {
       for (const ps of Object.values(byLL)) ps.forEach((p, i) => {
         const [x, y] = XY(p.ll), a = i * 2 * Math.PI / ps.length, off = ps.length > 1 ? 12 : 0;
@@ -1195,7 +1201,7 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
 
 /* ================================================================ boot */
 (async function boot() {
-  [D, WORLD, STATES, PHOTOS, PARKS] = await Promise.all([getJSON('data/atlas.json'), getJSON('data/world.json'), getJSON('data/states.json'), getJSON('data/photos.json', {}), getJSON('data/parks.json', {})]);
+  [D, WORLD, STATES, PHOTOS, PARKS, PARK_LOCATIONS] = await Promise.all([getJSON('data/atlas.json'), getJSON('data/world.json'), getJSON('data/states.json'), getJSON('data/photos.json', {}), getJSON('data/parks.json', {}), getJSON('data/park_locations.json', {})]);
   NOTES = { ...NOTES, ...(await getJSON('data/notes.json', {})) };
   const [published, fresh] = await Promise.all([getJSON('data/pages.json', {}), ghPull()]);
   loadStore(published, fresh);

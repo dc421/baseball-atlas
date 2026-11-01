@@ -25,7 +25,7 @@ Team marks sourced from Baseball-Reference franchise pages. Team marks belong to
 | New Haven Elm Citys | `NHV_1875.svg` (generic cap illustration) | User-supplied reference photograph |
 | Indianapolis Hoosiers | `IND_1914.svg` (stylized I reconstruction) | User-supplied shirt image; [The Shop Indy](https://theshopindy.com/products/indianapolis-hoosiers) |
 | Providence Grays | `PRO_1878.svg` (generic gray cap illustration) | User-supplied reference photograph |
-| Syracuse Stars | `SYS_1890.svg` (lettering reconstruction) | User-supplied team photograph |
+| Syracuse Stars | `SYR_1890.svg` (lettering reconstruction) | User-supplied team photograph |
 | Worcester Ruby Legs | `WOR_1880.svg` (blackletter reconstruction) | User-supplied uniform image |
 | 25th Infantry Wreckers | `W25_1914.svg` (jersey numeral reconstruction) | User-supplied team photograph |
 | Harrisburg Giants | `HBG_1924.svg`, `HSS_1943.svg` (franchise representation) | User-supplied team photograph |

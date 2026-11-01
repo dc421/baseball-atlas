@@ -431,14 +431,6 @@
     "negro:NYC:New_York"
    ]
   },
-  "CBE-Cincinnati": {
-   "n": "Cincinnati Buckeyes",
-   "root": "negro:Cincinnati_Buckeyes:Cincinnati",
-   "runs": [
-    "negro:Cincinnati_Buckeyes:Cincinnati",
-    "negro:CBE:Cincinnati"
-   ]
-  },
   "BAL": {
    "n": "Baltimore Orioles",
    "root": "mlb:BAL:Baltimore",
@@ -1331,7 +1323,7 @@
   "CBR-1940": null,
   "CC-1943": null,
   "CC2-1931": "CAG",
-  "CCB-1942": "CBE-Cincinnati",
+  "CCB-1942": null,
   "CCG-1899": "CAG",
   "CCG-1900": "CAG",
   "CCG-1901": "CAG",

@@ -429,6 +429,7 @@ function leave() {  // remember the home we're leaving
 // franchise page, or its league page when the club has no franchise page. Years run 1869–2025; before that is one page.
 const leagueOf = t => t && D.leagues?.[t.lg] ? t.lg : null;
 const pageKey = key => {
+  if (key === 'f_CBE-Cincinnati') return 'L_NAL';  // retire the former Cincinnati Buckeyes page
   if (key.startsWith('t_')) { const t = D.teams[key.slice(2)]; if (t && !t.top) { if (t.fp) return 'f_' + t.fp; if (leagueOf(t)) return 'L_' + t.lg; } }
   if (key.startsWith('y_')) { const y = +key.slice(2); if (y < 1869) return 'd_pre'; if (y > 2025) return 'y_2025'; }
   if (key.startsWith('d_') && +key.slice(2) < 1870) return 'd_pre';

@@ -342,8 +342,9 @@ for row in ck.values[19:]:
 # ---------------------------------------------------------------- games
 # The ranked list is scripts/build_games.py's: every game with play-by-play, scored with the Games tab's formula. Each game
 # is keyed by its Retrosheet game id. data/overrides/games.csv, by that key: your label (g), description (d), the team a game is
-# filed under (tm, a Baseball-Reference code; else the winner), your "great" pick, drop=1 to leave a game off, and for games
-# with no play-by-play (before 1908, some Negro Leagues games, the latest season) the formula's inputs, so they rank with the rest.
+# filed under (tm, a Baseball-Reference code; else the winner), your "great" pick, drop=1 to leave a game off, extra=1 for a page
+# off the ranked list, and for games with no play-by-play (before 1908, Japan, 1870) the formula's inputs, so they rank with the
+# rest: inn, gli, wt (gLI's multiplier; Japan's is quality x .8 x Japan's population over the US's), top5, mins, maxl, lastl.
 brmap = {}
 for tid, t in teams.items():
     if t['br']: brmap[(t['br'], t['y'])] = tid
@@ -353,9 +354,8 @@ fl = lambda x: None if x is None or str(x).strip() == '' or x != x else round(fl
 GOV = {r.key: r for r in pd.read_csv(OVR / 'games.csv', dtype=str).fillna('').itertuples()} if (OVR / 'games.csv').exists() else {}
 GR = pd.read_csv(SRC / 'games_ranked.csv', dtype={'gid': str, 'date': str}) if (SRC / 'games_ranked.csv').exists() else None
 if GR is None: print('games: no data/source/games_ranked.csv (run scripts/build_games.py)')
-def gscore(inn, ss9, ss, li, mx, ls, cw, w1, tie):  # build_games.py's formula, with the Games tab's defaults for blank cells
-    ss9 = 5 if ss9 is None else ss9
-    return (inn + ss9 + (ss9 if ss is None else ss) - 1) * (.4 + (1 if mx is None else mx) ** 3 + cw * li ** 2) ** 2 * (w1 if ls is None else ls) ** .5 * li
+def gscore(li, t5, mn, mx, ls):  # build_games.py's formula
+    return li ** 2 * t5 ** 1.5 / max(mn, .01) * (1 - min(mx, .99)) ** -.6 * max(ls, .01)
 RND = {'worldseries': 'WS', 'lcs': 'LCS', 'divisionseries': 'DS', 'wildcard': 'WC', 'championship': 'Champ'}
 cand = []
 for r in (GR.itertuples() if GR is not None else []):
@@ -364,19 +364,28 @@ for r in (GR.itertuples() if GR is not None else []):
 auto = {c['id'] for c in cand}
 for k, o in GOV.items():  # games with no play-by-play, scored from their own columns
     if k in auto or not o.inn: continue
-    v = {c: fl(getattr(o, c)) for c in ['inn', 'ss9', 'ss', 'gli', 'maxl', 'lastl', 'cwpa1', 'wpa1', 'tie']}
-    cand.append(dict(id=k, y=int(o.y), g=o.g, inn=int(v['inn']), sc=gscore(v['inn'], v['ss9'], v['ss'], v['gli'], v['maxl'], v['lastl'], v['cwpa1'], v['wpa1'], v['tie']),
-                     cw=v['cwpa1'], wpa=v['wpa1'], li=v['gli'], wn=None))
-cand = sorted((c for c in cand if not (c['id'] in GOV and GOV[c['id']].drop == '1')), key=lambda c: -c['sc'])
+    v = {c: fl(getattr(o, c)) for c in ['inn', 'gli', 'wt', 'top5', 'mins', 'maxl', 'lastl']}
+    li = v['gli'] * (1 if v['wt'] is None else v['wt'])
+    cand.append(dict(id=k, y=int(o.y), g=o.g, inn=int(v['inn']), sc=gscore(li, v['top5'], 1 if v['mins'] is None else v['mins'], v['maxl'], v['lastl']),
+                     cw=None, wpa=None, li=li, wn=None))
+EXTRA = {k for k, o in GOV.items() if getattr(o, 'extra', '') == '1'}  # extra=1: a page, but no place on the ranked list
+byid = {c['id']: c for c in cand}
+cand = sorted((c for c in cand if not (c['id'] in GOV and GOV[c['id']].drop == '1') and c['id'] not in EXTRA), key=lambda c: -c['sc'])
+def tm_tid(code, y):
+    tid = (brmap.get((code, y)) or brmap.get((BRFIX.get(code, code), y))) if code else None
+    return tid or (brmap.get(('WSN' if code == 'WAS' else code, y)) if code else None)
 games = {}
 for rk, c in enumerate(cand, start=1):
     o, y = GOV.get(c['id']), c['y']
     code = o.tm if o else ''
-    tid = (brmap.get((code, y)) or brmap.get((BRFIX.get(code, code), y))) if code else None
-    if code and not tid: tid = brmap.get(('WSN' if code == 'WAS' else code, y))
     games[c['id']] = dict(id=c['id'], rk=rk, y=y, g=(o.g if o and o.g else c['g']), inn=c['inn'], d=o.d if o else '', sc=fl(c['sc']), cw=fl(c['cw']), wpa=fl(c['wpa']),
-                          li=fl(c['li']), tm=code or None, tid=tid, gr=1 if o and o.great else 0, wn=c['wn'])
+                          li=fl(c['li']), tm=code or None, tid=tm_tid(code, y), gr=1 if o and o.great else 0, wn=c['wn'])
     years.setdefault(y, {}).setdefault('games', []).append(c['id'])
+for k in sorted(EXTRA):  # unranked: innings and winner from the box score when the ranked list doesn't have them
+    o, c, y = GOV[k], byid.get(k, {}), int(GOV[k].y)
+    games[k] = dict(id=k, rk=None, u=1, y=y, g=o.g or c.get('g'), inn=c.get('inn'), d=o.d, sc=None, cw=None, wpa=None, li=None,
+                    tm=o.tm or None, tid=tm_tid(o.tm, y), gr=1 if o.great else 0, wn=c.get('wn'))
+    years.setdefault(y, {}).setdefault('games', []).append(k)
 
 # ---------------------------------------------------------------- your rating model (scripts/export_ratings.R)
 # One rating everywhere: projected WAR per 150 games. The model's score is WAR/G above its era line (pitchers on the
@@ -710,9 +719,10 @@ if (OVR / 'manual_games.csv').exists():
         games[str(i)] = dict(rk=i, y=int(r.y), g=r.g, inn=nz(r.inn), d=r.d, sc=None, cw=None, wpa=None, li=None,
                              tm=teams[tid]['br'] if tid else None, tid=tid, gr=0, o=1)
         years.setdefault(int(r.y), {}).setdefault('games', []).append(str(i))
-# only tracked games have pages: the top of the ranked list, as many as tracked team seasons (the 'Others' row is out)
+# only tracked games have pages: the top of the ranked list, as many as tracked team seasons, plus the unranked extras
+# (the 'Others' row is out)
 n_games = sum(1 for t in teams.values() if t.get('top'))
-games = {k: g for k, g in games.items() if not g.get('o') and g['rk'] <= n_games}
+games = {k: g for k, g in games.items() if g.get('u') or (not g.get('o') and g['rk'] <= n_games)}
 for yd in years.values():
     if 'games' in yd: yd['games'] = [k for k in yd['games'] if k in games]
 
@@ -883,6 +893,8 @@ for key, g in games.items():
     if key in boxes:
         bx = boxes[key]
         g['vs'] = f"{bx['v']['n']} at {bx['h']['n']}"; g['nm'] = [bx['v']['fn'], bx['h']['fn']]
+        if g['inn'] is None: g['inn'] = max(len(bx['v']['inn']), len(bx['h']['inn']))
+        if not g['tid'] and not g['wn'] and bx['v']['r'] != bx['h']['r']: g['tid'] = (bx['v'] if bx['v']['r'] > bx['h']['r'] else bx['h'])['tid']
         if not g['tid'] and g['wn']: g['tid'] = retro2tid.get((g['wn'], y)) or rtid(g['wn'], y)  # filed under the winner
         if not (g['tid'] and teams.get(g['tid'], {}).get('top')) and bx['h']['tid']: g.setdefault('tid', bx['h']['tid'])
 

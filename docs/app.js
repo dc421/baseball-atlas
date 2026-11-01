@@ -160,7 +160,7 @@ const litN = key => isLocked(key) ? 3 : 0;
 function trackKeys() {
   const P = Object.keys(D.players).map(k => 'p_' + k);
   const T = Object.entries(D.teams).filter(([, t]) => t.top).sort((a, b) => a[1].y - b[1].y).map(([k]) => 't_' + k);
-  const G = Object.values(D.games).sort((a, b) => a.rk - b.rk).map(g => 'g_' + g.id);  // the build keeps as many as T
+  const G = Object.values(D.games).sort((a, b) => gOrd(a) - gOrd(b)).map(g => 'g_' + g.id);  // the build keeps as many as T
   const Y = [...new Set(Object.values(D.teams).map(t => t.y))].sort((a, b) => a - b).map(y => 'y_' + y);  // every season since 1869
   const Dc = ['d_pre', ...Array.from({ length: 16 }, (_, i) => 'd_' + (1870 + 10 * i))];
   const F = Object.keys(D.franch).map(k => 'f_' + k), Lg = Object.keys(D.leagues || {}).map(k => 'L_' + k);
@@ -466,9 +466,9 @@ function vTracker() {
     return yItems[y] ? `<button class="yg s${step(yf(y))}" onclick="go('y_${y}')" title="${y}: ${[...yItems[y]].filter(isLocked).length} of ${yItems[y].size} locked"><span>${String(y).slice(2)}</span></button>` : '<span class="yg none"></span>'; }).join('')}</div>`);
   const byPos = POSITIONS.map(pos => { const ks = K.P.filter(k => D.players[k.slice(2)].pos === pos); return [pos, ks]; }).filter(x => x[1].length);
   const next = (keys, rank) => keys.filter(k => !isLocked(k)).sort((a, b) => rank(a) - rank(b)).slice(0, 5);
-  const nP = next(K.P, k => D.players[k.slice(2)].ovr || 999), nT = next(K.T, k => D.teams[k.slice(2)].tr?.ar ?? 0), nG = next(K.G, k => D.games[k.slice(2)].rk);
+  const nP = next(K.P, k => D.players[k.slice(2)].ovr || 999), nT = next(K.T, k => D.teams[k.slice(2)].tr?.ar ?? 0), nG = next(K.G, k => gOrd(D.games[k.slice(2)]));
   const nextRow = k => { const e = ent(k), o = e.o;
-    const [a, b] = e.type === 'p' ? [rankLabel(o), nameOf(o)] : e.type === 't' ? [o.tr ? `#${o.tr.ar}` : String(o.y), `${o.y} ${o.n}`] : [`#${o.rk}`, `${o.y} ${o.gt || o.g}${o.d ? ' · ' + o.d : ''}`];
+    const [a, b] = e.type === 'p' ? [rankLabel(o), nameOf(o)] : e.type === 't' ? [o.tr ? `#${o.tr.ar}` : String(o.y), `${o.y} ${o.n}`] : [gRank(o), `${o.y} ${o.gt || o.g}${o.d ? ' · ' + o.d : ''}`];
     return `<button class="row" onclick="go('${k}')"><span class="yr">${esc(a)}</span><span class="rn">${esc(b)}</span></button>`; };
   const all = [...K.all], allDone = done(all);
   TRACK_TYPES = types.map(t => t[1]);
@@ -503,7 +503,9 @@ const pagebar = key => { const d = lockHTML(key); return d ? `<div class="crumbs
 const section = (title, links = [], body = '', sub = false) => body || editing()
   ? `${sub ? '<h3 class="sm">' : '<h2>'}${title}${links.length ? ` <small class="find">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(l)} ↗</a>`).join(' · ')}</small>` : ''}${sub ? '</h3>' : '</h2>'}${body}` : '';
 const banner = () => `<div class="banner" id="dbnote" ${note ? '' : 'hidden'}>${esc(note)}</div>`;
-function gameRow(g) { return `<button class="row" onclick="go('g_${g.id}')"><span class="yr">${g.y}</span><span class="rn">${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}<small>#${g.rk} on the list</small></span></button>`; }
+// unranked games (games.csv extra=1) have pages but no number on the list; they sort after the ranked ones
+const gRank = g => g.rk ? '#' + g.rk : 'Unranked', gOrd = g => g.rk ?? 1e9;
+function gameRow(g) { return `<button class="row" onclick="go('g_${g.id}')"><span class="yr">${g.y}</span><span class="rn">${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}<small>${g.rk ? `#${g.rk} on the list` : 'Unranked'}</small></span></button>`; }
 
 /* ================================================================ views */
 /* ---------------- your notes (docs/data/notes.json, from scripts/build_notes.py) ---------------- */
@@ -585,7 +587,7 @@ function vYear() {
   const lgs = [...new Set(tms.map(([, t]) => t.lg))], nClubs = tms.length + leagueClubs(y).length;
   const ws = tms.filter(([, t]) => t.ws), pen = tms.filter(([, t]) => t.pen && !t.ws);
   const wpa = (yd.top || []).find(e => e[0] === 'WPA'), mH = yd.mH || [], mP = yd.mP || [];
-  const gms = (yd.games || []).map(r => D.games[r]).sort((a, b) => b.gr - a.gr || a.rk - b.rk);
+  const gms = (yd.games || []).map(r => D.games[r]).sort((a, b) => b.gr - a.gr || gOrd(a) - gOrd(b));
   const yn = NOTES.years[y] || {};
   const champ = ([tid, t]) => `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="rn">${esc(t.n)}<small>${t.ws ? 'won the World Series' : esc(t.lg) + ' pennant'}${t.w != null ? ` · ${t.w}–${t.l}` : ''}</small></span></button>`;
   return `${pagebar('y_' + y)}${banner()}<div class="eyebrow">${y} · <a href="#" onclick="go('d_${decadeOf(y)}');return false">the ${decadeName(decadeOf(y))}</a></div>
@@ -936,7 +938,7 @@ function vGame() {
   const full = bx && bx.v.bat && bx.v.bat.length;
   const lineups = bx && !full && (bx.v.lu.length || bx.h.lu.length) ? `<div class="lineups">${[bx.v, bx.h].map(s => `<div><h3 class="sm">${esc(s.n)}</h3><table class="stats roster">${s.lu.map((p, i) => `<tr><td>${i + 1}</td><td class="nm">${whoLink(p[0], p.slice(2))}</td><td>${esc(p[1])}</td></tr>`).join('')}</table></div>`).join('')}</div>` : '';
   const wikiQ = wiki(n);
-  return `${crumbs('Game', key)}${banner()}<div class="eyebrow">${g.o ? 'From the “Others” row' : `#${g.rk}`}</div>
+  return `${crumbs('Game', key)}${banner()}<div class="eyebrow">${g.o ? 'From the “Others” row' : gRank(g)}</div>
    <h1 class="name">${esc(n)}</h1>${score}${ser}
    ${!bx && g.tid ? `<div class="sub" style="margin-top:8px"><span><a class="in" href="#" onclick="go('t_${g.tid}');return false">${esc(D.teams[g.tid].y + ' ' + D.teams[g.tid].n)}</a></span></div>` : ''}
    <h2>Line score</h2>${line || (BOXES ? '<p class="empty">No line score for this one in Retrosheet’s game logs.</p>' : '<p class="note">Loading…</p>')}
@@ -961,7 +963,7 @@ function vRankings() {
   const col = (title, n, rows, list) => `<section class="rcol"><h2>${title} <small>${n}</small></h2><div class="list">${rows.join('') || `<p class="empty">None from the ${decadeName(d)}.</p>`}</div><button class="btn ghost" onclick="go('r_${list}')">Full list ›</button></section>`;
   const P = Object.entries(D.players).filter(([, p]) => inDec(p.pk)).sort((a, b) => (a[1].ovr || 999) - (b[1].ovr || 999));
   const T = Object.entries(D.teams).filter(([, t]) => t.tr && inDec(t.y)).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
-  const G = Object.values(D.games).filter(g => inDec(g.y)).sort((a, b) => a.rk - b.rk);
+  const G = Object.values(D.games).filter(g => g.rk && inDec(g.y)).sort((a, b) => a.rk - b.rk);
   return `${banner()}<div class="eyebrow">The model</div><h1 class="name">Rankings</h1>
    <p class="note">Players, team seasons and games, each ranked by one model. A decade narrows all three; the year beside a row opens it on the map.</p>
    <div class="chips" style="margin:10px 0 4px">${decs.map(x => `<button class="chip" aria-pressed="${d === x}" data-rdec="${x}">${x === 'all' ? 'All time' : decadeName(x)}</button>`).join('')}</div>
@@ -990,7 +992,7 @@ function vList() {
   }
   if (h === 'games') {
     const arr = Object.values(D.games).filter(g => !f || (g.y + ' ' + g.g + ' ' + (g.gt || '') + ' ' + g.d).toLowerCase().includes(f));
-    arr.sort((a, b) => st.sort === 'lit' ? litN('g_' + a.id) - litN('g_' + b.id) || a.rk - b.rk : st.sort === 'peak' ? a.y - b.y : a.rk - b.rk);
+    arr.sort((a, b) => st.sort === 'lit' ? litN('g_' + a.id) - litN('g_' + b.id) || gOrd(a) - gOrd(b) : st.sort === 'peak' ? a.y - b.y : gOrd(a) - gOrd(b));
     return `${banner()}<div class="eyebrow">${toRankings}${Object.keys(D.games).length} games</div><h1 class="name">Games</h1>
      ${filter('Filter by year, series, description…', sortSel('Year'))}<div class="list">${arr.map(gameRow).join('') || '<p class="empty">No games match.</p>'}</div>`;
   }
@@ -1120,7 +1122,7 @@ function buildIndex() {
   IDX = [];
   for (const [k, p] of Object.entries(D.players)) IDX.push({ t: nameOf(p), s: `${p.pos} · peak ${p.pk}`, key: 'p_' + k, w: 3 });
   for (const [k, l] of Object.entries(D.leagues || {})) IDX.push({ t: l.n, s: `league · ${l.y0}–${l.y1}`, key: 'L_' + k, w: 3 });
-  for (const [k, g] of Object.entries(D.games)) IDX.push({ t: `${g.y} ${g.gt || g.g} ${g.d}`, s: 'game #' + g.rk, key: 'g_' + k, w: 1 });
+  for (const [k, g] of Object.entries(D.games)) IDX.push({ t: `${g.y} ${g.gt || g.g} ${g.d}`, s: g.rk ? 'game #' + g.rk : 'game, unranked', key: 'g_' + k, w: 1 });
 }
 function doSearch(q) {
   const box = $('#results'); q = q.trim().toLowerCase(); if (q.length < 2) { box.hidden = true; return; }

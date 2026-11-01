@@ -3,22 +3,26 @@
     python scripts/build_games.py          # then python scripts/build_data.py
     python scripts/build_games.py --redo   # recompute every season (each one is cached in data/retrosheet/games/)
 
-Score = (Inn + 9+SS + SS - 1) x (0.4 + maxL^3 + cWPA1 x gLI^2)^2 x lastL^0.5 x gLI
-  Inn     innings played
-  9+SS    lead changes from the 9th inning on (a play that goes from behind to ahead counts twice: tied, then ahead)
-  SS      the same count over the whole game
+Score = gLI^2 x Top5^1.5 x lastL / (minS x (1 - maxL)^0.6)      (minS at least .01, maxL at most .99, lastL at least .01)
+  gLI     how much the game moved the title odds, P(title | win) - P(title | loss), the average of the two teams'. In the
+          Negro Leagues' postseason (every pre-1969 round but the World Series) it's scaled by quality x interest x completeness:
+          quality and completeness by year from data/overrides/negro_series.csv; interest is half the gap between the series'
+          average crowd and that year's World Series average (Retrosheet attendance)
+  Top5    the five biggest swings in win probability, added up (WPA1-5; tWPA is all of them)
+  minS    the lowest the series winner's odds of taking the series got during the game (they move linearly with its win
+          chance). In the regular season, the lowest playoff odds of a team that made the postseason, where its odds if it
+          lost can't go below the hindsight check: flip this game to a loss, keep every other result, recount the final
+          standings: 1 still in, .5 tied for the last spot, 0 out (so a game that didn't decide anything gets no credit)
   maxL    the loser's best win probability during the game; lastL, the loser's win probability before the last play
           (a tie has no loser: maxL is twice the furthest either side got from even, so it runs 0-1 too, and lastL is the last play's
           swing, the one that ended it at .5)
-  WPA1-5  the five biggest swings in win probability; tWPA, all of them added up; cWPA1 = WPA1 x gLI
-  gLI     how much the game moved the title odds, P(title | win) - P(title | loss), the average of the two teams'
-          (half that in the Negro Leagues' postseason)
+  Inn, 9+SS, SS   innings, and lead changes from the 9th on and over the whole game (shown, not scored)
 Win probability comes from a table built from that season's own run scoring (how often each base-out state led to 0, 1,
 2... runs that inning), so 1968's table and 2000's differ the way their games did. Extra innings start with a runner on
 second in the 2020-2025 regular seasons, and the 2020-21 seven-inning doubleheader games end after seven.
 Postseason gLI comes from the series standing, each game a coin flip, and the rounds left. Regular-season gLI comes from
-playing out the rest of the schedule from that day's standings (coin flips again) under that year's postseason format;
-only AL and NL games get one. Games with no play-by-play (before 1908, Negro Leagues regular seasons, 2026) come from
+playing out the rest of the schedule from that day's standings (coin flips again) under that year's postseason format
+(1981's two halves as two races); only AL and NL games get one. Games with no play-by-play (before 1908, Negro Leagues regular seasons, 2026) come from
 data/overrides/games.csv, which also holds your descriptions and picks for the ranked games.
 The information used here was obtained free of charge from and is copyrighted by Retrosheet (www.retrosheet.org).
 """
@@ -161,7 +165,8 @@ def series_odds(a, b, need):  # P(first to `need` wins) from a-b, each game a co
     return 1. if a >= need else 0. if b >= need else .5 * (series_odds(a + 1, b, need) + series_odds(a, b + 1, need))
 
 
-def post_gli(info):  # postseason gameinfo -> gid: [gLI, round, game number in the series]
+def post_gli(info):  # postseason gameinfo -> gid: [gLI, round, game number in the series, home team's series odds if it wins /
+    # loses this game, the series winner (None while it's being played)]
     info = info.sort_values(['date', 'number'])
     ser = []  # (year, round, games, wins per game, wins needed, series winner)
     for (y, gt, _), s in info.groupby([info.date.astype(str).str[:4], info.gametype, info.apply(lambda r: '-'.join(sorted([r.visteam, r.hometeam])), axis=1)]):
@@ -169,7 +174,7 @@ def post_gli(info):  # postseason gameinfo -> gid: [gLI, round, game number in t
         wc = pd.Series(win).value_counts()
         need = int(wc.max()) if len(wc) else 0
         if int(y) > LAST: need = max(need, NEED[gt])  # a series still being played
-        ser.append((int(y), gt, s, win, need, wc.idxmax() if len(wc) else None))
+        ser.append((int(y), gt, s, win, need, wc.idxmax() if len(wc) and wc.max() >= need else None))
     order = ['divisionseries', 'lcs', 'championship']
     out = {}
     for y, gt, s, win, need, champ in ser:
@@ -180,7 +185,8 @@ def post_gli(info):  # postseason gameinfo -> gid: [gLI, round, game number in t
         w = {}
         for n, (r, x) in enumerate(zip(s.itertuples(), win), start=1):
             a, b = w.get(r.hometeam, 0), w.get(r.visteam, 0)
-            out[r.gid] = [(series_odds(a + 1, b, need) - series_odds(a, b + 1, need)) * .5 ** after, gt, n]
+            sw, sl = series_odds(a + 1, b, need), series_odds(a, b + 1, need)
+            out[r.gid] = [(sw - sl) * .5 ** after, gt, n, sw, sl, champ]
             if x: w[x] = w.get(x, 0) + 1
     return out
 
@@ -189,9 +195,14 @@ def cap(y):  # the most one regular-season game can be worth in title odds that 
     return 0 if y == 1994 else .5 if y < 1969 else .25 if y < 1995 else .125
 
 
-def title_odds(y, Wn, lg, dv):  # sims x teams standings (with tie-break noise) -> each team's title odds
+def title_odds(y, Wn, lg, dv, first=None):  # sims x teams standings (with tie-break noise) -> each team's title odds
     T, ar = np.zeros(Wn.shape), np.arange(len(Wn))
     if y == 1994: return T
+    if y == 1981:  # the strike split the season: each half's division winners met in the first round
+        if first is not None: T[np.broadcast_to(first, Wn.shape)] = 1 / 8; Wn = np.where(first, -np.inf, Wn)  # in already; the next best takes the second half
+        for d in set(zip(lg, dv)):
+            c = np.where((lg == d[0]) & (dv == d[1]))[0]; T[ar, c[Wn[:, c].argmax(1)]] = 1 / 8
+        return T
     for L in ('AL', 'NL'):
         cols = np.where(lg == L)[0]
         if not len(cols): continue
@@ -219,7 +230,7 @@ def title_odds(y, Wn, lg, dv):  # sims x teams standings (with tie-break noise) 
 
 
 class Season:  # a regular season's schedule and results from the game logs, for playing out the rest of it
-    def __init__(self, y, gl, divs):
+    def __init__(self, y, gl, divs, made=frozenset(), tb=frozenset()):  # made: (team, year) in the postseason; tb: tiebreaker ids
         g = gl[(gl[4].isin(['AL', 'NL'])) & (gl[7].isin(['AL', 'NL']))].copy()
         self.y = y
         self.teams = sorted(set(g[3]) | set(g[6])); ix = {t: n for n, t in enumerate(self.teams)}
@@ -229,12 +240,25 @@ class Season:  # a regular season's schedule and results from the game logs, for
         self.hw = (g[10] > g[9]).to_numpy(); self.vw = (g[9] > g[10]).to_numpy()
         self.gid = (g[6] + g[0].astype(str) + g[1].astype(str)).to_numpy(); self.row = {k: n for n, k in enumerate(self.gid)}
         self.day = {}
+        self.half, self.first = np.zeros(len(g), bool), None  # 1981: second-half games, and the first-half winners
+        if y == 1981:
+            self.half = self.date >= 19810810; f = ~self.half; nT = len(self.teams)
+            W1 = np.bincount(self.h[f & self.hw], minlength=nT) + np.bincount(self.v[f & self.vw], minlength=nT)
+            self.first = title_odds(y, W1[None, :] / (np.bincount(self.h[f], minlength=nT) + np.bincount(self.v[f], minlength=nT)), self.lg, self.dv)[0] > 0
+        # for the hindsight check: final standings by winning pct, the tiebreakers counted only when checking a tiebreaker
+        nT, dec = len(self.teams), self.hw | self.vw
+        self.made = np.array([(t, y) in made for t in self.teams]); self.tb = np.array([k in tb for k in self.gid])
+        cnt = lambda m: ((np.bincount(self.h[m & self.hw], minlength=nT) + np.bincount(self.v[m & self.vw], minlength=nT)).astype(float),
+                         np.maximum(np.bincount(self.h[m & dec], minlength=nT) + np.bincount(self.v[m & dec], minlength=nT), 1).astype(float))
+        self.fin = {False: cnt(~self.half), True: cnt(self.half)} if y == 1981 else {True: cnt(dec | True), False: cnt(~self.tb)}
+        self.hnoise = np.random.default_rng(y).random((64, nT)) * .5  # splits exact ties only
 
     def playout(self, d):  # sims x teams wins at season's end, playing every game from day d on as a coin flip
         if d not in self.day:
-            nT, done = len(self.teams), self.date < d
+            nT, part = len(self.teams), self.half == (self.y == 1981 and d >= 19810810)  # 1981: just this half's games
+            done = (self.date < d) & part
             W0 = np.bincount(self.h[done & self.hw], minlength=nT) + np.bincount(self.v[done & self.vw], minlength=nT)
-            rem = np.where(~done)[0]
+            rem = np.where(~done & part)[0]
             X = (np.random.default_rng(d).random((SIMS, len(rem))) < .5).astype(np.float32)
             Hi, Vi = np.zeros((len(rem), nT), np.float32), np.zeros((len(rem), nT), np.float32)
             Hi[np.arange(len(rem)), self.h[rem]] = 1; Vi[np.arange(len(rem)), self.v[rem]] = 1
@@ -243,24 +267,64 @@ class Season:  # a regular season's schedule and results from the game logs, for
             self.day = {d: (W, X, {r: n for n, r in enumerate(rem)}, noise)}  # one day at a time: games come in date order
         return self.day[d]
 
-    def gli(self, gid):
+    def play(self, gid):  # -> gLI, and {side: (playoff odds if it wins, if it loses)} for each postseason team in the game
         r = self.row.get(gid)
-        if r is None: return 0.
+        if r is None: return 0., {}
         W, X, col, noise = self.playout(self.date[r])
         h, v, x = self.h[r], self.v[r], X[:, col[r]]
         Wm = W.copy(); Wm[:, h] -= x; Wm[:, v] -= 1 - x
         Th = Wm.copy(); Th[:, h] += 1; Tv = Wm.copy(); Tv[:, v] += 1
-        Th, Tv = title_odds(self.y, Th + noise, self.lg, self.dv), title_odds(self.y, Tv + noise, self.lg, self.dv)
-        return ((Th[:, h] - Tv[:, h]).mean() + (Tv[:, v] - Th[:, v]).mean()) / 2
+        Th, Tv = self.odds(Th + noise, r), self.odds(Tv + noise, r)
+        odds = {sd: ((Tw[:, t] > 0).mean(), (Tl[:, t] > 0).mean()) for sd, t, Tw, Tl in (('h', h, Th, Tv), ('v', v, Tv, Th)) if self.made[t]}
+        return ((Th[:, h] - Tv[:, h]).mean() + (Tv[:, v] - Th[:, v]).mean()) / 2, odds
+
+    def hind(self, gid):  # {side: the hindsight check} for each postseason team in the game (1 if it lost and made it anyway)
+        r = self.row.get(gid); out = {}
+        if r is None: return out
+        for sd, t, o, won, lost in (('h', self.h[r], self.v[r], self.hw[r], self.vw[r]), ('v', self.v[r], self.h[r], self.vw[r], self.hw[r])):
+            if not self.made[t]: continue
+            if lost: out[sd] = 1.; continue
+            if self.y == 1981:
+                (w1, d1), (w2, d2) = [(w.copy(), d) for w, d in (self.fin[False], self.fin[True])]
+                w = w2 if self.half[r] else w1
+            else: w, d = self.fin[bool(self.tb[r])]; w = w.copy()
+            w[o] += 1
+            if won: w[t] -= 1
+            if self.y == 1981:
+                t1 = title_odds(1981, w1 / d1 * 1e6 + self.hnoise, self.lg, self.dv) > 0
+                inn = t1 | (title_odds(1981, w2 / d2 * 1e6 + self.hnoise, self.lg, self.dv, first=t1) > 0)
+            else: inn = title_odds(self.y, w / d * 1e6 + self.hnoise, self.lg, self.dv) > 0
+            out[sd] = round(float(inn[:, t].mean()) * 2) / 2
+        return out
+
+    def odds(self, Wn, r):  # title odds for standings at season's end, after game r
+        return title_odds(self.y, Wn, self.lg, self.dv, self.first if self.half[r] else None)
 
 
 # ---------------------------------------------------------------- scoring
-def weight(y, gt):  # gLI counts half in the Negro Leagues' postseason (every pre-1969 round but the World Series)
-    return np.where((y < 1969) & ~pd.Series(gt).isin(['worldseries', 'regular']).to_numpy(), .5, 1)
+def negro_wt(info):  # postseason gameinfo -> gid: gLI multiplier for the Negro Leagues' postseason (see the top)
+    f = ROOT / 'data' / 'overrides' / 'negro_series.csv'
+    qc = {int(r.y): (r.q, r.c) for r in pd.read_csv(f).itertuples()} if f.exists() else {}
+    y = info.date.astype(str).str[:4].astype(int).to_numpy(); gt = info.gametype.to_numpy()
+    att = pd.to_numeric(info.get('attendance'), errors='coerce').where(lambda a: a > 0).to_numpy()  # 0 is unknown
+    pair = np.array(['-'.join(sorted(p)) for p in zip(info.visteam, info.hometeam)])
+    neg = (y < 1969) & (gt != 'worldseries')
+    ws = pd.Series(att[gt == 'worldseries']).groupby(y[gt == 'worldseries']).mean()
+    ser = pd.Series(att[neg]).groupby([y[neg], gt[neg], pair[neg]]).mean()
+    ratio = (ser / ws.reindex(ser.index.get_level_values(0)).to_numpy()).dropna()
+    out = {}
+    for gid, yy, g, pr in zip(info.gid[neg], y[neg], gt[neg], pair[neg]):
+        q, c = qc.get(yy, (.8, .6))
+        out[gid] = q * (1 + min(ratio.get((yy, g, pr), ratio.median()), 1)) / 2 * c
+    return out
 
 
-def score(inn, ss9, ss, gli, maxl, lastl, wpa1, tie):
-    return (inn + ss9 + ss - 1) * (.4 + maxl ** 3 + wpa1 * gli * gli ** 2) ** 2 * np.where(pd.isna(lastl), wpa1, lastl) ** .5 * gli
+def score(gli, top5, mins, maxl, lastl):
+    return gli ** 2 * top5 ** 1.5 / np.maximum(mins, .01) * (1 - np.minimum(maxl, .99)) ** -.6 * np.maximum(lastl, .01)
+
+
+def low(maxl, won, tie, pw, pl):  # a team's lowest series (or playoff) odds during a game: they move linearly with its win chance
+    return pl + (pw - pl) * (1 - maxl) * (.5 if tie else 1) if (won or tie) else pl
 
 
 def season_rows(y, redo):
@@ -304,41 +368,60 @@ def main(redo=False):
         o = game_stats(pp, inf, Env(counts[min(years, key=lambda z: abs(z - y))]), ghost=False)
         if len(o): rows.append(o.reset_index().assign(y=y, gt=lambda d: d.gid.map(lambda g: pg[g][1]), n=lambda d: d.gid.map(lambda g: pg[g][2])))
     G = pd.concat(rows, ignore_index=True)
-    G['gli'] = G.gid.map(lambda g: pg[g][0] if g in pg else np.nan) * weight(G.y.to_numpy(), G['gt'].to_numpy())
+    nw = negro_wt(post_i)
+    G['gli'] = G.gid.map(lambda g: pg[g][0] * nw.get(g, 1) if g in pg else np.nan)
+    G['top5'] = G[[f'wpa{n}' for n in range(1, 6)]].fillna(0).sum(1)
+    G['mins'] = 1.
+    for k in G.index[G.gid.isin(pg)]:  # the series winner's lowest series odds during the game
+        r = G.loc[k]; _, _, _, sw, sl, champ = pg[r.gid]
+        if champ is None or champ not in (r.h, r.v): continue
+        home = champ == r.h; pw, pl = (sw, sl) if home else (1 - sl, 1 - sw)
+        G.at[k, 'mins'] = low(r.maxl, (r.hr > r.vr) == home and r.hr != r.vr, r.tie == 1, pw, pl)
     print(f'\n{len(G)} games with play-by-play ({(G["gt"] != "regular").sum()} postseason)')
 
     # regular-season gLI: play out the schedule only where it could matter, best case first, until no game left could
-    # reach the top KEEP (the score only grows with gLI, so the season's cap bounds it)
-    reg = G["gt"] == "regular"
-    ub = score(G.inn, G.ss9, G.ss, G.y.map(cap), G.maxl, G.lastl, G.wpa1, G.tie)
-    best = list(score(G.inn, G.ss9, G.ss, G.gli, G.maxl, G.lastl, G.wpa1, G.tie)[~reg].nlargest(KEEP))
-    heapq.heapify(best)
+    # reach the top KEEP. The score only grows with gLI, so the season's cap bounds it, and the hindsight check bounds minS.
     gl = {}
     with zipfile.ZipFile(RET / 'gl1871_2025.zip') as z:
         for y in years: gl[y] = pd.read_csv(z.open(f'gl{y}.txt'), header=None, usecols=[0, 1, 3, 4, 6, 7, 9, 10], dtype={1: str})
     T = pd.read_csv(ROOT / 'data' / 'lahman' / 'Teams.csv', encoding='utf-8-sig')
     divs = {(r.teamIDretro, r.yearID): r.divID if isinstance(r.divID, str) else '' for r in T.itertuples()}
-    seasons, n = {}, 0
+    made = {(r.teamIDretro, r.yearID) for r in T.itertuples() if 'Y' in (r.DivWin, r.WCWin, r.LgWin)}
+    seasons = {}
+    for y in years:
+        info = read(f'{y}csvs.zip', 'gameinfo.csv', dtype={'gid': str})
+        seasons[y] = Season(y, gl[y], divs, made, set(info.gid[info.gametype == 'playoff']))
+    reg = G["gt"] == "regular"
+    hind = {k: seasons[G.at[k, 'y']].hind(G.at[k, 'gid']) for k in G.index[reg]}
+    mlo = pd.Series({k: max(min(h.values()), .01) if h else 1. for k, h in hind.items()})
+    ub = score(G.y.map(cap), G.top5, mlo.reindex(G.index).fillna(1), G.maxl, G.lastl)
+    best = list(score(G.gli, G.top5, G.mins, G.maxl, G.lastl)[~reg].nlargest(KEEP))
+    heapq.heapify(best)
     order = ub[reg].sort_values(ascending=False)
     todo = G.loc[order.index]
     todo = todo[order > 0]
     # work season by season, in date order, so each day's playouts are reused
     picked = [k for k, u in zip(todo.index, order[order > 0]) if u >= best[0]]  # a first pass; the bound tightens below
+    n = 0
     for y, ks in todo.loc[picked].groupby('y').groups.items():
-        s = seasons.setdefault(y, Season(y, gl[y], divs))
+        s = seasons[y]
         for k in sorted(ks, key=lambda k: G.at[k, 'gid'][3:11]):
             if ub[k] < best[0]: G.at[k, 'gli'] = np.nan; continue
-            G.at[k, 'gli'] = s.gli(G.at[k, 'gid']); n += 1
-            sc = score(G.at[k, 'inn'], G.at[k, 'ss9'], G.at[k, 'ss'], G.at[k, 'gli'], G.at[k, 'maxl'], G.at[k, 'lastl'], G.at[k, 'wpa1'], G.at[k, 'tie'])
+            r = G.loc[k]; gli, odds = s.play(r.gid); m = []; n += 1
+            for sd, (pw, pl) in odds.items():  # the odds if it lost can't go below the hindsight check
+                pl = max(pl, hind[k].get(sd, 1.)); pw = max(pw, pl)
+                m.append(low(r.maxl, (r.hr > r.vr) if sd == 'h' else (r.vr > r.hr), r.tie == 1, pw, pl))
+            G.at[k, 'gli'], G.at[k, 'mins'] = gli, min(m) if m else 1.
+            sc = score(gli, r.top5, G.at[k, 'mins'], r.maxl, r.lastl)
             if sc > best[0]: heapq.heapreplace(best, sc)
         print(f'  {y}: {n} regular-season games played out', end='\r', flush=True)
     print()
     G = G[G.gli.notna()].copy()
     G['cwpa1'] = G.wpa1 * G.gli
-    G['score'] = score(G.inn, G.ss9, G.ss, G.gli, G.maxl, G.lastl, G.wpa1, G.tie)
+    G['score'] = score(G.gli, G.top5, G.mins, G.maxl, G.lastl)
     G = G.sort_values('score', ascending=False).head(KEEP)
     G['date'] = G.gid.str[3:11]
-    cols = ['gid', 'y', 'date', 'gt', 'n', 'v', 'h', 'vr', 'hr', 'inn', 'ss9', 'ss', 'gli', 'maxl', 'lastl', 'cwpa1', 'wpa1', 'tie', 'score', 'twpa', 'wpa2', 'wpa3', 'wpa4', 'wpa5']
+    cols = ['gid', 'y', 'date', 'gt', 'n', 'v', 'h', 'vr', 'hr', 'inn', 'ss9', 'ss', 'gli', 'top5', 'mins', 'maxl', 'lastl', 'cwpa1', 'wpa1', 'tie', 'score', 'twpa', 'wpa2', 'wpa3', 'wpa4', 'wpa5']
     G[cols].round(4).to_csv(OUT, index=False)
     print(f'wrote {OUT.relative_to(ROOT)}: the top {len(G)} games ({n} regular-season races played out)')
 

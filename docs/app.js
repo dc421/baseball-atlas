@@ -276,13 +276,13 @@ function drawBase() {
     const pins = view.type === 'h' ? allTimePins() : [...Object.entries(D.teams).filter(([, t]) => t.y === YEAR && t.ll).map(([tid, t]) => ({ tid, t, ll: t.ll })), ...leagueClubs(YEAR).map(c => ({ c, ll: c.ll }))];
     const byLL = {};
     for (const p of pins) {
-      if (insetOf(p.ll)) { INSET_PTS.push({ ll: p.ll, key: p.t ? (p.key || 't_' + p.tid) : p.c.key, label: p.t ? (p.key ? p.t.n : `${p.t.y} ${p.t.n}`) : `${p.c.n} · ${D.leagues[p.c.lg].n}`, fill: p.t ? teamColors(p.t)[0] : 'var(--chalk)' }); continue; }
+      if (insetOf(p.ll)) { INSET_PTS.push({ ll: p.ll, key: p.t ? (p.key || 't_' + p.tid) : p.c.key, label: p.t ? (p.key ? p.t.n : `${p.t.y} ${p.t.n}`) : `${p.c.n} · ${D.leagues[p.c.lg].n}`, fill: p.t ? teamColors(p.t)[0] : 'var(--chalk)', t: p.t }); if (view.type !== 'h') continue; }
       (byLL[p.ll.join()] = byLL[p.ll.join()] || []).push(p);
     }
     const items = [];
     if (view.type === 'h') {
       // Spread badges across nearby cities as well as identical coordinates, keeping their locations as anchors.
-      for (const p of pins.filter(p => !insetOf(p.ll))) {
+      for (const p of pins) {
         const [x, y] = XY(p.ll), r = 4.5 + 12.5 * Math.sqrt(Math.min(Math.max(p.seasons - 1, 0), 99) / 99);
         items.push({ ...p, x, y, ox: 0, oy: 0, r, px: x, py: y });
       }
@@ -341,9 +341,13 @@ function drawInsets() {
     const byLL = {}; for (const p of pts) (byLL[p.ll.join()] = byLL[p.ll.join()] || []).push(p);
     for (const ps of Object.values(byLL)) ps.forEach((p, i) => {
       const [x, y] = s.proj([p.ll[1], p.ll[0]]), a = i * 2 * Math.PI / ps.length, off = ps.length > 1 ? 6 : 0;
-      s.pins.append('circle').attr('class', 'pin').attr('cx', x + off * Math.sin(a)).attr('cy', y - off * Math.cos(a)).attr('r', 5)
-        .attr('fill', p.fill).attr('stroke', 'var(--water)').attr('stroke-width', 1).style('cursor', p.key ? 'pointer' : null)
-        .on('click', () => p.key && go(p.key)).append('title').text(p.label);
+      const badge = s.pins.append('g').attr('class', 'pin').attr('transform', `translate(${x + off * Math.sin(a)},${y - off * Math.cos(a)})`)
+        .style('cursor', p.key ? 'pointer' : null).on('click', () => p.key && go(p.key));
+      const logo = p.t && logoFor(p.t), radius = p.t ? 9 : 5;
+      badge.append('circle').attr('r', radius).attr('fill', logo ? '#fff' : p.fill).attr('stroke', 'var(--water)').attr('stroke-width', 1);
+      if (logo) badge.append('image').attr('href', 'logos/' + logo).attr('x', -7).attr('y', -7).attr('width', 14).attr('height', 14);
+      else if (p.t) { const [, fg] = teamColors(p.t); badge.append('text').attr('text-anchor', 'middle').attr('dominant-baseline', 'central').attr('fill', fg).attr('font-size', 5.5).text(p.t.br || p.t.tm); }
+      badge.append('title').text(p.label);
     });
     const clubs = pts.filter(p => !p.focus).length, lg = s.lg && D.leagues?.[s.lg];
     s.cap.html(`${lg ? `<a href="#" onclick="go('L_${s.lg}');return false">${esc(s.name)} ›</a>` : `<span>${esc(s.name)}</span>`}${clubs ? `<small>${clubs} club${clubs > 1 ? 's' : ''}</small>` : ''}`);
@@ -378,7 +382,7 @@ const fitYear = y => { const lls = yearLLs(y); if (lls.length) fitTo(lls, 14); e
 function refreshMap() {
   gCountry.selectAll('*').remove();
   if (view.type === 'h') gCountry.selectAll('path').data(LAND.features.filter(f => {
-    const code = LEAGUE_COUNTRIES[f.properties?.name]; return code && code !== 'JPN' && D.leagues?.[code];
+    const code = LEAGUE_COUNTRIES[f.properties?.name]; return code && D.leagues?.[code];
   })).enter().append('path').attr('class', f => 'league-country league-' + LEAGUE_COUNTRIES[f.properties.name]).attr('d', path)
     .on('click', (ev, f) => go('L_' + LEAGUE_COUNTRIES[f.properties.name]))
     .append('title').text(f => D.leagues[LEAGUE_COUNTRIES[f.properties.name]].n);
@@ -1112,8 +1116,15 @@ function updateHomeVisibility() {
 function vHome() {
   const franchises = Object.entries(D.franch).map(([id, fr]) => {
     const teams = fr.s.map(tid => D.teams[tid]), t = teams[teams.length - 1], years = [...new Set(teams.map(x => x.y))];
-    const top = teams.filter(x => x.tr?.ar <= 156).length;
-    return { id, t, name: fr.n || t.n, years, score: years.length + top, type: 'franchise' };
+    const titles = teams.filter(x => x.ws && (x.lg === 'AL' || x.lg === 'NL')).length;
+    const groups = new Map();
+    for (const x of teams) { if (!groups.has(x.fr)) groups.set(x.fr, []); groups.get(x.fr).push(x); }
+    const own = groups.get(t.fr) || teams, ownYears = [...new Set(own.map(x => x.y))];
+    const included = [...groups.entries()].filter(([key]) => key !== t.fr).map(([, ts]) => {
+      const last = ts[ts.length - 1], ys = ts.map(x => x.y), first = Math.min(...ys), end = Math.max(...ys);
+      return { name: last.n, years: `${first}${first === end ? '' : '–' + end}`, count: new Set(ys).size };
+    }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+    return { id, t, name: fr.n || t.n, years: ownYears, included, score: years.length + 5 * titles, type: 'franchise' };
   });
   const leagues = CLUB_LEAGUES.filter(id => D.leagues?.[id]).map(id => {
     const lg = D.leagues[id], years = [...new Set(lg.s.map(row => row[0]))];
@@ -1124,7 +1135,7 @@ function vHome() {
     <p class="note">Explore the franchises and international leagues visible on the map. Larger badges represent more recorded seasons. Choose a decade below the map to explore a particular era.</p>
     <h2>Franchises &amp; leagues <small id="home-franchise-count">${entries.length}</small></h2><div class="list home-entries" id="home-franchises">${entries.map(e => {
       const league = e.type === 'league', first = Math.min(...e.years), last = Math.max(...e.years), range = e.years.length ? (first === last ? String(first) : `${first}–${last}`) : '';
-      return `<button class="row home-entry" data-home-${e.type}="${esc(e.id)}" onclick="go('${league ? 'L' : 'f'}_${e.id}')">${league ? `<span class="home-league-mark league-${e.id}" aria-hidden="true"></span>` : badgeSm(e.t)}<span class="rn">${esc(e.name)}</span><span class="home-years">${esc(range)}</span></button>`;
+      return `<button class="row home-entry" data-home-${e.type}="${esc(e.id)}" onclick="go('${league ? 'L' : 'f'}_${e.id}')">${league ? `<span class="home-league-mark league-${e.id}" aria-hidden="true"></span>` : badgeSm(e.t)}<span class="rn">${esc(e.name)}${e.included?.length ? `<small class="home-includes">Includes: ${e.included.map(x => `${esc(x.name)} (${x.years})`).join('; ')}</small>` : ''}</span><span class="home-years">${esc(range)}</span></button>`;
     }).join('')}</div><p class="empty" id="home-franchise-empty" hidden>No franchises or leagues in view.</p>`;
 }
 

@@ -173,7 +173,7 @@ const lockHTML = key => editing() && trackKeys().all.has(key)
 /* ================================================================ map
    North America, the Caribbean and Venezuela on one map, zoomed to fit whatever the view is about (a year: every club
    that played). Japan and Hawaii are insets in the corner, shown only when something on the map is there. */
-let svg, gRoot, gLand, gBase, gFocus, gLab, proj, path, W = 800, H = 600, K = 1, LAND = null, moved = false;
+let svg, gRoot, gLand, gCountry, gBase, gFocus, gLab, proj, path, W = 800, H = 600, K = 1, LAND = null, moved = false;
 const zoom = d3.zoom().scaleExtent([1, 80]).on('zoom', ev => { gRoot.attr('transform', ev.transform); K = ev.transform.k; if (ev.sourceEvent) moved = true; rescale(); });
 const INSETS = [  // box: [lon, lat] corners; in: which points it takes
   { id: 'jp', name: 'Japan', lg: 'JPN', box: [[129.5, 31.2], [145.8, 45.5]], w: 150, h: 170, in: ll => ll[1] > 100 },
@@ -188,26 +188,19 @@ function leagueClubs(y) {
     for (const r of lg.s) if (r[0] === y && lg.ll?.[r[4]]) out.push({ key: 'L_' + code, n: r[3], lg: code, city: r[4], ll: lg.ll[r[4]] }); }
   return out;
 }
-// One representative location per franchise, and each country-league club across its recorded seasons.
+// The all-time map links only to franchise pages; international leagues use country highlights.
+const LEAGUE_COUNTRIES = { Cuba: 'CUB', 'Dominican Rep.': 'DOM', 'Puerto Rico': 'PR', Venezuela: 'VEN', Japan: 'JPN' };
 function allTimePins() {
   const pins = [];
   for (const [fid, fr] of Object.entries(D.franch)) {
     const tid = [...fr.s].reverse().find(id => D.teams[id]?.ll);
     if (tid) pins.push({ tid, t: D.teams[tid], ll: D.teams[tid].ll, key: 'f_' + fid });
   }
-  const seen = new Set();
-  for (const code of CLUB_LEAGUES) {
-    const lg = D.leagues?.[code]; if (!lg) continue;
-    for (const r of lg.s) {
-      const ll = lg.ll?.[r[4]], id = [code, r[3], r[4]].join('|');
-      if (ll && !seen.has(id)) { seen.add(id); pins.push({ c: { key: 'L_' + code, n: r[3], lg: code, city: r[4], ll }, ll }); }
-    }
-  }
   return pins;
 }
 const yearLLs = y => [...Object.values(D.teams).filter(t => t.y === y && t.ll).map(t => t.ll), ...leagueClubs(y).map(c => c.ll)];
 function setupMap() {
-  svg = d3.select('#map'); gRoot = svg.append('g'); gLand = gRoot.append('g'); gBase = gRoot.append('g'); gFocus = gRoot.append('g'); gLab = gRoot.append('g');
+  svg = d3.select('#map'); gRoot = svg.append('g'); gLand = gRoot.append('g'); gCountry = gRoot.append('g'); gBase = gRoot.append('g'); gFocus = gRoot.append('g'); gLab = gRoot.append('g');
   LAND = { type: 'FeatureCollection', features: topojson.feature(WORLD, WORLD.objects.countries).features.filter(f => f.properties?.name !== 'Antarctica') };
   const box = d3.select('#insets');
   for (const s of INSETS) {
@@ -215,6 +208,7 @@ function setupMap() {
     s.proj = d3.geoMercator().fitExtent([[4, 4], [s.w - 4, s.h - 4]], { type: 'MultiPoint', coordinates: s.box }).clipExtent([[0, 0], [s.w, s.h]]);
     const g = s.el.append('svg').attr('viewBox', `0 0 ${s.w} ${s.h}`).attr('width', s.w).attr('height', s.h).attr('role', 'img').attr('aria-label', s.name);
     g.append('path').datum(LAND).attr('class', 'land').attr('d', d3.geoPath(s.proj));
+    s.countries = g.append('g');
     s.pins = g.append('g');
     s.cap = s.el.append('div').attr('class', 'cap');
   }
@@ -300,8 +294,11 @@ function drawBase() {
 // Japan and Hawaii: shown only when there's something to put in them
 function drawInsets() {
   for (const s of INSETS) {
-    const pts = INSET_PTS.filter(p => s.in(p.ll));
-    s.el.attr('hidden', pts.length ? null : true); if (!pts.length) continue;
+    const pts = INSET_PTS.filter(p => s.in(p.ll)), country = view.type === 'h' && s.lg === 'JPN' && D.leagues?.JPN;
+    s.el.attr('hidden', pts.length || country ? null : true);
+    s.countries.selectAll('*').remove();
+    if (country) s.countries.selectAll('path').data(LAND.features.filter(f => LEAGUE_COUNTRIES[f.properties?.name] === 'JPN')).enter().append('path').attr('class', 'league-country').attr('d', d3.geoPath(s.proj)).on('click', () => go('L_JPN')).append('title').text(country.n);
+    if (!pts.length && !country) continue;
     s.pins.selectAll('*').remove();
     const byLL = {}; for (const p of pts) (byLL[p.ll.join()] = byLL[p.ll.join()] || []).push(p);
     for (const ps of Object.values(byLL)) ps.forEach((p, i) => {
@@ -340,7 +337,15 @@ function fitTo(lls, maxK = 30) {
 }
 const fitNorthAmerica = () => fitTo([[50, -125], [24, -66]], 6);
 const fitYear = y => { const lls = yearLLs(y); if (lls.length) fitTo(lls, 14); else fitNorthAmerica(); };
-function refreshMap() { drawBase(); drawFocus(); }
+function refreshMap() {
+  gCountry.selectAll('*').remove();
+  if (view.type === 'h') gCountry.selectAll('path').data(LAND.features.filter(f => {
+    const code = LEAGUE_COUNTRIES[f.properties?.name]; return code && code !== 'JPN' && D.leagues?.[code];
+  })).enter().append('path').attr('class', 'league-country').attr('d', path)
+    .on('click', (ev, f) => go('L_' + LEAGUE_COUNTRIES[f.properties.name]))
+    .append('title').text(f => D.leagues[LEAGUE_COUNTRIES[f.properties.name]].n);
+  drawBase(); drawFocus();
+}
 function setYear(y) {
   YEAR = Math.max(1845, Math.min(2025, y | 0)); $('#yr').value = YEAR; $('#bigyear').textContent = YEAR;
   const yk = pageKey('y_' + YEAR), cur = view.type + '_' + view.id;  // on a year page (or 1845–1868), the slider moves the page
@@ -1062,7 +1067,7 @@ const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.<
 /* ================================================================ render */
 function mapFor() {
   const t = view.type; highlight = null; focusPts = null; let fit = null;
-  if (t === 'h') { MAPMODE = 'teams'; fit = allTimePins().map(p => p.ll); }
+  if (t === 'h') { MAPMODE = 'teams'; fit = [...allTimePins().map(p => p.ll), [21.5, -79.5], [19, -70.5], [18.2, -66.5], [8, -66]]; }
   if (t === 'y') MAPMODE = 'teams';
   if (t === 'y') { const lls = yearLLs(YEAR); if (lls.length) fit = lls; }
   if (t === 'd') { MAPMODE = 'teams'; const d0 = view.id === 'pre' ? 1845 : +view.id === 1870 ? 1869 : +view.id; if (YEAR < d0 || YEAR > (view.id === 'pre' ? 1868 : +view.id + 9)) { YEAR = view.id === 'pre' ? 1868 : d0; $('#yr').value = YEAR; $('#bigyear').textContent = YEAR; }
@@ -1081,7 +1086,7 @@ function mapFor() {
       for (const c of p.clubs || []) focusPts.push({ ll: [+c[2], +c[3]], label: c[0], r: 5 });
       fit = focusPts.map(x => x.ll); } }
   $('#mapbar').hidden = t === 'h' || MAPMODE !== 'teams' || (layoutOf(view) !== 'map' && !FULL);
-  $('#maphint').textContent = t === 'h' ? 'Franchises and league clubs across baseball history. Click a badge.' : { teams: highlight ? `Every team on the field in ${YEAR}` : `Every team on the field in ${YEAR}. Click a badge.` }[MAPMODE];
+  $('#maphint').textContent = t === 'h' ? 'Click a franchise badge or highlighted league country.' : { teams: highlight ? `Every team on the field in ${YEAR}` : `Every team on the field in ${YEAR}. Click a badge.` }[MAPMODE];
   return fit;
 }
 function render(newView = true, opts = {}) {

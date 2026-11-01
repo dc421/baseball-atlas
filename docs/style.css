@@ -460,3 +460,7 @@ body.lay-list.wide aside.panel{padding-left:max(22px,calc((100% - 1160px)/2));pa
 .rrow .row .yr{min-width:38px}
 .ylink{border:0;background:none;font-family:var(--f-mono);font-size:12px;color:var(--lit);cursor:pointer;padding:4px 0}
 .ylink:hover{text-decoration:underline}
+
+/* International league countries on the all-time map. */
+.league-country{fill:var(--lit);fill-opacity:.48;stroke:var(--lit);stroke-width:1;vector-effect:non-scaling-stroke;cursor:pointer}
+.league-country:hover{fill-opacity:.75}

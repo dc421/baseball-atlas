@@ -1207,9 +1207,7 @@ function vHome() {
     return { id, name: lg.n, years, score: years.length, type: 'league' };
   });
   const entries = [...franchises, ...leagues].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
-  return `<div class="eyebrow">Baseball through the years</div><h1 class="name">Baseball Atlas</h1>
-    <p class="note">Explore the franchises and international leagues visible on the map. Badge size reflects recorded seasons plus five for each MLB World Series title. Choose a decade below the map to explore a particular era.</p>
-    <h2>Franchises &amp; leagues <small id="home-franchise-count">${entries.length}</small></h2><div class="list home-entries" id="home-franchises">${entries.map(e => {
+  return `<h2>Franchises &amp; leagues <small id="home-franchise-count">${entries.length}</small></h2><div class="list home-entries" id="home-franchises">${entries.map(e => {
       const league = e.type === 'league', first = Math.min(...e.years), last = Math.max(...e.years), range = e.years.length ? (first === last ? String(first) : `${first}–${last}`) : '';
       return `<button class="row home-entry${league ? ' home-league-row league-' + e.id : ''}" data-home-${e.type}="${esc(e.id)}" onclick="go('${league ? 'L' : 'f'}_${e.id}')">${league ? `<span class="home-league-mark" aria-hidden="true"></span>` : badgeSm(e.t)}<span class="rn">${esc(e.name)}${e.included?.length ? `<small class="home-includes">Includes: ${esc(e.included[0].name)} (${e.included[0].years})${e.included.length > 1 ? ' &amp; others' : ''}</small>` : ''}</span><span class="home-years">${esc(range)}</span></button>`;
     }).join('')}</div><p class="empty" id="home-franchise-empty" hidden>No franchises or leagues in view.</p>`;

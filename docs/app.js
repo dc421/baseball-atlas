@@ -1212,8 +1212,7 @@ function vHome() {
     <h2>Franchises &amp; leagues <small id="home-franchise-count">${entries.length}</small></h2><div class="list home-entries" id="home-franchises">${entries.map(e => {
       const league = e.type === 'league', first = Math.min(...e.years), last = Math.max(...e.years), range = e.years.length ? (first === last ? String(first) : `${first}–${last}`) : '';
       return `<button class="row home-entry${league ? ' home-league-row league-' + e.id : ''}" data-home-${e.type}="${esc(e.id)}" onclick="go('${league ? 'L' : 'f'}_${e.id}')">${league ? `<span class="home-league-mark" aria-hidden="true"></span>` : badgeSm(e.t)}<span class="rn">${esc(e.name)}${e.included?.length ? `<small class="home-includes">Includes: ${esc(e.included[0].name)} (${e.included[0].years})${e.included.length > 1 ? ' &amp; others' : ''}</small>` : ''}</span><span class="home-years">${esc(range)}</span></button>`;
-    }).join('')}</div><p class="empty" id="home-franchise-empty" hidden>No franchises or leagues in view.</p>
-    <h2>More leagues</h2><div class="chips">${Object.entries(D.leagues || {}).filter(([k]) => !CLUB_LEAGUES.includes(k)).map(([k, l]) => `<button class="chip" onclick="go('L_${k}')">${esc(l.n)}</button>`).join('')}</div>`;
+    }).join('')}</div><p class="empty" id="home-franchise-empty" hidden>No franchises or leagues in view.</p>`;
 }
 
 const notFound = () => `${crumbs('')}<p class="empty">Couldn’t find that one.</p>`;

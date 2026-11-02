@@ -1262,8 +1262,13 @@ function wire() {
   document.querySelectorAll('[data-pos]').forEach(b => b.addEventListener('click', () => { st.pos = b.dataset.pos; refilter(true); }));
   document.querySelectorAll('[data-grp]').forEach(b => b.addEventListener('click', () => { st.grp = b.dataset.grp; refilter(true); }));
   document.querySelectorAll('[data-rdec]').forEach(b => b.addEventListener('click', () => { RB.dec = b.dataset.rdec; refilter(true); }));
+  // a narrow decade row stays where it was left; if the chosen decade is out of view, it comes to rest just after the one before it
   const decs = $('.rdecs'), on = decs?.querySelector('[aria-pressed="true"]');
-  if (on && decs.scrollWidth > decs.clientWidth) decs.scrollLeft = on.offsetLeft - (decs.clientWidth - on.offsetWidth) / 2;
+  if (on && decs.scrollWidth > decs.clientWidth) {
+    const x0 = decs.firstElementChild.offsetLeft; decs.scrollLeft = RB.sl || 0;
+    if (on.offsetLeft - x0 < decs.scrollLeft || on.offsetLeft + on.offsetWidth > decs.scrollLeft + decs.clientWidth) decs.scrollLeft = (on.previousElementSibling || on).offsetLeft - x0;
+    decs.addEventListener('scroll', () => { RB.sl = decs.scrollLeft; }, { passive: true });
+  }
   const wireMore = () => $('#rkmore')?.addEventListener('click', () => { st.n += 100; render(false); }); wireMore();
   $('#rksort')?.addEventListener('change', e => { st.sort = e.target.value; refilter(false); });
   // typing swaps only the list under the box, so the box itself (and its caret) is never rebuilt

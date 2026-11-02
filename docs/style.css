@@ -1,22 +1,23 @@
 
-/* Layout: a night-game map on the left (stadium lights = what you've explored), a scorebook panel on the right. */
+/* Layout: a map on the left, an encyclopedia-style reading panel on the right. White paper, ink, one slate blue. */
 :root{
-  --bg:#edf0e8; --panel:#f6f7f2; --raise:#ffffff; --line:#d3dacd; --ink:#15201b; --muted:#5a6b61;
-  --ghost:#aebbb2; --lit:#b26c0c; --lit-soft:rgba(178,108,12,.13); --chalk:#24332c; --stitch:#b23a30;
-  --land:#dfe5d9; --border:#c6cfc1; --water:#eef1ea; --focus:#1f6f8b;
-  --f-display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
-  --f-body:"Libre Franklin","Franklin Gothic Medium","Helvetica Neue",Arial,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --bg:#ffffff; --panel:#ffffff; --raise:#f6f7f9; --line:#e1e5e9; --rule:#cfd4d9; --ink:#1a1f24; --muted:#6b7279;
+  --ghost:#b9c1c8; --lit:#3d5a73; --lit-soft:rgba(61,90,115,.10); --gold:#9a7224; --chalk:#2b3540; --stitch:#b23a30;
+  --land:#f9fafb; --border:#c5ccd3; --water:#e8edf1; --focus:#3d5a73;
+  --f-display:"Spectral SC",Georgia,serif;
+  --f-serif:"Spectral",Georgia,serif;
+  --f-body:"Public Sans","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"Public Sans","Helvetica Neue",Arial,sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0d1613; --panel:#111c18; --raise:#17251f; --line:#22342c; --ink:#e6ebe0; --muted:#8fa196;
-  --ghost:#3a4f45; --lit:#f3b53f; --lit-soft:rgba(243,181,63,.16); --chalk:#dbe5dd; --stitch:#e0584b;
-  --land:#16231e; --border:#26392f; --water:#0a1210; --focus:#6cc3dd; color-scheme:dark}}
+  --bg:#14181c; --panel:#14181c; --raise:#1b2026; --line:#2a3139; --rule:#3a424b; --ink:#e7eaed; --muted:#949ea8;
+  --ghost:#3c454e; --lit:#8db0cf; --lit-soft:rgba(141,176,207,.14); --gold:#d6ad5c; --chalk:#d9dfe5; --stitch:#e0584b;
+  --land:#1b2026; --border:#343c45; --water:#0f1316; --focus:#8db0cf; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0d1613; --panel:#111c18; --raise:#17251f; --line:#22342c; --ink:#e6ebe0; --muted:#8fa196;
-  --ghost:#3a4f45; --lit:#f3b53f; --lit-soft:rgba(243,181,63,.16); --chalk:#dbe5dd; --stitch:#e0584b;
-  --land:#16231e; --border:#26392f; --water:#0a1210; --focus:#6cc3dd; color-scheme:dark}
+  --bg:#14181c; --panel:#14181c; --raise:#1b2026; --line:#2a3139; --rule:#3a424b; --ink:#e7eaed; --muted:#949ea8;
+  --ghost:#3c454e; --lit:#8db0cf; --lit-soft:rgba(141,176,207,.14); --gold:#d6ad5c; --chalk:#d9dfe5; --stitch:#e0584b;
+  --land:#1b2026; --border:#343c45; --water:#0f1316; --focus:#8db0cf; color-scheme:dark}
 html,body{height:100%;margin:0}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -518,3 +519,59 @@ body.home-zoomed .inset-jp,body.home-zoomed .inset-hi{display:none}
 
 /* Scale Pacific inset maps with the available map area, including desktop split views. */
 .inset svg{width:var(--inset-width,150px);height:auto}
+
+/* v5: encyclopedia type. Spectral small caps for marks, headings and tabs; Spectral for numbers and asides; Public Sans for names and UI. */
+table.stats,table.track{font-variant-numeric:tabular-nums}
+.mark{font-family:var(--f-display);font-weight:600;font-size:23px;letter-spacing:.06em;text-transform:none}
+.mark i{font-family:var(--f-serif);font-style:italic;font-weight:400;letter-spacing:0;color:var(--lit)}
+nav.tabs{gap:16px}
+nav.tabs button{font-family:var(--f-display);font-weight:500;font-size:16px;letter-spacing:.05em;border:0;border-radius:0;padding:4px 0}
+nav.tabs button[aria-current="true"]{background:none;border:0;color:var(--ink);font-weight:600}
+h1.name{font-family:var(--f-serif);font-weight:600;font-size:40px;line-height:1.05;letter-spacing:-.005em;text-transform:none}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;letter-spacing:.04em;text-transform:none}
+h2 small{font-family:var(--f-serif);font-style:italic;font-size:14px}
+.primer h4,.spin h3,details.allteams summary{font-family:var(--f-display);font-weight:600;letter-spacing:.04em;text-transform:none}
+.eyebrow,h3.sm,.clip .kind,.card80 .kind,form.tlform .kind{font-family:var(--f-display);font-size:13.5px;font-weight:500;letter-spacing:.05em;text-transform:none}
+.card80 .kind small{font-family:var(--f-serif);font-style:italic}
+.bigyear,.prog b,.overall .big b,.yrow .yhead b{font-family:var(--f-serif);font-weight:600;font-variant-numeric:lining-nums tabular-nums}
+.inset .cap,.home-league-mark,.avatar{font-family:var(--f-display);font-weight:600;text-transform:none}
+.inset .cap{letter-spacing:.04em}
+
+/* lists: italic serif ranks and asides, serif numbers, one light rule per row */
+.row .yr{font-family:var(--f-serif);font-style:italic;font-size:14px}
+.row .rn small{font-family:var(--f-serif);font-style:italic;font-size:13.5px}
+.row .meta{font-family:var(--f-serif);font-weight:600;font-size:16px;color:var(--ink);font-variant-numeric:lining-nums tabular-nums}
+.rrow.top .row .yr{color:var(--lit);font-weight:400;font-size:14px}
+.ylink{font-family:var(--f-serif);font-style:italic;font-size:14px}
+.home-years{font-family:var(--f-serif);font-style:italic;font-size:13px}
+
+/* tabs: small caps with a slate underline; counts in italic */
+.rtabs{gap:26px;margin:12px 0 10px}
+.rtabs button{font-family:var(--f-display);font-weight:600;font-size:18px;letter-spacing:.04em;padding:0 0 6px;border-bottom-width:3px}
+.rtabs b{font-family:var(--f-serif);font-style:italic;font-weight:400;font-size:15px;letter-spacing:0;color:var(--lit);margin-left:4px}
+
+/* chips: outlined in slate, filled when chosen */
+.chips{gap:8px}
+.chip{border:1.5px solid var(--lit);background:var(--panel);color:var(--lit);border-radius:6px;padding:3px 11px;font-family:var(--f-serif);font-weight:600;font-size:15px}
+a.chip,button.chip{color:var(--lit)}
+.chip[aria-pressed="true"],a.chip[aria-pressed="true"],button.chip[aria-pressed="true"]{background:var(--lit);border-color:var(--lit);color:var(--bg)}
+.chip.lit{border-color:var(--lit)}
+.decstrip button{font-family:var(--f-serif);font-size:13px}
+.badge{font-family:var(--f-display);font-size:13.5px;letter-spacing:.04em;border-color:var(--rule);border-radius:3px;padding:0 6px}
+.badge.gold{border-color:var(--gold);color:var(--gold)}
+
+/* quieter objects: square-ish corners, no accent rails */
+.btn,.tool,.iconbtn,.pinbtn,.donebtn,.spinbtn,.search input,input.t,select.t,textarea.t,.mapexpand span{border-radius:6px}
+.primer,.spin,.prog div,.overall,.park,.parkbox,.card80,.savebox,.banner,.results,.tl-item,.hero .photo,.video{border-radius:6px}
+.mapbar{border-radius:8px}
+#spin,.spinbtn{border-color:var(--lit);background:none;color:var(--lit)}
+.clip{border-left:2px solid var(--rule);border-radius:0;background:none;padding:4px 0 4px 14px}
+.clip.story,.writeup{font-family:var(--f-serif);font-size:16.5px;line-height:1.6}
+.writeup summary{font-family:var(--f-body)}
+@media (max-width:820px){
+  .mark{font-size:20px}
+  nav.tabs{gap:0}
+  nav.tabs button{font-family:var(--f-body);font-size:11px;letter-spacing:0;font-weight:500}
+  nav.tabs button[aria-current="true"]{color:var(--lit);font-weight:600}
+  h1.name{font-size:34px}
+}

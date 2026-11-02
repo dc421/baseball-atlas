@@ -504,7 +504,7 @@ body.home-zoomed .inset-jp,body.home-zoomed .inset-hi{display:none}
 .home-entry .rn:has(.home-includes){white-space:normal}
 .home-entry .rn .home-includes{font-size:11px;line-height:1.3;overflow-wrap:anywhere}
 
-.home-league-row{background:color-mix(in srgb,var(--league-color) 24%,var(--panel));padding-left:6px;padding-right:6px;border-radius:5px}
+.home-league-row{background:color-mix(in srgb,var(--league-color) 24%,var(--panel));margin:0 -6px;padding-left:6px;padding-right:6px;width:calc(100% + 12px)}
 .home-league-row:hover{background:color-mix(in srgb,var(--league-color) 38%,var(--panel))}
 .home-league-mark{display:grid;place-items:center;background:transparent;color:var(--ink);font-family:var(--f-display);font-size:14px;font-weight:800;opacity:.7}
 

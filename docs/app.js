@@ -1114,10 +1114,10 @@ const pRating = p => p.mr && !p.mr.rel ? `<span class="meta" title="${RATING}">$
 const mainTeam = p => [...(p.st || [])].sort((a, b) => b[4] - a[4])[0]?.[1] || '';
 // the head of all four pages: tabs, then the decade (one row that scrolls sideways on a phone)
 function rkHead(id) {
-  const decs = ['all', ...Array.from({ length: 16 }, (_, i) => String(1870 + 10 * i))], n = x => x.toLocaleString();
-  const tabs = [['rankings', 'Overview'], ['players', 'Players', rkPlayers().length], ['teams', 'Teams', rkTeams().length], ['games', 'Games', rkGames().filter(g => g.rk).length]];
+  const decs = ['all', ...Array.from({ length: 16 }, (_, i) => String(1870 + 10 * i))];
+  const tabs = [['rankings', 'Overview'], ['players', 'Players'], ['teams', 'Teams'], ['games', 'Games']];
   return `${banner()}<h1 class="name">Rankings</h1>
-   <nav class="rtabs">${tabs.map(([k, l, c]) => `<button onclick="go('r_${k}')" aria-current="${k === id}">${l}${c != null ? `<b>${n(c)}</b>` : ''}</button>`).join('')}</nav>
+   <nav class="rtabs">${tabs.map(([k, l]) => `<button onclick="go('r_${k}')" aria-current="${k === id}">${l}</button>`).join('')}</nav>
    <div class="chips rdecs">${decs.map(x => `<button class="chip" aria-pressed="${RB.dec === x}" data-rdec="${x}">${x === 'all' ? 'All time' : decadeName(x)}</button>`).join('')}</div>`;
 }
 const more = (st, left) => left > 0 ? `<button class="btn ghost" id="rkmore" style="margin-top:10px">Show more (${left} left)</button>` : '';

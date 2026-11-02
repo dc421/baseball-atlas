@@ -477,7 +477,7 @@ function decEdges() {
    Each page you open is a browser history entry (state.d = how deep you are, state.sc = where you'd scrolled),
    so the browser's back and forward buttons and swipes work like the ← Back button. */
 let view = { type: 'h', id: 'all' };
-const HOMES = ['map', 'rankings', 'tracker'], LISTS = ['rankings', 'players', 'teams', 'games', 'tracker'];  // the full lists open from Rankings
+const HOMES = ['map', 'rankings', 'tracker'], LISTS = ['players', 'teams', 'games', 'tracker'];  // the full lists open from Rankings
 const homeOf = v => 'hyld'.includes(v.type) ? 'map' : v.type === 'r' ? (v.id === 'tracker' ? 'tracker' : 'rankings') : null;
 const layoutOf = v => 'hyld'.includes(v.type) ? 'map' : v.type === 'r' || v.type === 'g' ? 'list' : 'page';  // game pages: no map
 let lastHome = 'map', lastMap = { type: 'h', id: 'all' }, mapT = null, FULL = false, sizedFor = '';
@@ -487,7 +487,7 @@ const setHash = () => { try { history.replaceState(history.state, '', hashOf(vie
 const depth = () => history.state?.d || 0;
 function viewFromHash() {
   const m = (location.hash || '').slice(1).match(/^([hptgfyardL])-([^?]+)(\?.*)?$/); if (!m) return null;
-  const pk = pageKey(m[1] + '_' + m[2]), v = { type: pk[0], id: pk[0] === 'r' && !LISTS.includes(pk.slice(2)) ? 'rankings' : pk.slice(2) };
+  const pk = pageKey(m[1] + '_' + m[2]), v = { type: pk[0], id: pk[0] === 'r' && !LISTS.includes(pk.slice(2)) ? 'players' : pk.slice(2) };
   if (v.type === 'r' && v.id !== 'tracker') rkApply(v.id, m[3] || '');  // a list's filters ride in the hash
   return v;
 }
@@ -505,6 +505,7 @@ const pageKey = key => {
   if (key.startsWith('t_')) { const t = D.teams[key.slice(2)]; if (t && !t.top) { if (t.fp) return 'f_' + t.fp; if (leagueOf(t)) return 'L_' + t.lg; } }
   if (key.startsWith('y_')) { const y = +key.slice(2); if (y < 1869) return 'd_pre'; if (y > 2025) return 'y_2025'; }
   if (key.startsWith('d_') && +key.slice(2) < 1870) return 'd_pre';
+  if (key.startsWith('r_') && !LISTS.includes(key.slice(2))) return 'r_players';  // Rankings opens on the players
   return key;
 };
 function go(key, push = true) {
@@ -519,8 +520,9 @@ function go(key, push = true) {
 }
 function goHome(h) {
   if (h === 'map') { go('h_all'); return; }
-  go('r_' + h);
-  if (homeScroll[h]) scroller().scrollTop = homeScroll[h];
+  const id = h === 'rankings' ? 'players' : h;
+  go('r_' + id);
+  if (homeScroll[id]) scroller().scrollTop = homeScroll[id];
 }
 const back = () => history.back();
 function onPop(e) {  // the browser moved through history: show that page, scrolled where you left it
@@ -1085,8 +1087,8 @@ function vGame() {
    ${section('Game story', [['Wikipedia', rec?.sto?.url || wikiQ]], gameStory(rec?.sto))}`;
 }
 
-/* ---------------- Rankings: the overview plus players, teams and games ---------------- */
-// one decade for all four pages; each list keeps its own filters. All of it rides in the hash (#r-players?dec=1950&pos=SS),
+/* ---------------- Rankings: players, teams and games ---------------- */
+// one decade for all three pages; each list keeps its own filters. All of it rides in the hash (#r-players?dec=1950&pos=SS),
 // so a filtered list can be bookmarked or sent, and Back steps through filter changes.
 const RB = { dec: 'all' };
 const RK = { players: { f: '', sort: 'rank', pos: 'All', n: 100 }, games: { f: '', sort: 'rank', n: 100 }, teams: { f: '', grp: 'all', n: 100 } };
@@ -1112,32 +1114,17 @@ const rkTeams = () => Object.entries(D.teams).filter(([, t]) => t.tr?.ar <= 156 
 const rkGames = () => Object.values(D.games).filter(g => inDec(g.y));
 const pRating = p => p.mr && !p.mr.rel ? `<span class="meta" title="${RATING}">${fmtR(p.mr.r)}</span>` : '';
 const mainTeam = p => [...(p.st || [])].sort((a, b) => b[4] - a[4])[0]?.[1] || '';
-// the head of all four pages: tabs, then the decade (one row that scrolls sideways on a phone)
+// the head of all three pages: tabs, then the decade (one row that scrolls sideways on a phone)
 function rkHead(id) {
   const decs = ['all', ...Array.from({ length: 16 }, (_, i) => String(1870 + 10 * i))];
-  const tabs = [['rankings', 'Overview'], ['players', 'Players'], ['teams', 'Teams'], ['games', 'Games']];
+  const tabs = [['players', 'Players'], ['teams', 'Teams'], ['games', 'Games']];
   return `${banner()}<h1 class="name">Rankings</h1>
    <nav class="rtabs">${tabs.map(([k, l]) => `<button onclick="go('r_${k}')" aria-current="${k === id}">${l}</button>`).join('')}</nav>
    <div class="chips rdecs">${decs.map(x => `<button class="chip" aria-pressed="${RB.dec === x}" data-rdec="${x}">${x === 'all' ? 'All time' : decadeName(x)}</button>`).join('')}</div>`;
 }
 const more = (st, left) => left > 0 ? `<button class="btn ghost" id="rkmore" style="margin-top:10px">Show more (${left} left)</button>` : '';
-function vRankings() {
-  const d = RB.dec;
-  const row = (key, rank, lead, name, sub, meta, y, top) => `<div class="rrow${top ? ' top' : ''}"><button class="row" onclick="go('${key}')">${lead}<span class="yr">${rank}</span><span class="rn">${name}${sub ? `<small>${sub}</small>` : ''}</span>${meta}</button>${y ? `<button class="ylink" onclick="go('y_${y}')" title="${y} on the map">${y}</button>` : ''}</div>`;
-  const col = (title, n, rows, list) => `<section class="rcol"><h2>${title} <small>${n.toLocaleString()}</small></h2><div class="list">${rows.join('') || `<p class="empty">None from the ${decadeName(d)}.</p>`}</div><button class="btn ghost" onclick="go('r_${list}')">Full list ›</button></section>`;
-  const P = rkPlayers().sort((a, b) => (a[1].ovr || 999) - (b[1].ovr || 999));
-  const T = rkTeams().sort((a, b) => a[1].tr.ar - b[1].tr.ar);
-  const G = rkGames().filter(g => g.rk).sort((a, b) => a.rk - b.rk);
-  return `${rkHead('rankings')}
-   <div class="rcols">
-    ${col('Players', P.length, P.slice(0, 10).map(([k, p], i) => row('p_' + k, '#' + (p.ovr || '?'), avatar(k), esc(nameOf(p)), esc(p.pos), pRating(p), p.pk, i < 3)), 'players')}
-    ${col('Teams', T.length, T.slice(0, 10).map(([tid, t], i) => row('t_' + tid, '#' + t.tr.ar, badgeSm(t), esc(t.n), `${t.w}–${t.l}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ''}`, `<span class="meta">${fmtS(t.tr.a)}</span>`, t.y, i < 3)), 'teams')}
-    ${col('Games', G.length, G.slice(0, 10).map((g, i) => row('g_' + g.id, '#' + g.rk, '', esc(g.gt || g.g), esc(g.d || ''), '', g.y, i < 3)), 'games')}
-   </div>`;
-}
 function vList() {
   if (view.id === 'tracker') return vTracker();
-  if (view.id === 'rankings') return vRankings();
   const h = view.id === 'teams' || view.id === 'games' ? view.id : 'players', st = RK[h], f = st.f.toLowerCase();
   const filter = (ph, extra = '') => `<div class="r" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><input class="t" id="rkfilter" placeholder="${ph}" value="${esc(st.f)}">${extra}</div>`;
   const sortSel = yearLabel => `<select class="t" id="rksort" style="flex:0 0 auto"><option value="rank" ${st.sort === 'rank' ? 'selected' : ''}>List order</option><option value="peak" ${st.sort === 'peak' ? 'selected' : ''}>${yearLabel}</option>${editing() ? `<option value="lit" ${st.sort === 'lit' ? 'selected' : ''}>Drafts first</option>` : ''}</select>`;
@@ -1247,7 +1234,6 @@ function render(newView = true, opts = {}) {
   document.body.classList.remove('lay-map', 'lay-page', 'lay-list'); document.body.classList.add('lay-' + lay);
   if (home) lastHome = home;
   for (const h of HOMES) { const b = $('#home-' + h); b.setAttribute('aria-current', h === home); b.classList.toggle('from', !home && h === lastHome); }
-  document.body.classList.toggle('wide', t === 'r' && view.id === 'rankings');
   panel.innerHTML = (V[t] || vYear)();
   decStrip(); decEdges();
   if (!newView) { scroller().scrollTop = st; for (const [id, v] of Object.entries(drafts)) { const el = document.getElementById(id); if (el && !el.value) el.value = v; } if (active) document.getElementById(active)?.focus(); }

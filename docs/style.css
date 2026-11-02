@@ -48,6 +48,7 @@ main.split{display:grid;grid-template-columns:minmax(0,1fr) min(500px,44vw);min-
 svg#map{width:100%;height:100%;display:block;touch-action:none}
 .land{fill:var(--land);stroke:var(--border);stroke-width:.6;vector-effect:non-scaling-stroke}
 .states{fill:none;stroke:var(--border);stroke-width:.5;vector-effect:non-scaling-stroke}
+.lakes{fill:var(--water);stroke:var(--border);stroke-width:.6;vector-effect:non-scaling-stroke}
 .pin{cursor:pointer}
 .pin circle{transition:fill .3s}
 .route{fill:none;stroke:var(--lit);stroke-opacity:.75}

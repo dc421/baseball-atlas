@@ -9,7 +9,7 @@ const enc = encodeURIComponent;
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
 
 let ROSTERS = null, rosterLoad = null, BOXES = null, boxLoad = null;  // + data/games.json (line scores), on first game page  // data/rosters.json, fetched when a team page first opens
-let D, WORLD, STATES, PHOTOS = {}, PARKS = {}, PARK_LOCATIONS = {}, NOTES = { pre: [], years: {}, decades: {}, players: {} };
+let D, WORLD, STATES, LAKES, PHOTOS = {}, PARKS = {}, PARK_LOCATIONS = {}, NOTES = { pre: [], years: {}, decades: {}, players: {} };
 const LG = { NA: 'National Association', NL: 'National League', AL: 'American League', AA: 'American Association', UA: 'Union Association', PL: "Players' League", FL: 'Federal League', NNL: 'Negro National League', NN2: 'Negro National League (II)', ECL: 'Eastern Colored League', ANL: 'American Negro League', EWL: 'East-West League', NSL: 'Negro Southern League', NAL: 'Negro American League', EAS: 'Eastern independent clubs', WES: 'Western independent clubs', IND: 'Independent clubs', NAC: 'Negro American (Cuban) clubs', INT: 'Interracial independents' };
 const POSP = new Set(['SP', 'RP']);
 const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'SP', 'RP'];
@@ -232,6 +232,7 @@ function sizeMap() {
   gLand.selectAll('*').remove();
   gLand.append('path').datum(LAND).attr('class', 'land').attr('d', path);
   gLand.append('path').datum(topojson.mesh(STATES, STATES.objects.states, (a, b) => a !== b)).attr('class', 'states').attr('d', path);
+  gLand.append('path').datum(LAKES).attr('class', 'lakes').attr('d', path);
 }
 const XY = ll => proj([ll[1], ll[0]]);
 const sc = () => 1 / Math.pow(K, 0.75);
@@ -1333,7 +1334,7 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
 
 /* ================================================================ boot */
 (async function boot() {
-  [D, WORLD, STATES, PHOTOS, PARKS, PARK_LOCATIONS] = await Promise.all([getJSON('data/atlas.json'), getJSON('data/world.json'), getJSON('data/states.json'), getJSON('data/photos.json', {}), getJSON('data/parks.json', {}), getJSON('data/park_locations.json', {})]);
+  [D, WORLD, STATES, LAKES, PHOTOS, PARKS, PARK_LOCATIONS] = await Promise.all([getJSON('data/atlas.json'), getJSON('data/world.json'), getJSON('data/states.json'), getJSON('data/lakes.json', { type: 'FeatureCollection', features: [] }), getJSON('data/photos.json', {}), getJSON('data/parks.json', {}), getJSON('data/park_locations.json', {})]);
   NOTES = { ...NOTES, ...(await getJSON('data/notes.json', {})) };
   const [published, fresh] = await Promise.all([getJSON('data/pages.json', {}), ghPull()]);
   loadStore(published, fresh);

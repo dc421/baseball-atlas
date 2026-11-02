@@ -1108,7 +1108,7 @@ const LGROUP = { AL: 'mlb', NL: 'mlb', NA: 'early', AA: 'early', UA: 'early', PL
 const GROUPS = [['mlb', 'American & National League'], ['early', '19th-century majors & Federal League'], ['negro', 'Negro Leagues'], ['ind', 'Independent clubs']];
 const inDec = y => RB.dec === 'all' || (y != null && decadeOf(+y) === RB.dec);
 const rkPlayers = () => Object.entries(D.players).filter(([, p]) => inDec(p.pk));
-const rkTeams = () => Object.entries(D.teams).filter(([, t]) => t.tr && inDec(t.y));
+const rkTeams = () => Object.entries(D.teams).filter(([, t]) => t.tr?.ar <= 156 && inDec(t.y));  // the top 156 of all time
 const rkGames = () => Object.values(D.games).filter(g => inDec(g.y));
 const pRating = p => p.mr && !p.mr.rel ? `<span class="meta" title="${RATING}">${fmtR(p.mr.r)}</span>` : '';
 const mainTeam = p => [...(p.st || [])].sort((a, b) => b[4] - a[4])[0]?.[1] || '';

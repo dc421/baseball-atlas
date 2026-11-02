@@ -475,7 +475,7 @@ body.lay-list.wide aside.panel{padding-left:max(22px,calc((100% - 1160px)/2));pa
 .rtabs button:hover{color:var(--ink)}
 .rtabs button[aria-current="true"]{color:var(--ink);border-bottom-color:var(--lit)}
 .rdecs{position:relative;margin:0 0 8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-.rdecs .chip{flex:1 0 auto}
+.chips.rdecs{gap:6px}.rdecs .chip{flex:1 0 auto;padding-left:7px;padding-right:7px}
 details.method{margin:2px 0 6px}
 details.method summary{cursor:pointer;font-size:13px;width:max-content}
 details.method summary::marker{color:var(--lit)}

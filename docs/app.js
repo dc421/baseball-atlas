@@ -1136,20 +1136,20 @@ function vList() {
       return `<button class="row" onclick="go('p_${k}')">${avatar(k)}<span class="yr">${esc(rk)}</span><span class="rn">${esc(nameOf(p))}<small>${[esc(mainTeam(p)), p.pk ? 'peak ' + p.pk : ''].filter(Boolean).join(' · ')}</small></span>${pRating(p)}</button>`; }).join('');
     return `${rkHead('players')}
      <div class="chips" style="margin-bottom:8px">${['All', ...POSITIONS].map(p => `<button class="chip" aria-pressed="${st.pos === p}" data-pos="${p}">${p}</button>`).join('')}</div>
-     ${filter('Filter by name…', sortSel('Peak year'))}<div class="list">${rows || '<p class="empty">No one matches.</p>'}</div>${more(st, arr.length - st.n)}`;
+     ${filter('Filter by name…', sortSel('Peak year'))}<div id="rkbody"><div class="list">${rows || '<p class="empty">No one matches.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
   }
   if (h === 'games') {
     const arr = rkGames().filter(g => !f || (g.y + ' ' + g.g + ' ' + (g.gt || '') + ' ' + g.d).toLowerCase().includes(f));
     arr.sort((a, b) => st.sort === 'lit' ? litN('g_' + a.id) - litN('g_' + b.id) || gOrd(a) - gOrd(b) : st.sort === 'peak' ? a.y - b.y : gOrd(a) - gOrd(b));
     return `${rkHead('games')}
-     ${filter('Filter by year, series, description…', sortSel('Year'))}<div class="list">${arr.slice(0, st.n).map(gameRow).join('') || '<p class="empty">No games match.</p>'}</div>${more(st, arr.length - st.n)}`;
+     ${filter('Filter by year, series, description…', sortSel('Year'))}<div id="rkbody"><div class="list">${arr.slice(0, st.n).map(gameRow).join('') || '<p class="empty">No games match.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
   }
   const arr = rkTeams().filter(([, t]) => (st.grp === 'all' || (LGROUP[t.lg] || 'ind') === st.grp) && (!f || (t.y + ' ' + t.n).toLowerCase().includes(f))).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
   return `${rkHead('teams')}
    <details class="method"><summary>How teams are scored</summary><p class="note">Each player’s projected WAR per game for that season, weighted by his games for the team, summed and put on a 162-game scale. That talent, measured against a typical team of its era (a smooth curve over time), makes up 80% of the score; Pythagorean record is 15% and actual record 5% (shrunk toward .500 in short seasons). All three are in wins over an average team per 162, scaled to how spread out teams were in that era.</p></details>
    <div class="chips" style="margin:8px 0">${[['all', 'All'], ...GROUPS].map(([g, l]) => `<button class="chip" aria-pressed="${st.grp === g}" data-grp="${g}">${l}</button>`).join('')}</div>
    ${filter('Filter by year or team name…')}
-   <div class="list">${arr.slice(0, st.n).map(teamRankRow).join('') || '<p class="empty">No teams match.</p>'}</div>${more(st, arr.length - st.n)}`;
+   <div id="rkbody"><div class="list">${arr.slice(0, st.n).map(teamRankRow).join('') || '<p class="empty">No teams match.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
 }
 function badgeSm(t) {
   const logo = logoFor(t), [bg, fg] = teamColors(t);
@@ -1264,9 +1264,12 @@ function wire() {
   document.querySelectorAll('[data-rdec]').forEach(b => b.addEventListener('click', () => { RB.dec = b.dataset.rdec; refilter(true); }));
   const decs = $('.rdecs'), on = decs?.querySelector('[aria-pressed="true"]');
   if (on && decs.scrollWidth > decs.clientWidth) decs.scrollLeft = on.offsetLeft - (decs.clientWidth - on.offsetWidth) / 2;
-  $('#rkmore')?.addEventListener('click', () => { st.n += 100; render(false); });
+  const wireMore = () => $('#rkmore')?.addEventListener('click', () => { st.n += 100; render(false); }); wireMore();
   $('#rksort')?.addEventListener('change', e => { st.sort = e.target.value; refilter(false); });
-  $('#rkfilter')?.addEventListener('input', e => { st.f = e.target.value; clearTimeout(window.__rf); window.__rf = setTimeout(() => refilter(false), 150); });
+  // typing swaps only the list under the box, so the box itself (and its caret) is never rebuilt
+  const relist = () => { if (!st || view.type !== 'r') return; st.n = 100; const tmp = document.createElement('div'); tmp.innerHTML = vList();
+    const body = $('#rkbody'), fresh = tmp.querySelector('#rkbody'); if (body && fresh) { body.replaceWith(fresh); wireMore(); } rkNav(false); };
+  $('#rkfilter')?.addEventListener('input', e => { st.f = e.target.value; clearTimeout(window.__rf); window.__rf = setTimeout(relist, 150); });
   // lock a page (or unlock it); a player page locks with its own copy of the timeline
   document.querySelectorAll('[data-lock]').forEach(b => b.addEventListener('click', () => { TL_EDIT = null;
     mutate(b.dataset.lock, cur => { if (cur.locked) delete cur.locked; else { if (b.dataset.lock.startsWith('p_') && !cur.items) cur.items = seedItems(b.dataset.lock.slice(2)); cur.locked = Date.now(); } }); scheduleSync(0); }));  // locking saves at once

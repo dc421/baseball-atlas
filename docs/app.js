@@ -1129,7 +1129,6 @@ function vRankings() {
   const T = rkTeams().sort((a, b) => a[1].tr.ar - b[1].tr.ar);
   const G = rkGames().filter(g => g.rk).sort((a, b) => a.rk - b.rk);
   return `${rkHead('rankings')}
-   <p class="note">Players, teams and games, each ranked by one model. The year beside a row opens it on the map.</p>
    <div class="rcols">
     ${col('Players', P.length, P.slice(0, 10).map(([k, p], i) => row('p_' + k, '#' + (p.ovr || '?'), avatar(k), esc(nameOf(p)), esc(p.pos), pRating(p), p.pk, i < 3)), 'players')}
     ${col('Teams', T.length, T.slice(0, 10).map(([tid, t], i) => row('t_' + tid, '#' + t.tr.ar, badgeSm(t), esc(t.n), `${t.w}–${t.l}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ''}`, `<span class="meta">${fmtS(t.tr.a)}</span>`, t.y, i < 3)), 'teams')}

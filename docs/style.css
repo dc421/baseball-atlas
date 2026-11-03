@@ -567,10 +567,14 @@ a.chip,button.chip{color:var(--lit)}
   h1.name{font-size:34px}
 }
 
-/* header: a rule sets the two homes off from the wordmark, a hairline between them */
+/* header: the two homes as a small switch in the UI face, so only the wordmark reads as type */
 @media (min-width:821px){
-  nav.tabs{border-left:1px solid var(--rule);padding-left:18px;gap:0}
-  nav.tabs button+button,nav.tabs button+button[aria-current="true"]{margin-left:16px;padding-left:16px;border-left:1px solid var(--line)}
+  nav.tabs{gap:2px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--raise)}
+  nav.tabs button,nav.tabs button[aria-current="true"]{display:inline-flex;align-items:center;gap:7px;padding:5px 13px;border-radius:6px;
+    font-family:var(--f-body);font-size:14px;letter-spacing:0;font-weight:500;color:var(--muted)}
+  nav.tabs button:hover{color:var(--ink)}
+  nav.tabs button[aria-current="true"]{background:var(--bg);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--line),0 1px 2px rgba(0,0,0,.06)}
+  nav.tabs svg{display:block;width:16px;height:16px}
 }
 
 /* player rankings: name, then the career as a sparkline, then the rating; the sparkline drops on narrow screens */

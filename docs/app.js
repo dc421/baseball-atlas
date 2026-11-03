@@ -1114,6 +1114,20 @@ const rkTeams = () => Object.entries(D.teams).filter(([, t]) => t.tr?.ar <= 156 
 const rkGames = () => Object.values(D.games).filter(g => inDec(g.y));
 const pRating = p => p.mr && !p.mr.rel ? `<span class="meta" title="${RATING}">${fmtR(p.mr.r)}</span>` : '';
 const mainTeam = p => [...(p.st || [])].sort((a, b) => b[4] - a[4])[0]?.[1] || '';
+const careerSpan = p => { const s = p.st || [], a = p.arc || [], y0 = s.length ? Math.min(...s.map(x => x[2])) : a[0]?.[0], y1 = s.length ? Math.max(...s.map(x => x[3])) : a.at(-1)?.[0];
+  return y0 == null ? '' : y0 === y1 ? String(y0) : y0 + '–' + y1; };
+// a career in one line: each season's rating on one scale for every row, so heights and lengths compare down the list; the dot is the peak
+function arcSpark(p) {
+  const a = p.arc || [], W = 280, H = 42, TOP = 15, MAX = 10.5; if (!a.length) return '<span></span>';
+  const y0 = a[0][0], step = Math.min(10, (W - 8) / Math.max(1, a.at(-1)[0] - y0));
+  const x = yr => (4 + (yr - y0) * step).toFixed(1), y = r => (H - 2 - (H - 2 - TOP) * Math.max(0, Math.min(r, MAX)) / MAX).toFixed(1);
+  const segs = []; for (const e of a) { const s = segs.at(-1); if (s && e[0] - s.at(-1)[0] === 1) s.push(e); else segs.push([e]); }  // missed seasons break the line
+  const pts = s => s.map(e => x(e[0]) + ' ' + y(e[1])).join('L');
+  const pk = a.find(e => e[0] === +p.pk) || a.reduce((m, e) => e[1] > m[1] ? e : m), px = +x(pk[0]), lx = Math.max(13, Math.min(W - 13, px));
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">${segs.map(s => s.length > 1
+      ? `<path class="a" d="M${x(s[0][0])} ${H - 2}L${pts(s)}L${x(s.at(-1)[0])} ${H - 2}Z"/><path class="l" d="M${pts(s)}"/>` : `<circle r="1.3" cx="${x(s[0][0])}" cy="${y(s[0][1])}"/>`).join('')}
+    <circle r="3" cx="${px}" cy="${y(pk[1])}"/><text x="${lx}" y="${+y(pk[1]) - 6}" text-anchor="middle">${pk[0]}</text></svg>`;
+}
 // the head of all three pages: tabs, then the decade (one row that scrolls sideways on a phone)
 function rkHead(id) {
   const decs = ['all', ...Array.from({ length: 16 }, (_, i) => String(1870 + 10 * i))];
@@ -1133,10 +1147,11 @@ function vList() {
     const byRank = (a, b) => st.pos === 'All' ? (a[1].ovr || 999) - (b[1].ovr || 999) : (typeof a[1].prk === 'number' ? a[1].prk : 999) - (typeof b[1].prk === 'number' ? b[1].prk : 999);
     arr.sort({ rank: byRank, peak: (a, b) => (a[1].pk || 0) - (b[1].pk || 0), lit: (a, b) => litN('p_' + a[0]) - litN('p_' + b[0]) || byRank(a, b) }[st.sort] || byRank);
     const rows = arr.slice(0, st.n).map(([k, p]) => { const rk = st.pos === 'All' ? rankLabel(p) : (typeof p.prk === 'number' ? '#' + p.prk : p.prk || '') + ' ' + p.pos;
-      return `<button class="row" onclick="go('p_${k}')">${avatar(k)}<span class="yr">${esc(rk)}</span><span class="rn">${esc(nameOf(p))}<small>${[esc(mainTeam(p)), p.pk ? 'peak ' + p.pk : ''].filter(Boolean).join(' · ')}</small></span>${pRating(p)}</button>`; }).join('');
+      return `<button class="row prow" onclick="go('p_${k}')">${avatar(k)}<span class="yr">${esc(rk)}</span><span class="rn">${esc(nameOf(p))}<small>${[esc(mainTeam(p)), careerSpan(p)].filter(Boolean).join(' · ')}</small></span>${arcSpark(p)}${pRating(p)}</button>`; }).join('');
+    const cols = `<div class="prow phead"><span></span><span></span><span></span><span class="sh" title="The rating each season; the dot marks the peak">Career</span><span title="${RATING}">Rating</span></div>`;
     return `${rkHead('players')}
      <div class="chips" style="margin-bottom:8px">${['All', ...POSITIONS].map(p => `<button class="chip" aria-pressed="${st.pos === p}" data-pos="${p}">${p}</button>`).join('')}</div>
-     ${filter('Filter by name…', sortSel('Peak year'))}<div id="rkbody"><div class="list">${rows || '<p class="empty">No one matches.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
+     ${filter('Filter by name…', sortSel('Peak year'))}<div id="rkbody"><div class="list">${rows ? cols + rows : '<p class="empty">No one matches.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
   }
   if (h === 'games') {
     const arr = rkGames().filter(g => !f || (g.y + ' ' + g.g + ' ' + (g.gt || '') + ' ' + g.d).toLowerCase().includes(f));
@@ -1324,6 +1339,8 @@ function stopPlay() { if (playT) { clearInterval(playT); playT = null; $('#play'
 
 /* ================================================================ boot */
 (async function boot() {
+  { const v = { type: (location.hash.match(/^#([hptgfyardL])-/) || [])[1] || 'h' }, home = homeOf(v);  // lay the page out from the hash while the data loads
+    document.body.classList.add('lay-' + layoutOf(v)); if (home) $('#home-' + home).setAttribute('aria-current', true); }
   [D, WORLD, STATES, LAKES, PHOTOS, PARKS, PARK_LOCATIONS] = await Promise.all([getJSON('data/atlas.json'), getJSON('data/world.json'), getJSON('data/states.json'), getJSON('data/lakes.json', { type: 'FeatureCollection', features: [] }), getJSON('data/photos.json', {}), getJSON('data/parks.json', {}), getJSON('data/park_locations.json', {})]);
   NOTES = { ...NOTES, ...(await getJSON('data/notes.json', {})) };
   const [published, fresh] = await Promise.all([getJSON('data/pages.json', {}), ghPull()]);

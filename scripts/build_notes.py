@@ -70,13 +70,17 @@ def main():
                                or re.fullmatch(r"(?:[A-Z][\w.'’-]*\.? ?){2,4}", bare)):
                 starts.append((i, 'other', h))  # someone not on your list, or a list header: ends the previous player
     first_year = next(i for i, kind, _ in starts if kind == 'year')
-    out = {'pre': paras(lines[15:first_year]), 'years': {}, 'decades': {}, 'players': {}}
+    out = {'pre': paras(lines[15:first_year]), 'years': {}, 'decades': {}, 'players': {}, 'articles': []}
     for n, (i, kind, ident) in enumerate(starts):
         end = starts[n + 1][0] if n + 1 < len(starts) else len(lines)
         body = paras(lines[i + 1:end])
         if kind == 'player':
             # the doc's tail holds lists and drafts, not bios: stop a player's notes at the next non-player block
-            out['players'].setdefault(ident, []).extend(body)
+            if heading(lines[i]).startswith('COMPLETED'):  # a finished article (**COMPLETED: #2 Babe Ruth**): it alone is his notes
+                out['players'][ident] = body
+                out['articles'].append(ident)
+            elif ident not in out['articles']:
+                out['players'].setdefault(ident, []).extend(body)
         elif kind == 'other':
             continue
         elif kind == 'year':

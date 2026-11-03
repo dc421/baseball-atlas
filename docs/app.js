@@ -9,7 +9,7 @@ const enc = encodeURIComponent;
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
 
 let ROSTERS = null, rosterLoad = null, BOXES = null, boxLoad = null;  // + data/games.json (line scores), on first game page  // data/rosters.json, fetched when a team page first opens
-let D, WORLD, STATES, LAKES, PHOTOS = {}, PARKS = {}, PARK_LOCATIONS = {}, NOTES = { pre: [], years: {}, decades: {}, players: {} };
+let D, WORLD, STATES, LAKES, PHOTOS = {}, PARKS = {}, PARK_LOCATIONS = {}, NOTES = { pre: [], years: {}, decades: {}, players: {}, articles: [] };
 const LG = { NA: 'National Association', NL: 'National League', AL: 'American League', AA: 'American Association', UA: 'Union Association', PL: "Players' League", FL: 'Federal League', NNL: 'Negro National League', NN2: 'Negro National League (II)', ECL: 'Eastern Colored League', ANL: 'American Negro League', EWL: 'East-West League', NSL: 'Negro Southern League', NAL: 'Negro American League', EAS: 'Eastern independent clubs', WES: 'Western independent clubs', IND: 'Independent clubs', NAC: 'Negro American (Cuban) clubs', INT: 'Interracial independents' };
 const POSP = new Set(['SP', 'RP']);
 const POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'SP', 'RP'];
@@ -652,7 +652,7 @@ function gameRow(g) { return `<button class="row" onclick="go('g_${g.id}')"><spa
 const decadeOf = y => y < 1869 ? 'pre' : y === 1869 ? '1870' : String(Math.floor(y / 10) * 10);
 const decadeName = d => d === 'pre' ? '1845–1868' : d + 's';
 function md(s) {  // your doc's text: escape it, then turn [text](url) and bare links into links
-  let h = esc(s).replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, (m, t, u) => `<a href="${u}" target="_blank" rel="noopener">${t}</a>`);
+  let h = esc(s).replace(/\*([^*\s][^*]*?)\*/g, '<em>$1</em>').replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, (m, t, u) => `<a href="${u}" target="_blank" rel="noopener">${t}</a>`);
   return h.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, (m, pre, u) => `${pre}<a href="${u}" target="_blank" rel="noopener">${u.replace(/^https?:\/\/(www\.)?/, '').slice(0, 40)}…</a>`);
 }
 function writeup(paras, open = 2) {  // first paragraphs shown, the rest behind "Keep reading"
@@ -793,13 +793,15 @@ function datedStories(p, y0) {
    Everything on a player page sits at a year: stories, paragraphs from the history doc, photos, video, the scouting card at
    his peak. Items without a year come after the career. seedItems is the draft from the data; the first edit copies it into
    the page's own items (data/pages.json), which win from then on, so refetching stories or media never changes an edited page. */
+const SEASON_LINE = /^(\d{4}) \(([^)]*)\):?\s*(.*)$/;  // "1923 (NYY RF): #1 (best season of all-time) (WS)"
 const ytId = u => (String(u).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/) || [])[1] || (/^[\w-]{11}$/.test(u) ? u : null);
 function seedItems(k) {
+  if (NOTES.articles.includes(k)) return [];  // a finished article prints as written (articleHTML), with nothing added to it
   const p = D.players[k], ss = p.ss || [], y0 = ss.length ? Math.min(...ss.map(r => r[0])) : p.st?.[0]?.[2], pk = p.mr?.pk || p.pk || null;
   const b = p.born ? +p.born.slice(0, 4) : (y0 || 1900) - 25, d = p.died ? +p.died.slice(0, 4) : 2026, yr = t => yearIn(t, b, d);
   const out = datedStories(p, y0).map((o, i) => ({ id: 's' + i, k: 'story', y: o.y, t: o.x[0], u: o.x[1], src: o.x[2] }));
-  const season = /^(\d{4}) \(([^)]*)\):?\s*(.*)$/;  // season lines from the doc sit in the career table; without one they become paragraphs
-  (NOTES.players[k] || []).forEach((x, i) => { const sm = x.match(season); if (sm && ss.length) return;
+  // season lines from the doc sit in the career table; without one they become paragraphs
+  (NOTES.players[k] || []).forEach((x, i) => { const sm = x.match(SEASON_LINE); if (sm && ss.length) return;
     out.push(sm ? { id: 'w' + i, k: 'text', y: +sm[1], t: sm[3] || '' } : { id: 'w' + i, k: 'text', y: yr(x), t: x }); });
   if (CARD.some(([c]) => p.tools?.[c] != null)) out.push({ id: 'card', k: 'card', y: pk });
   const v = (id, x, y) => x && out.push({ id, k: 'video', y, v: x[0], t: x[1], src: x[2] || '', min: x[3] || null });
@@ -877,7 +879,7 @@ function bioHTML(p, k, links, items, ed) {
   const sy = ss.map(r => r[0]), y0 = sy.length ? Math.min(...sy) : p.st?.[0]?.[2], y1 = sy.length ? Math.max(...sy) : p.st?.length ? Math.max(...p.st.map(x => x[3])) : y0;
   const st = sortItems(items), inRun = o => o.y != null && o.y >= y0 && o.y <= y1, one = o => tlItem(o, p, ed);
   const before = st.filter(o => o.y != null && o.y < y0), after = st.filter(o => o.y == null || o.y > y1);
-  if (!ss.length || !(showBat || showPit)) return `${h2}${head}${clubs}${st.map(one).join('')}`;
+  if (!ss.length || !(showBat || showPit)) return `${h2}${head}${articleHTML(k, false)}${clubs}${st.map(one).join('')}`;
   const primP = !showBat || (pitcher && showPit);
   const B = [['G', 0], ['PA', 1], ['R', 3], ['H', 4], ['2B', 5], ['3B', 6], ['HR', 7], ['RBI', 8], ['SB', 9], ['BB', 10], ['SO', 11], ['AVG', 12], ['OBP', 13], ['SLG', 14]];
   const Pc = [['W', 0], ['L', 1], ['ERA', 10], ['G', 2], ['GS', 3], ['SV', 4], ['IP', 5], ['H', 6], ['BB', 7], ['SO', 8], ['HR', 9]];
@@ -895,16 +897,23 @@ function bioHTML(p, k, links, items, ed) {
   const sum = (idx, i) => ss.reduce((t, r) => t + (r[idx] ? +r[idx][i] || 0 : 0), 0);
   const tot = c => primP ? ({ ERA: pit.ERA, IP: pit.IP }[c[0]] ?? sum(4, c[1])) : ({ AVG: bat.AVG, OBP: bat.OBP, SLG: bat.SLG }[c[0]] ?? sum(3, c[1]));
   const tot2 = c => c[1] === -1 ? `${pit.W}–${pit.L}` : primP ? bat[c[0]] : pit[c[0]];
-  return `${h2}${head}${before.map(one).join('')}
+  return `${h2}${head}${articleHTML(k, true)}${before.map(one).join('')}
    <div class="statline"><table class="stats career"><tr><th>Year</th><th>Age</th><th>Team</th><th class="mdl" title="${rel ? 'Per batter faced' : RATING}">Rating</th><th class="mdl">Rk</th>${main.map(c => `<th>${c[0]}</th>`).join('')}${second.map(c => `<th class="sec">${c[0]}</th>`).join('')}</tr>
    ${rows}<tr class="tot"><td>Career</td><td></td><td></td><td class="mdl">${m ? fmt(m.r) : ''}</td><td class="mdl">${m ? '#' + m.rk : ''}</td>${main.map(c => `<td>${tot(c)}</td>`).join('')}${second.map(c => `<td class="sec">${tot2(c)}</td>`).join('')}</tr></table></div>
    ${after.map(one).join('')}`;
+}
+// a finished article from the doc prints whole and in its own order above the career table; its season lines sit in the table
+function articleHTML(k, table) {
+  if (!NOTES.articles.includes(k)) return '';
+  const ps = NOTES.players[k].filter(x => !(table && SEASON_LINE.test(x))), rule = x => /^-{3,}$/.test(x);
+  while (ps.length && rule(ps.at(-1))) ps.pop();
+  return `<div class="writeup article">${ps.map(x => rule(x) ? '<hr>' : `<p>${md(x).replace(/^([A-Z][A-Z /-]+:)/, '<b>$1</b>')}</p>`).join('')}</div>`;
 }
 const ytEmbed = v => v ? `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${esc(v[0])}" title="${esc(v[1])}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
   <p class="note">${esc(v[1])}${v[2] ? ' · ' + esc(v[2]) : ''}${v[3] ? ' · ' + v[3] + ' min' : ''} · <a href="https://www.youtube.com/watch?v=${esc(v[0])}" target="_blank" rel="noopener">Watch on YouTube ↗</a></p>` : '';
 // your doc's lines about a player that start with "YYYY (...)": year -> [what you wrote, the team/position bit]
 function seasonReads(k) {
-  const out = {}; for (const x of NOTES.players[k] || []) { const m = x.match(/^(\d{4}) \(([^)]*)\):?\s*(.*)$/); if (m) out[m[1]] = [m[3] || '', m[2]]; }
+  const out = {}; for (const x of NOTES.players[k] || []) { const m = x.match(SEASON_LINE); if (m) out[m[1]] = [m[3] || '', m[2]]; }
   return out;
 }
 function vTeam() {

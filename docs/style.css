@@ -206,6 +206,8 @@ body.mapfull .maphint{display:block}
 .writeup summary{cursor:pointer;color:var(--lit);font-weight:600;font-size:14px}
 .writeup summary small{color:var(--muted);font-weight:400;margin-left:6px}
 .writeup a,.quick a{color:var(--muted)}
+.writeup hr{width:100%;border:0;border-top:1px solid var(--line);margin:6px 0}
+.writeup.article{margin:12px 0 22px}
 ul.quick{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px;max-width:66ch}
 .years{display:grid;gap:2px}
 .yrow{display:grid;grid-template-columns:34px 150px minmax(0,1fr);gap:4px 14px;padding:8px 0;border-bottom:1px solid var(--line);align-items:start}

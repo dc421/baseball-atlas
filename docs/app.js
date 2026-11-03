@@ -1125,17 +1125,26 @@ const pRating = p => p.mr && !p.mr.rel ? `<span class="meta" title="${RATING}">$
 const mainTeam = p => [...(p.st || [])].sort((a, b) => b[4] - a[4])[0]?.[1] || '';
 const careerSpan = p => { const s = p.st || [], a = p.arc || [], y0 = s.length ? Math.min(...s.map(x => x[2])) : a[0]?.[0], y1 = s.length ? Math.max(...s.map(x => x[3])) : a.at(-1)?.[0];
   return y0 == null ? '' : y0 === y1 ? String(y0) : y0 + '–' + y1; };
-// a career in one line: each season's rating on one scale for every row, so heights and lengths compare down the list; the dot is the peak
-function arcSpark(p) {
-  const a = p.arc || [], W = 280, H = 42, TOP = 15, MAX = 10.5; if (!a.length) return '<span></span>';
-  const y0 = a[0][0], step = Math.min(10, (W - 8) / Math.max(1, a.at(-1)[0] - y0));
-  const x = yr => (4 + (yr - y0) * step).toFixed(1), y = r => (H - 2 - (H - 2 - TOP) * Math.max(0, Math.min(r, MAX)) / MAX).toFixed(1);
+// a career in one line: each season's rating on one scale for every row, so heights and lengths compare down the list; the dot is the peak.
+// Guide lines at 8 and 5 are Baseball-Reference's MVP and All-Star marks (labelled on the first row); team badges sit under each stretch.
+function arcSpark(p, axis) {
+  const a = p.arc || [], W = 280, PW = 234, H = 50, BASE = 46, TOP = 13, MAX = 10.5; if (!a.length) return '<span class="spark"></span>';
+  const y0 = a[0][0], y1 = a.at(-1)[0], step = Math.min(8.2, (PW - 8) / Math.max(1, y1 - y0));
+  const xn = yr => 4 + (Math.max(y0, Math.min(y1, yr)) - y0) * step, x = yr => xn(yr).toFixed(1), y = r => (BASE - (BASE - TOP) * Math.max(0, Math.min(r, MAX)) / MAX).toFixed(1);
+  const st = (p.st || []).filter(s => s[3] >= y0 && s[2] <= y1).sort((m, n) => m[2] - n[2] || m[3] - n[3]), teamIn = yr => [...st].reverse().find(s => s[2] <= yr && yr <= s[3])?.[1] || '';
   const segs = []; for (const e of a) { const s = segs.at(-1); if (s && e[0] - s.at(-1)[0] === 1) s.push(e); else segs.push([e]); }  // missed seasons break the line
   const pts = s => s.map(e => x(e[0]) + ' ' + y(e[1])).join('L');
-  const pk = a.find(e => e[0] === +p.pk) || a.reduce((m, e) => e[1] > m[1] ? e : m), px = +x(pk[0]), lx = Math.max(13, Math.min(W - 13, px));
-  return `<svg class="spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">${segs.map(s => s.length > 1
-      ? `<path class="a" d="M${x(s[0][0])} ${H - 2}L${pts(s)}L${x(s.at(-1)[0])} ${H - 2}Z"/><path class="l" d="M${pts(s)}"/>` : `<circle r="1.3" cx="${x(s[0][0])}" cy="${y(s[0][1])}"/>`).join('')}
-    <circle r="3" cx="${px}" cy="${y(pk[1])}"/><text x="${lx}" y="${+y(pk[1]) - 6}" text-anchor="middle">${pk[0]}</text></svg>`;
+  const pk = a.find(e => e[0] === +p.pk) || a.reduce((m, e) => e[1] > m[1] ? e : m), px = +x(pk[0]), lx = Math.max(13, Math.min(PW - 13, px));
+  const guides = [[8, 'MVP'], [5, 'All-Star']].map(([v, l]) => `<line class="g" x1="0" x2="${PW}" y1="${y(v)}" y2="${y(v)}"/>${axis ? `<text class="gl" x="${PW + 6}" y="${+y(v) + 3}">${l}</text>` : ''}`).join('');
+  const cuts = st.slice(1).map((s, i) => { const prev = st[i][3], cx = prev >= s[2] ? xn(s[2]) : (xn(prev) + xn(s[2])) / 2;  // a mid-season trade splits that season
+    return `<line class="cut" x1="${cx.toFixed(1)}" x2="${cx.toFixed(1)}" y1="${TOP}" y2="${BASE + 4}"/>`; }).join('');
+  const hits = a.map(e => `<rect class="hit" x="${(xn(e[0]) - step / 2).toFixed(1)}" y="0" width="${step.toFixed(1)}" height="${H}"><title>${e[0]} ${esc(teamIn(e[0]))}: ${fmtR(e[1])}, #${e[2]} that season</title></rect>`).join('');
+  const placed = [], badges = [...st].sort((m, n) => n[4] - m[4]).map(s => { const t = D.teams[s[5]], cx = Math.max(8, Math.min(PW - 8, (xn(s[2]) + xn(s[3])) / 2));
+    if (!t || placed.some(o => Math.abs(o - cx) < 17)) return ''; placed.push(cx);
+    return `<span class="stint" style="left:${(cx - 7.5).toFixed(1)}px" title="${esc(s[1])}, ${s[2] === s[3] ? s[2] : s[2] + '–' + s[3]}">${badgeSm(t)}</span>`; }).join('');
+  return `<span class="spark"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${guides}${cuts}${segs.map(s => s.length > 1
+      ? `<path class="a" d="M${x(s[0][0])} ${BASE}L${pts(s)}L${x(s.at(-1)[0])} ${BASE}Z"/><path class="l" d="M${pts(s)}"/>` : `<circle r="1.3" cx="${x(s[0][0])}" cy="${y(s[0][1])}"/>`).join('')}
+    <circle r="3" cx="${px}" cy="${y(pk[1])}"/><text x="${lx}" y="${+y(pk[1]) - 6}" text-anchor="middle">${pk[0]}</text>${hits}</svg>${badges}</span>`;
 }
 // the head of all three pages: tabs, then the decade (one row that scrolls sideways on a phone)
 function rkHead(id) {
@@ -1155,9 +1164,10 @@ function vList() {
     const arr = rkPlayers().filter(([, p]) => (st.pos === 'All' || p.pos === st.pos) && (!f || nameOf(p).toLowerCase().includes(f)));
     const byRank = (a, b) => st.pos === 'All' ? (a[1].ovr || 999) - (b[1].ovr || 999) : (typeof a[1].prk === 'number' ? a[1].prk : 999) - (typeof b[1].prk === 'number' ? b[1].prk : 999);
     arr.sort({ rank: byRank, peak: (a, b) => (a[1].pk || 0) - (b[1].pk || 0), lit: (a, b) => litN('p_' + a[0]) - litN('p_' + b[0]) || byRank(a, b) }[st.sort] || byRank);
-    const rows = arr.slice(0, st.n).map(([k, p]) => { const rk = st.pos === 'All' ? rankLabel(p) : (typeof p.prk === 'number' ? '#' + p.prk : p.prk || '') + ' ' + p.pos;
-      return `<button class="row prow" onclick="go('p_${k}')">${avatar(k)}<span class="yr">${esc(rk)}</span><span class="rn">${esc(nameOf(p))}<small>${[esc(mainTeam(p)), careerSpan(p)].filter(Boolean).join(' · ')}</small></span>${arcSpark(p)}${pRating(p)}</button>`; }).join('');
-    const cols = `<div class="prow phead"><span></span><span></span><span></span><span class="sh" title="The rating each season; the dot marks the peak">Career</span><span title="${RATING}">Rating</span></div>`;
+    const rows = arr.slice(0, st.n).map(([k, p], i) => { const all = st.pos === 'All', rk = all ? p.ovr || (typeof p.prk === 'string' ? p.prk : '') : p.prk ?? '';
+      const pos = all && !p.ovr && typeof p.prk === 'number' ? `#${p.prk} ${p.pos}` : p.pos;  // the rank column is the overall rank; a position rank is spelled out with its position
+      return `<button class="row prow" onclick="go('p_${k}')"><span class="rk">${esc(String(rk))}</span>${avatar(k)}<span class="rn">${esc(nameOf(p))}<small>${[esc(pos), esc(mainTeam(p)), careerSpan(p)].filter(Boolean).join(' · ')}</small></span>${arcSpark(p, i === 0)}${pRating(p)}</button>`; }).join('');
+    const cols = `<div class="prow phead"><span></span><span></span><span></span><span class="sh" title="The rating each season on one scale for every row; the dot marks the peak, the badges the teams">Career</span><span title="${RATING}">Rating</span></div>`;
     return `${rkHead('players')}
      <div class="chips" style="margin-bottom:8px">${['All', ...POSITIONS].map(p => `<button class="chip" aria-pressed="${st.pos === p}" data-pos="${p}">${p}</button>`).join('')}</div>
      ${filter('Filter by name…', sortSel('Peak year'))}<div id="rkbody"><div class="list">${rows ? cols + rows : '<p class="empty">No one matches.</p>'}</div>${more(st, arr.length - st.n)}</div>`;

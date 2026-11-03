@@ -479,7 +479,7 @@ function decEdges() {
 let view = { type: 'h', id: 'all' };
 const HOMES = ['map', 'rankings', 'tracker'], LISTS = ['players', 'teams', 'games', 'tracker'];  // the full lists open from Rankings
 const homeOf = v => 'hyld'.includes(v.type) ? 'map' : v.type === 'r' ? (v.id === 'tracker' ? 'tracker' : 'rankings') : null;
-const layoutOf = v => 'hyld'.includes(v.type) ? 'map' : v.type === 'r' || v.type === 'g' ? 'list' : 'page';  // game pages: no map
+const layoutOf = v => 'hyld'.includes(v.type) ? 'map' : 'rgp'.includes(v.type) ? 'list' : 'page';  // game and player pages: no map
 let lastHome = 'map', lastMap = { type: 'h', id: 'all' }, mapT = null, FULL = false, sizedFor = '';
 const homeScroll = {};
 const hashOf = v => '#' + v.type + '-' + v.id + (v.type === 'r' && v.id !== 'tracker' ? rkQuery(v.id) : '');

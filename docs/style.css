@@ -566,3 +566,9 @@ a.chip,button.chip{color:var(--lit)}
   nav.tabs button[aria-current="true"]{color:var(--lit);font-weight:600}
   h1.name{font-size:34px}
 }
+
+/* header: a rule sets the two homes off from the wordmark, a hairline between them */
+@media (min-width:821px){
+  nav.tabs{border-left:1px solid var(--rule);padding-left:18px;gap:0}
+  nav.tabs button+button,nav.tabs button+button[aria-current="true"]{margin-left:16px;padding-left:16px;border-left:1px solid var(--line)}
+}

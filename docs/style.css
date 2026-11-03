@@ -567,14 +567,14 @@ a.chip,button.chip{color:var(--lit)}
   h1.name{font-size:34px}
 }
 
-/* header: the two homes as a small switch in the UI face, so only the wordmark reads as type */
+/* header: the two homes as tabs whose underline sits on the header's rule, quieter than the wordmark */
 @media (min-width:821px){
-  nav.tabs{gap:2px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--raise)}
-  nav.tabs button,nav.tabs button[aria-current="true"]{display:inline-flex;align-items:center;gap:7px;padding:5px 13px;border-radius:6px;
-    font-family:var(--f-body);font-size:14px;letter-spacing:0;font-weight:500;color:var(--muted)}
+  nav.tabs{align-self:stretch;margin:-8px 0 -9px 14px;gap:26px}
+  nav.tabs button,nav.tabs button[aria-current="true"]{display:flex;align-items:center;padding:2px 1px 0;font-size:14.5px;letter-spacing:.07em;border-bottom:2px solid transparent}
   nav.tabs button:hover{color:var(--ink)}
-  nav.tabs button[aria-current="true"]{background:var(--bg);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--line),0 1px 2px rgba(0,0,0,.06)}
-  nav.tabs svg{display:block;width:16px;height:16px}
+  nav.tabs button[aria-current="true"]{border-bottom-color:var(--lit)}
+  nav.tabs button.from{text-decoration:none;color:var(--ink);border-bottom-color:var(--rule)}
+}
 }
 
 /* player rankings: name, then the career as a sparkline, then the rating; the sparkline drops on narrow screens */

@@ -1125,17 +1125,19 @@ const pRating = p => p.mr && !p.mr.rel ? `<span class="meta" title="${RATING}">$
 const mainTeam = p => [...(p.st || [])].sort((a, b) => b[4] - a[4])[0]?.[1] || '';
 const careerSpan = p => { const s = p.st || [], a = p.arc || [], y0 = s.length ? Math.min(...s.map(x => x[2])) : a[0]?.[0], y1 = s.length ? Math.max(...s.map(x => x[3])) : a.at(-1)?.[0];
   return y0 == null ? '' : y0 === y1 ? String(y0) : y0 + '–' + y1; };
-// a career in one line: each season's rating on one scale for every row, so heights and lengths compare down the list; the dot is the peak.
+// a career in one line: each season's rating on one scale for every row, placed by his age that season (as of June 30, as Baseball-Reference
+// counts it) so everyone's age-27 season lines up down the list; the dot is the peak.
 // One guide line at the Hall line (borderline in, 5.2; labelled on the first row): the line runs dark above it and faint below. Stars are
 // seasons he was #1. Seasons he didn't play (war, injury) or the model didn't rate are a gray dashed bridge, with a gray band where he missed.
 // Team badges sit under each stretch: a return to the same club after a gap is one stretch, and a few games elsewhere in between don't split it.
-const HALL = 5.2; let sparkN = 0;
+const HALL = 5.2, AGE0 = 17, AGE1 = 49, SPW = 234; let sparkN = 0;  // ages past 49 (Paige's one inning at 58) fall off the end
+const birthYr = p => { const b = String(p.born || ''); return b ? +b.slice(0, 4) + (+b.slice(5, 7) > 6 ? 1 : 0) : null; };
 const starPts = (cx, cy, r) => Array.from({ length: 10 }, (_, i) => { const t = Math.PI * i / 5 - Math.PI / 2, d = i % 2 ? r * .45 : r; return (cx + d * Math.cos(t)).toFixed(1) + ',' + (cy + d * Math.sin(t)).toFixed(1); }).join(' ');
 function arcSpark(p, axis) {
   const S = p.st || [], f0 = Math.min(...S.map(s => s[2])), f1 = Math.max(...S.map(s => s[3]));  // the model can rate a year before his debut
-  const a = (p.arc || []).filter(e => !S.length || (e[0] >= f0 && e[0] <= f1)), W = 280, PW = 234, H = 50, BASE = 46, TOP = 13, MAX = 10.5; if (!a.length) return '<span class="spark"></span>';
-  const y0 = a[0][0], y1 = a.at(-1)[0], step = Math.min(8.2, (PW - 8) / Math.max(1, y1 - y0));
-  const xn = yr => 4 + (Math.max(y0, Math.min(y1, yr)) - y0) * step, x = yr => xn(yr).toFixed(1), y = r => (BASE - (BASE - TOP) * Math.max(0, Math.min(r, MAX)) / MAX).toFixed(1);
+  const by = birthYr(p), a = (p.arc || []).filter(e => (!S.length || (e[0] >= f0 && e[0] <= f1)) && (by == null || e[0] - by <= AGE1)), W = 280, PW = SPW, H = 50, BASE = 46, TOP = 13, MAX = 10.5; if (!a.length) return '<span class="spark"></span>';
+  const y0 = a[0][0], y1 = a.at(-1)[0], step = (PW - 8) / (AGE1 - AGE0), b0 = by ?? y0 - 23;  // no birth date: call his first season 23
+  const xn = yr => 4 + (Math.max(y0, Math.min(y1, yr)) - b0 - AGE0) * step, x = yr => xn(yr).toFixed(1), y = r => (BASE - (BASE - TOP) * Math.max(0, Math.min(r, MAX)) / MAX).toFixed(1);
   const raw = S.filter(s => s[3] >= y0 && s[2] <= y1).sort((m, n) => m[2] - n[2] || m[3] - n[3]), teamIn = yr => [...raw].reverse().find(s => s[2] <= yr && yr <= s[3])?.[1] || '';
   const played = yr => !raw.length || raw.some(s => s[2] <= yr && yr <= s[3]);
   const st = []; raw.forEach((s, i) => { const k = st.at(-1);
@@ -1183,7 +1185,7 @@ function vList() {
     const rows = arr.slice(0, st.n).map(([k, p], i) => { const all = st.pos === 'All', rk = all ? p.ovr || (typeof p.prk === 'string' ? p.prk : '') : p.prk ?? '';
       const pos = all && !p.ovr && typeof p.prk === 'number' ? `#${p.prk} ${p.pos}` : p.pos;  // the rank column is the overall rank; a position rank is spelled out with its position
       return `<button class="row prow" onclick="go('p_${k}')"><span class="rk">${esc(String(rk))}</span>${avatar(k)}<span class="rn">${esc(nameOf(p))}<small>${[esc(pos), esc(mainTeam(p)), careerSpan(p)].filter(Boolean).join(' · ')}</small></span>${arcSpark(p, i === 0)}${pRating(p)}</button>`; }).join('');
-    const cols = `<div class="prow phead"><span></span><span></span><span></span><span class="sh" title="The rating each season on one scale for every row; the dot marks the peak, the badges the teams">Career</span><span title="${RATING}">Rating</span></div>`;
+    const cols = `<div class="prow phead"><span></span><span></span><span></span><span class="sh" title="The rating each season by his age that season, on one scale for every row; the dot marks the peak, stars the seasons he was #1, the badges the teams">${[20, 25, 30, 35, 40, 45].map(g => `<i style="left:${(4 + (g - AGE0) * (SPW - 8) / (AGE1 - AGE0)).toFixed(1)}px">${g}</i>`).join('')}<b>Age</b></span><span title="${RATING}">Rating</span></div>`;
     return `${rkHead('players')}
      <div class="chips" style="margin-bottom:8px">${['All', ...POSITIONS].map(p => `<button class="chip" aria-pressed="${st.pos === p}" data-pos="${p}">${p}</button>`).join('')}</div>
      ${filter('Filter by name…', sortSel('Peak year'))}<div id="rkbody"><div class="list">${rows ? cols + rows : '<p class="empty">No one matches.</p>'}</div>${more(st, arr.length - st.n)}</div>`;

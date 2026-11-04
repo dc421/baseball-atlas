@@ -1126,7 +1126,8 @@ const mainTeam = p => [...(p.st || [])].sort((a, b) => b[4] - a[4])[0]?.[1] || '
 const careerSpan = p => { const s = p.st || [], a = p.arc || [], y0 = s.length ? Math.min(...s.map(x => x[2])) : a[0]?.[0], y1 = s.length ? Math.max(...s.map(x => x[3])) : a.at(-1)?.[0];
   return y0 == null ? '' : y0 === y1 ? String(y0) : y0 + '–' + y1; };
 // a career in one line: each season's rating on one scale for every row, so heights and lengths compare down the list; the dot is the peak.
-// Guide lines at 8 and 5 are Baseball-Reference's MVP and All-Star marks (labelled on the first row); team badges sit under each stretch.
+// One guide line at the Hall line (borderline in, 5.2; labelled on the first row): the line runs dark above it and faint below. Team badges sit under each stretch.
+const HALL = 5.2; let sparkN = 0;
 function arcSpark(p, axis) {
   const a = p.arc || [], W = 280, PW = 234, H = 50, BASE = 46, TOP = 13, MAX = 10.5; if (!a.length) return '<span class="spark"></span>';
   const y0 = a[0][0], y1 = a.at(-1)[0], step = Math.min(8.2, (PW - 8) / Math.max(1, y1 - y0));
@@ -1135,7 +1136,7 @@ function arcSpark(p, axis) {
   const segs = []; for (const e of a) { const s = segs.at(-1); if (s && e[0] - s.at(-1)[0] === 1) s.push(e); else segs.push([e]); }  // missed seasons break the line
   const pts = s => s.map(e => x(e[0]) + ' ' + y(e[1])).join('L');
   const pk = a.find(e => e[0] === +p.pk) || a.reduce((m, e) => e[1] > m[1] ? e : m), px = +x(pk[0]), lx = Math.max(13, Math.min(PW - 13, px));
-  const guides = [[8, 'MVP'], [5, 'All-Star']].map(([v, l]) => `<line class="g" x1="0" x2="${PW}" y1="${y(v)}" y2="${y(v)}"/>${axis ? `<text class="gl" x="${PW + 6}" y="${+y(v) + 3}">${l}</text>` : ''}`).join('');
+  const hy = y(HALL), id = 'hall' + ++sparkN, guides = `<clipPath id="${id}"><rect x="-4" y="-4" width="${W + 8}" height="${+hy + 4}"/></clipPath><line class="g" x1="0" x2="${PW}" y1="${hy}" y2="${hy}"/>${axis ? `<text class="gl" x="${PW + 6}" y="${+hy + 3}">Hall</text>` : ''}`;
   const cuts = st.slice(1).map((s, i) => { const prev = st[i][3], cx = prev >= s[2] ? xn(s[2]) : (xn(prev) + xn(s[2])) / 2;  // a mid-season trade splits that season
     return `<line class="cut" x1="${cx.toFixed(1)}" x2="${cx.toFixed(1)}" y1="${TOP}" y2="${BASE + 4}"/>`; }).join('');
   const hits = a.map(e => `<rect class="hit" x="${(xn(e[0]) - step / 2).toFixed(1)}" y="0" width="${step.toFixed(1)}" height="${H}"><title>${e[0]} ${esc(teamIn(e[0]))}: ${fmtR(e[1])}, #${e[2]} that season</title></rect>`).join('');
@@ -1143,7 +1144,8 @@ function arcSpark(p, axis) {
     if (!t || placed.some(o => Math.abs(o - cx) < 17)) return ''; placed.push(cx);
     return `<span class="stint" style="left:${(cx - 7.5).toFixed(1)}px" title="${esc(s[1])}, ${s[2] === s[3] ? s[2] : s[2] + '–' + s[3]}">${badgeSm(t)}</span>`; }).join('');
   return `<span class="spark"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${guides}${cuts}${segs.map(s => s.length > 1
-      ? `<path class="a" d="M${x(s[0][0])} ${BASE}L${pts(s)}L${x(s.at(-1)[0])} ${BASE}Z"/><path class="l" d="M${pts(s)}"/>` : `<circle r="1.3" cx="${x(s[0][0])}" cy="${y(s[0][1])}"/>`).join('')}
+      ? `<path class="a" d="M${x(s[0][0])} ${BASE}L${pts(s)}L${x(s.at(-1)[0])} ${BASE}Z"/><path class="a up" clip-path="url(#${id})" d="M${x(s[0][0])} ${BASE}L${pts(s)}L${x(s.at(-1)[0])} ${BASE}Z"/><path class="l" d="M${pts(s)}"/><path class="l up" clip-path="url(#${id})" d="M${pts(s)}"/>`
+      : `<circle class="${s[0][1] > HALL ? 'up' : 'lo'}" r="1.3" cx="${x(s[0][0])}" cy="${y(s[0][1])}"/>`).join('')}
     <circle r="3" cx="${px}" cy="${y(pk[1])}"/><text x="${lx}" y="${+y(pk[1]) - 6}" text-anchor="middle">${pk[0]}</text>${hits}</svg>${badges}</span>`;
 }
 // the head of all three pages: tabs, then the decade (one row that scrolls sideways on a phone)

@@ -250,6 +250,9 @@ for fr, ps in page_home.items():
 # ---------------------------------------------------------------- players
 Pi = P.set_index('playerID')
 A2 = A.merge(T[['yearID', 'teamID', 'franchID', 'name']], on=['yearID', 'teamID'], how='left')
+# a season's teams in the order he played for them (Batting/Pitching stint), so a mid-season trade reads TEX then DET
+STN = pd.concat([BAT, PIT])[['playerID', 'yearID', 'teamID', 'stint']].groupby(['playerID', 'yearID', 'teamID']).stint.min().reset_index()
+A2 = A2.merge(STN, on=['playerID', 'yearID', 'teamID'], how='left')
 apps = {pid: g for pid, g in A2.groupby('playerID')}
 bat = BAT.groupby('playerID')[['G', 'AB', 'R', 'H', '2B', '3B', 'HR', 'RBI', 'SB', 'BB', 'SO', 'HBP', 'SF']].sum()
 pit = PIT.groupby('playerID')[['W', 'L', 'G', 'GS', 'SV', 'IPOuts', 'H', 'ER', 'BB', 'SO', 'HR']].sum()
@@ -279,7 +282,7 @@ for j, r in IN.iterrows():
         st = []
         g = apps.get(pid)
         if g is not None:
-            for y, yy in g.sort_values(['yearID', 'G_all'], ascending=[True, False]).groupby('yearID'):
+            for y, yy in g.sort_values(['yearID', 'stint', 'G_all'], ascending=[True, True, False], na_position='last').groupby('yearID'):
                 for t in yy.itertuples():
                     tid = tkey.get((t.teamID, int(y)))
                     if tid: roster.setdefault(tid, []).append(key)

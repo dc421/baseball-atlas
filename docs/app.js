@@ -1126,27 +1126,41 @@ const mainTeam = p => [...(p.st || [])].sort((a, b) => b[4] - a[4])[0]?.[1] || '
 const careerSpan = p => { const s = p.st || [], a = p.arc || [], y0 = s.length ? Math.min(...s.map(x => x[2])) : a[0]?.[0], y1 = s.length ? Math.max(...s.map(x => x[3])) : a.at(-1)?.[0];
   return y0 == null ? '' : y0 === y1 ? String(y0) : y0 + '–' + y1; };
 // a career in one line: each season's rating on one scale for every row, so heights and lengths compare down the list; the dot is the peak.
-// One guide line at the Hall line (borderline in, 5.2; labelled on the first row): the line runs dark above it and faint below. Team badges sit under each stretch.
+// One guide line at the Hall line (borderline in, 5.2; labelled on the first row): the line runs dark above it and faint below. Stars are
+// seasons he was #1. Seasons he didn't play (war, injury) or the model didn't rate are a gray dashed bridge, with a gray band where he missed.
+// Team badges sit under each stretch: a return to the same club after a gap is one stretch, and a few games elsewhere in between don't split it.
 const HALL = 5.2; let sparkN = 0;
+const starPts = (cx, cy, r) => Array.from({ length: 10 }, (_, i) => { const t = Math.PI * i / 5 - Math.PI / 2, d = i % 2 ? r * .45 : r; return (cx + d * Math.cos(t)).toFixed(1) + ',' + (cy + d * Math.sin(t)).toFixed(1); }).join(' ');
 function arcSpark(p, axis) {
-  const a = p.arc || [], W = 280, PW = 234, H = 50, BASE = 46, TOP = 13, MAX = 10.5; if (!a.length) return '<span class="spark"></span>';
+  const S = p.st || [], f0 = Math.min(...S.map(s => s[2])), f1 = Math.max(...S.map(s => s[3]));  // the model can rate a year before his debut
+  const a = (p.arc || []).filter(e => !S.length || (e[0] >= f0 && e[0] <= f1)), W = 280, PW = 234, H = 50, BASE = 46, TOP = 13, MAX = 10.5; if (!a.length) return '<span class="spark"></span>';
   const y0 = a[0][0], y1 = a.at(-1)[0], step = Math.min(8.2, (PW - 8) / Math.max(1, y1 - y0));
   const xn = yr => 4 + (Math.max(y0, Math.min(y1, yr)) - y0) * step, x = yr => xn(yr).toFixed(1), y = r => (BASE - (BASE - TOP) * Math.max(0, Math.min(r, MAX)) / MAX).toFixed(1);
-  const st = (p.st || []).filter(s => s[3] >= y0 && s[2] <= y1).sort((m, n) => m[2] - n[2] || m[3] - n[3]), teamIn = yr => [...st].reverse().find(s => s[2] <= yr && yr <= s[3])?.[1] || '';
-  const segs = []; for (const e of a) { const s = segs.at(-1); if (s && e[0] - s.at(-1)[0] === 1) s.push(e); else segs.push([e]); }  // missed seasons break the line
+  const raw = S.filter(s => s[3] >= y0 && s[2] <= y1).sort((m, n) => m[2] - n[2] || m[3] - n[3]), teamIn = yr => [...raw].reverse().find(s => s[2] <= yr && yr <= s[3])?.[1] || '';
+  const played = yr => !raw.length || raw.some(s => s[2] <= yr && yr <= s[3]);
+  const st = []; raw.forEach((s, i) => { const k = st.at(-1);
+    if (k && s[4] < 5 && raw[i + 1]?.[0] === k[0]) return;  // a cameo between two runs with the same club
+    if (k && k[0] === s[0]) { k[3] = Math.max(k[3], s[3]); k[4] += s[4]; } else st.push([...s]); });
+  const segs = []; for (const e of a) { const s = segs.at(-1); if (played(e[0]) && s && e[0] - s.at(-1)[0] === 1) s.push(e); else if (played(e[0])) segs.push([e]); }
   const pts = s => s.map(e => x(e[0]) + ' ' + y(e[1])).join('L');
-  const pk = a.find(e => e[0] === +p.pk) || a.reduce((m, e) => e[1] > m[1] ? e : m), px = +x(pk[0]), lx = Math.max(13, Math.min(PW - 13, px));
-  const hy = y(HALL), id = 'hall' + ++sparkN, guides = `<clipPath id="${id}"><rect x="-4" y="-4" width="${W + 8}" height="${+hy + 4}"/></clipPath><line class="g" x1="0" x2="${PW}" y1="${hy}" y2="${hy}"/>${axis ? `<text class="gl" x="${PW + 6}" y="${+hy + 3}">Hall</text>` : ''}`;
-  const cuts = st.slice(1).map((s, i) => { const prev = st[i][3], cx = prev >= s[2] ? xn(s[2]) : (xn(prev) + xn(s[2])) / 2;  // a mid-season trade splits that season
+  const pk = a.find(e => e[0] === +p.pk && played(e[0])) || a.filter(e => played(e[0])).reduce((m, e) => e[1] > m[1] ? e : m, a[0]), px = +x(pk[0]), lx = Math.max(13, Math.min(PW - 13, px));
+  const hy = y(HALL), id = 'hall' + ++sparkN, guides = `<pattern id="${id}h" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line class="hatch" x1="0" y1="0" x2="0" y2="3"/></pattern><clipPath id="${id}"><rect x="-4" y="-4" width="${W + 8}" height="${+hy + 4}"/></clipPath><line class="g" x1="0" x2="${PW}" y1="${hy}" y2="${hy}"/>${axis ? `<text class="gl" x="${PW + 6}" y="${+hy + 3}">Hall</text>` : ''}`;
+  const out = []; for (let yr = y0; yr <= y1; yr++) if (!played(yr)) { const o = out.at(-1); if (o && o[1] === yr - 1) o[1] = yr; else out.push([yr, yr]); }
+  const bands = out.map(([m, n]) => `<rect class="miss" fill="url(#${id}h)" x="${(xn(m) - step / 2).toFixed(1)}" y="${TOP}" width="${((n - m + 1) * step).toFixed(1)}" height="${BASE - TOP}"><title>${m === n ? m : m + '–' + n}: didn’t play</title></rect>`).join('');
+  const cuts = st.slice(1).filter((s, i) => st[i][3] >= s[2] - 1).map(s => { const prev = st[st.indexOf(s) - 1][3], cx = prev >= s[2] ? xn(s[2]) : (xn(prev) + xn(s[2])) / 2;  // a mid-season trade splits that season
     return `<line class="cut" x1="${cx.toFixed(1)}" x2="${cx.toFixed(1)}" y1="${TOP}" y2="${BASE + 4}"/>`; }).join('');
-  const hits = a.map(e => `<rect class="hit" x="${(xn(e[0]) - step / 2).toFixed(1)}" y="0" width="${step.toFixed(1)}" height="${H}"><title>${e[0]} ${esc(teamIn(e[0]))}: ${fmtR(e[1])}, #${e[2]} that season</title></rect>`).join('');
+  const hits = a.map(e => `<rect class="hit" x="${(xn(e[0]) - step / 2).toFixed(1)}" y="0" width="${step.toFixed(1)}" height="${H}"><title>${e[0]} ${played(e[0]) ? esc(teamIn(e[0])) + ': ' + fmtR(e[1]) + ', #' + e[2] + ' that season' : 'didn’t play'}</title></rect>`).join('');
   const placed = [], badges = [...st].sort((m, n) => n[4] - m[4]).map(s => { const t = D.teams[s[5]], cx = Math.max(8, Math.min(PW - 8, (xn(s[2]) + xn(s[3])) / 2));
     if (!t || placed.some(o => Math.abs(o - cx) < 17)) return ''; placed.push(cx);
     return `<span class="stint" style="left:${(cx - 7.5).toFixed(1)}px" title="${esc(s[1])}, ${s[2] === s[3] ? s[2] : s[2] + '–' + s[3]}">${badgeSm(t)}</span>`; }).join('');
-  return `<span class="spark"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${guides}${cuts}${segs.map(s => s.length > 1
+  const bridge = segs.slice(1).map((s, i) => { const e = segs[i].at(-1), f = s[0];  // across the gap, at his ratings on either side
+    return `<path class="gap" d="M${x(e[0])} ${y(e[1])}L${x(f[0])} ${y(f[1])}"/>`; }).join('');
+  const stars = a.filter(e => e[2] === 1 && played(e[0]) && e !== pk).map(e => `<polygon class="star" points="${starPts(+x(e[0]), +y(e[1]), 3)}"/>`).join('');
+  const peak = pk[2] === 1 ? `<polygon class="star pk" points="${starPts(px, +y(pk[1]), 4.6)}"/>` : `<circle r="3" cx="${px}" cy="${y(pk[1])}"/>`;
+  return `<span class="spark"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${bands}${guides}${cuts}${bridge}${segs.map(s => s.length > 1
       ? `<path class="a" d="M${x(s[0][0])} ${BASE}L${pts(s)}L${x(s.at(-1)[0])} ${BASE}Z"/><path class="a up" clip-path="url(#${id})" d="M${x(s[0][0])} ${BASE}L${pts(s)}L${x(s.at(-1)[0])} ${BASE}Z"/><path class="l" d="M${pts(s)}"/><path class="l up" clip-path="url(#${id})" d="M${pts(s)}"/>`
       : `<circle class="${s[0][1] > HALL ? 'up' : 'lo'}" r="1.3" cx="${x(s[0][0])}" cy="${y(s[0][1])}"/>`).join('')}
-    <circle r="3" cx="${px}" cy="${y(pk[1])}"/><text x="${lx}" y="${+y(pk[1]) - 6}" text-anchor="middle">${pk[0]}</text>${hits}</svg>${badges}</span>`;
+    ${stars}${peak}<text x="${lx}" y="${+y(pk[1]) - 7}" text-anchor="middle">${pk[0]}</text>${hits}</svg>${badges}</span>`;
 }
 // the head of all three pages: tabs, then the decade (one row that scrolls sideways on a phone)
 function rkHead(id) {

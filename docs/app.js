@@ -644,17 +644,19 @@ const section = (title, links = [], body = '', sub = false) => body || editing()
 const banner = () => `<div class="banner" id="dbnote" ${note ? '' : 'hidden'}>${esc(note)}</div>`;
 // unranked games (games.csv extra=1) have pages but no number on the list; they sort after the ranked ones
 const gRank = g => g.rk ? '#' + g.rk : 'Unranked', gOrd = g => g.rk ?? 1e9;
+// series names shortened for the list: ALCS, NLDS, AL Wild Card Game, NNL Championship Series
+const shortSeries = t => t.replace(/^Negro National League /, 'NNL ').replace(/^(American|National) League (Championship|Division) Series/, (_, l, s) => l[0] + 'L' + s[0] + 'S').replace(/^(American|National) League /, (_, l) => l[0] + 'L ');
 // a ranked game with its line score and who won, lost and homered, from the box scores (data/games.json, loaded with the list)
 function gameRankRow(g) {
   const bx = BOXES && BOXES[g.id]?.v ? BOXES[g.id] : null;
-  if (!bx) return `<button class="row grow" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(g.gt || g.g)}${g.vs ? `<small>${esc(g.vs)}</small>` : ''}</span></button>`;
+  if (!bx) return `<button class="row grow" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(shortSeries(g.gt || g.g))}${g.vs ? `<small>${esc(g.vs)}</small>` : ''}</span></button>`;
   const k = Math.max(9, bx.v.inn.length, bx.h.inn.length), last = n => esc(n.split(' ').slice(-1)[0]);
   const hrs = [bx.v, bx.h].flatMap(s => (s.bat || []).filter(b => b[10] > 0).map(b => last(b[0]) + (b[10] > 1 ? ' ' + b[10] : '')));
   const notes = [['W', bx.wp], ['L', bx.lp], ['S', bx.sv]].filter(x => x[1]).map(([l, n]) => `${l}: ${last(n)}`).concat(hrs.length ? ['HR: ' + hrs.join(', ')] : []).join(' · ');
   const cells = s => [...Array(k)].map((_, i) => `<i>${esc(s.inn[i] ?? '')}</i>`).join('');
   const ls = !bx.v.inn.length && !bx.h.inn.length ? '' : `<span class="mls" style="grid-template-columns:auto repeat(${k},1.15em) 1.9em 1.4em 1.4em"><i></i>${[...Array(k)].map((_, i) => `<i class="h">${i + 1}</i>`).join('')}<i class="h r">R</i><i class="h">H</i><i class="h">E</i>
     ${[bx.v, bx.h].map(s => `<i class="t">${esc(s.n)}</i>${cells(s)}<b class="r">${s.r}</b><i>${s.h}</i><i>${s.e}</i>`).join('')}</span>`;
-  return `<button class="row grow" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(g.gt || g.g)}${notes ? `<small>${notes}</small>` : ''}</span>${ls}</button>`;
+  return `<button class="row grow" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(shortSeries(g.gt || g.g))}${notes ? `<small>${notes}</small>` : ''}</span>${ls}</button>`;
 }
 function gameRow(g) { return `<button class="row" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}</span></button>`; }
 

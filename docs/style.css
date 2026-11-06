@@ -610,3 +610,12 @@ a.chip,button.chip{color:var(--lit)}
   .row.prow,.phead{grid-template-columns:26px 38px minmax(0,1fr) auto}
   .prow .spark,.phead .sh{display:none}
 }
+
+/* game rankings: a small line score at the right of each row, under the title on a phone */
+.grow{align-items:center}
+.grow .mls{display:grid;column-gap:2px;row-gap:1px;font-family:var(--f-serif);font-size:13px;font-variant-numeric:lining-nums tabular-nums;color:var(--ink);flex:none}
+.grow .mls i,.grow .mls b{font-style:normal;text-align:center}
+.grow .mls .h{color:var(--muted);font-size:11px}
+.grow .mls .t{text-align:left;padding-right:8px;white-space:nowrap;color:var(--muted)}
+.grow .mls .r{border-left:1px solid var(--line);padding-left:4px}
+@media (max-width:820px){.grow{flex-wrap:wrap}.grow .rn{flex-basis:calc(100% - 86px)}.grow .mls{margin-left:86px;max-width:calc(100% - 86px);overflow-x:auto}}

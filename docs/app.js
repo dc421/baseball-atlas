@@ -644,6 +644,18 @@ const section = (title, links = [], body = '', sub = false) => body || editing()
 const banner = () => `<div class="banner" id="dbnote" ${note ? '' : 'hidden'}>${esc(note)}</div>`;
 // unranked games (games.csv extra=1) have pages but no number on the list; they sort after the ranked ones
 const gRank = g => g.rk ? '#' + g.rk : 'Unranked', gOrd = g => g.rk ?? 1e9;
+// a ranked game with its line score and who won, lost and homered, from the box scores (data/games.json, loaded with the list)
+function gameRankRow(g) {
+  const bx = BOXES && BOXES[g.id]?.v ? BOXES[g.id] : null;
+  if (!bx) return `<button class="row grow" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(g.gt || g.g)}${g.vs ? `<small>${esc(g.vs)}</small>` : ''}</span></button>`;
+  const k = Math.max(9, bx.v.inn.length, bx.h.inn.length), last = n => esc(n.split(' ').slice(-1)[0]);
+  const hrs = [bx.v, bx.h].flatMap(s => (s.bat || []).filter(b => b[10] > 0).map(b => last(b[0]) + (b[10] > 1 ? ' ' + b[10] : '')));
+  const notes = [['W', bx.wp], ['L', bx.lp], ['S', bx.sv]].filter(x => x[1]).map(([l, n]) => `${l}: ${last(n)}`).concat(hrs.length ? ['HR: ' + hrs.join(', ')] : []).join(' · ');
+  const cells = s => [...Array(k)].map((_, i) => `<i>${esc(s.inn[i] ?? '')}</i>`).join('');
+  const ls = !bx.v.inn.length && !bx.h.inn.length ? '' : `<span class="mls" style="grid-template-columns:auto repeat(${k},1.15em) 1.9em 1.4em 1.4em"><i></i>${[...Array(k)].map((_, i) => `<i class="h">${i + 1}</i>`).join('')}<i class="h r">R</i><i class="h">H</i><i class="h">E</i>
+    ${[bx.v, bx.h].map(s => `<i class="t">${esc(s.n)}</i>${cells(s)}<b class="r">${s.r}</b><i>${s.h}</i><i>${s.e}</i>`).join('')}</span>`;
+  return `<button class="row grow" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(g.gt || g.g)}${notes ? `<small>${notes}</small>` : ''}</span>${ls}</button>`;
+}
 function gameRow(g) { return `<button class="row" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}</span></button>`; }
 
 /* ================================================================ views */
@@ -1190,10 +1202,12 @@ function vList() {
      ${filter('Filter by name…', sortSel('Peak year'))}<div id="rkbody"><div class="list">${rows ? cols + rows : '<p class="empty">No one matches.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
   }
   if (h === 'games') {
-    const arr = rkGames().filter(g => !f || (g.y + ' ' + g.g + ' ' + (g.gt || '') + ' ' + g.d).toLowerCase().includes(f));
+    if (!BOXES) boxLoad = boxLoad || getJSON('data/games.json', {}).then(b => { BOXES = b; if (view.type === 'g' || view.type === 'r') render(false); });
+    const hay = g => { const bx = BOXES?.[g.id]; return [g.y, g.g, g.gt, g.d, g.vs, ...(g.nm || []), bx?.wp, bx?.lp, bx?.sv, ...(bx?.v ? [bx.v, bx.h].flatMap(s => (s.bat || []).filter(b => b[10] > 0).map(b => b[0])) : [])].filter(Boolean).join(' ').toLowerCase(); };
+    const arr = rkGames().filter(g => !f || hay(g).includes(f));
     arr.sort((a, b) => st.sort === 'lit' ? litN('g_' + a.id) - litN('g_' + b.id) || gOrd(a) - gOrd(b) : st.sort === 'peak' ? a.y - b.y : gOrd(a) - gOrd(b));
     return `${rkHead('games')}
-     ${filter('Filter by year, series, description…', sortSel('Year'))}<div id="rkbody"><div class="list">${arr.slice(0, st.n).map(gameRow).join('') || '<p class="empty">No games match.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
+     ${filter('Filter by year, series, team, player…', sortSel('Year'))}<div id="rkbody"><div class="list">${arr.slice(0, st.n).map(gameRankRow).join('') || '<p class="empty">No games match.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
   }
   const arr = rkTeams().filter(([, t]) => !f || (t.y + ' ' + t.n).toLowerCase().includes(f)).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
   return `${rkHead('teams')}

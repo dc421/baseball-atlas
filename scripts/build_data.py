@@ -286,12 +286,13 @@ for j, r in IN.iterrows():
                 for t in yy.itertuples():
                     tid = tkey.get((t.teamID, int(y)))
                     if tid: roster.setdefault(tid, []).append(key)
-                    if st and st[-1][0] == t.franchID and st[-1][3] >= y - 1:
+                    fp = t.franchID + '@' + str(teams[tid].get('fp') if tid else '')  # franchise in a city: Brooklyn and Los Angeles are two stints
+                    if st and st[-1][0] == fp and st[-1][3] >= y - 1:
                         st[-1][3] = int(y); st[-1][4] += int(t.G_all or 0)
                     else:
-                        st.append([t.franchID, t.name, int(y), int(y), int(t.G_all or 0), tid, {}])
+                        st.append([fp, t.name, int(y), int(y), int(t.G_all or 0), tid, {}])
                     nm = st[-1][6].setdefault(t.name, [0, tid]); nm[0] += int(t.G_all or 0)
-            for s in st:  # a stint that spans a move (Koufax's Dodgers) goes by the club he played most for there
+            for s in st:  # a stint through a rename (Bees to Braves) goes by the name he played most games under
                 s[1], (_, s[5]) = max(s[6].items(), key=lambda kv: kv[1][0]); s.pop()
         o['st'] = st
         if pid in bat.index and bat.loc[pid, 'AB'] > 0:
@@ -958,9 +959,9 @@ for tid, ks in MANUAL_RO.items():  # and on the hand-entered teams, which also j
     t = teams[tid]; ks = [k for k in ks if k in players]; t['ro'] = ks
     for k in ks:
         st = players[k].setdefault('st', [])
-        run = next((x for x in st if x[0] == t['fr'] and x[3] == t['y'] - 1), None)
+        run = next((x for x in st if x[0] == t['fr'] + '@' + str(t.get('fp') or '') and x[3] == t['y'] - 1), None)
         if run: run[3] = t['y']
-        else: st.append([t['fr'], t['n'], t['y'], t['y'], 0, tid])
+        else: st.append([t['fr'] + '@' + str(t.get('fp') or ''), t['n'], t['y'], t['y'], 0, tid])
         st.sort(key=lambda x: x[2])
 # ---------------------------------------------------------------- managers and executives (franchise pages)
 # managers: each run of seasons with a franchise, with his record there: [name, player key or None, bbref id, y0, y1, W, L]

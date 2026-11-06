@@ -161,7 +161,7 @@ for r in T.itertuples():
     retro_of[tid] = r.teamIDretro or r.teamID
     lg = r.lgID or ('NA' if r.yearID <= 1875 else None)
     teams[tid] = dict(y=int(r.yearID), lg=lg, tm=r.teamID, fr=r.franchID, n=r.name, w=nz(r.W), l=nz(r.L), rs=nz(r.R), ra=nz(r.RA), rk=nz(r.Rank),
-                      pen=1 if r.LgWin == 'Y' else 0, ws=1 if r.WSWin == 'Y' else 0, dv=nz(r.divID), pk=pk, park=nz(r.park),
+                      pen=1 if r.LgWin == 'Y' else 0, ws=1 if r.WSWin == 'Y' else 0, dw=1 if r.DivWin == 'Y' else 0, wc=1 if r.WCWin == 'Y' else 0, dv=nz(r.divID), pk=pk, park=nz(r.park),
                       br=nz(r.teamIDBR), ll=ll, pl=place, ap=ap)
 print('team seasons', len(teams), '| without a location:', sorted({t['n'] for t in teams.values() if not t['ll']}))
 

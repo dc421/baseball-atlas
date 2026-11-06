@@ -619,3 +619,14 @@ a.chip,button.chip{color:var(--lit)}
 .grow .mls .t{text-align:left;padding-right:8px;white-space:nowrap;color:var(--muted)}
 .grow .mls .r{border-left:1px solid var(--line);padding-left:4px}
 @media (max-width:820px){.grow{flex-wrap:wrap}.grow .rn{flex-basis:calc(100% - 86px)}.grow .mls{margin-left:86px;max-width:calc(100% - 86px);overflow-x:auto}}
+
+/* team rankings: rank, badge, name with record and postseason, then talent / Pythagorean / actual as winning percentages and the score */
+.row.trow,.trow.phead{display:grid;grid-template-columns:30px 38px minmax(0,1fr) 48px 48px 48px 52px;gap:0 12px;align-items:center}
+.trow .rk{font-family:var(--f-serif);font-weight:600;font-size:17px;color:var(--muted);text-align:right;font-variant-numeric:lining-nums tabular-nums}
+.trow .pc{font-family:var(--f-serif);font-size:14px;color:var(--muted);text-align:right;font-variant-numeric:lining-nums tabular-nums}
+.trow.phead span:nth-child(n+4){text-align:right}
+.trow .rn .badge{font-style:normal;margin-left:4px}
+@media (max-width:700px){
+  .row.trow,.trow.phead{grid-template-columns:26px 38px minmax(0,1fr) 52px}
+  .trow .pc,.trow.phead span:nth-child(n+4):not(:last-child){display:none}
+}

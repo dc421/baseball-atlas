@@ -548,7 +548,7 @@ function cardHTML(p) {
 }
 /* ================================================================ the rating model
    One rating for players: projected WAR per 150 games, era-adjusted before the war (scripts/build_data.py).
-   Team scores are wins over an average team. Relievers keep a per-batter rate. */
+   Team scores are era-adjusted winning percentages. Relievers keep a per-batter rate. */
 const TIERS = [[6.225, 'All-timer'], [5.64, 'Safely in'], [5.19, 'Borderline in'], [4.74, 'Borderline out'], [-Infinity, 'Out']];
 const tierOf = s => TIERS.find(t => s > t[0])[1];
 const fmtS = s => (s > 0 ? '+' : '') + s.toFixed(1);
@@ -944,8 +944,8 @@ function vTeam() {
    <div class="hero">${teamBadge(t)}<div class="who"><div class="eyebrow">${leagueOf(t) ? `<a href="#" onclick="go('L_${t.lg}');return false">${esc(LG[t.lg] || t.lg)}</a>` : esc(LG[t.lg] || t.lg)}${t.dv ? ' · ' + esc(t.dv) + ' division' : ''}</div>
    <div style="display:flex;align-items:center;gap:8px">${prev ? `<button class="iconbtn" onclick="go('t_${prev}')" aria-label="Previous season">‹</button>` : ''}<h1 class="name" style="margin:0">${t.y} ${esc(t.n)}</h1>${next ? `<button class="iconbtn" onclick="go('t_${next}')" aria-label="Next season">›</button>` : ''}</div></div></div>
    <div class="sub" style="margin-top:8px"><span><b>${t.w ?? '?'}–${t.l ?? '?'}</b></span>${t.rk ? `<span>finished <b>${ordinal(t.rk)}</b></span>` : ''}${t.ws ? '<span class="badge gold">World Series champions</span>' : t.pen ? '<span class="badge gold">Pennant</span>' : ''}${t.pl?.c ? `<span>${esc([t.pl.c, t.pl.n !== 'United States' ? t.pl.n : t.pl.r].filter(Boolean).join(', '))}</span>` : ''}<span><a href="#" onclick="go('y_${t.y}');return false">The ${t.y} season</a></span></div>
-   ${t.tr ? `<h2>By the model <small>talent and results</small></h2><div class="sub" style="margin-top:0"><span><b>${fmtS(t.tr.a)}</b> wins over an average team</span><span><b>#${t.tr.yr}</b> of ${t.tr.n} in ${t.y}</span><span><b>#${t.tr.ar}</b> all-time</span></div>
-   <p class="note">Per 162 games: talent ${fmtS(t.tr.tal)} (80%), Pythagorean record ${fmtS(t.tr.py)} (15%), actual record ${fmtS(t.tr.wp)} (5%)${t.w + t.l < 150 ? ', records shrunk toward .500 for the short season' : ''}.</p>
+   ${t.tr ? `<h2>By the model <small>talent and results</small></h2><div class="sub" style="margin-top:0"><span><b>${fmtP(t.tr.a)}</b> score</span><span><b>#${t.tr.yr}</b> of ${t.tr.n} in ${t.y}</span><span><b>#${t.tr.ar}</b> all-time</span></div>
+   <p class="note">As winning percentages, era-adjusted: talent ${fmtP(t.tr.tal)} (80%), Pythagorean record ${fmtP(t.tr.py)} (15%), actual record ${fmtP(t.tr.wp)} (5%)${t.w + t.l < 150 ? ', records shrunk toward .500 for the short season' : ''}.</p>
    <p class="note">${t.tr.v} projected WAR per 162: ${t.tr.h} from position players, ${t.tr.p} from pitchers. Most of it from ${t.tr.top.map(e => `${e[1] ? `<a href="#" onclick="go('p_${e[1]}');return false">${esc(e[0])}</a>` : esc(e[0])}${e[2] != null ? ` (<span title="${RATING}">${fmtR(e[2])}</span>)` : ''}`).join(', ')}.</p>` : ''}
    ${park || t.park ? `<h2>Ballpark</h2><div class="parkbox"><b>${esc(park ? park.n : t.park)}</b>${park ? ` · ${esc(park.c)} · used ${park.y0}–${park.y1}${park.al ? `<div class="note">Also called ${esc(park.al)}</div>` : ''}${park.note ? `<div class="note">Note: ${esc(park.note)}</div>` : ''}` : (t.ap ? ' <span class="note">(map pin at the city)</span>' : '')}</div>` : ''}
    <h2>From the list <small>${ro.length} on this roster${t.ros ? ', best rating first' : ''}</small></h2>${ro.length ? `<div class="chips">${ro.map(k => t.ros && k in t.ros ? playerChip(k).replace('</button>', ` <span class="k" title="${RATING}">${fmtR(t.ros[k])}</span></button>`) : playerChip(k)).join('')}</div>` : '<p class="empty">Nobody from the list played here this year.</p>'}
@@ -961,7 +961,7 @@ function vFranchise() {
   const W = ts.reduce((a, [, x]) => a + (x.w || 0), 0), Lo = ts.reduce((a, [, x]) => a + (x.l || 0), 0), pens = ts.filter(([, x]) => x.pen).length, wss = ts.filter(([, x]) => x.ws).length;
   const rated = ts.filter(([, x]) => x.tr).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
   const mine = [...new Set(ts.flatMap(([, x]) => x.ro || []))].filter(k => D.players[k]).sort((a, b) => (D.players[a].ovr || 999) - (D.players[b].ovr || 999));
-  const season = ([tid, x]) => `<tr><td><a href="#" onclick="go('t_${tid}');return false">${x.y}</a></td><td class="nm">${esc(x.n)}</td><td>${x.w != null ? `${x.w}–${x.l}` : ''}</td><td>${x.rk ? ordinal(x.rk) : ''}</td><td>${x.ws ? 'WS' : x.pen ? 'Pennant' : ''}</td><td>${x.tr ? fmtS(x.tr.a) : ''}</td><td>${x.tr ? '#' + x.tr.ar : ''}</td><td>${x.top ? '★' : ''}</td></tr>`;
+  const season = ([tid, x]) => `<tr><td><a href="#" onclick="go('t_${tid}');return false">${x.y}</a></td><td class="nm">${esc(x.n)}</td><td>${x.w != null ? `${x.w}–${x.l}` : ''}</td><td>${x.rk ? ordinal(x.rk) : ''}</td><td>${x.ws ? 'WS' : x.pen ? 'Pennant' : ''}</td><td>${x.tr ? fmtP(x.tr.a) : ''}</td><td>${x.tr ? '#' + x.tr.ar : ''}</td><td>${x.top ? '★' : ''}</td></tr>`;
   return `${crumbs('Franchise', key)}${banner()}
    <div class="hero">${teamBadge(last)}<div class="who"><div class="eyebrow">Franchise · ${first.y}${last.y !== first.y ? '–' + last.y : ''}</div><h1 class="name">${esc(fr.n)}</h1></div></div>
    <div class="sub" style="margin-top:8px"><span><b>${ts.length}</b> season${ts.length > 1 ? 's' : ''}</span>${W + Lo ? `<span><b>${W}–${Lo}</b> all-time</span>` : ''}${pens ? `<span><b>${pens}</b> pennant${pens > 1 ? 's' : ''}</span>` : ''}${wss ? `<span><b>${wss}</b> World Series</span>` : ''}</div>
@@ -971,7 +971,7 @@ function vFranchise() {
    ${mine.length ? `<h2>From the list <small>${mine.length} played here</small></h2><div class="chips">${mine.map(playerChip).join('')}</div>` : ''}
    ${managersHTML(fr.mg)}
    ${fr.ex ? `<h2>Front office <small>from Wikipedia</small></h2><div class="execs">${[['own', 'Principal owners'], ['gm', 'General managers']].filter(([k]) => fr.ex[k]).map(([k, l]) => `<div><h3 class="sm">${l}</h3>${execRows(fr.ex[k])}</div>`).join('')}</div>` : ''}
-   <h2>Every season</h2><div class="statline"><table class="stats roster fr"><tr><th>Year</th><th class="nm">Team</th><th>W–L</th><th>Finish</th><th></th><th title="The model, wins over an average team">Score</th><th>Rank</th><th title="Best team that season (tracked)">★</th></tr>${ts.map(season).join('')}</table></div>`;
+   <h2>Every season</h2><div class="statline"><table class="stats roster fr"><tr><th>Year</th><th class="nm">Team</th><th>W–L</th><th>Finish</th><th></th><th title="The model, as an era-adjusted winning percentage">Score</th><th>Rank</th><th title="Best team that season (tracked)">★</th></tr>${ts.map(season).join('')}</table></div>`;
 }
 // a home park: Wikipedia photo, its dimensions diagram (or a field drawn from the infobox distances), years here
 const wpFile = f => 'https://en.wikipedia.org/wiki/File:' + enc(f);

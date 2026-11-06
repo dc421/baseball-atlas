@@ -560,9 +560,13 @@ function modelList(lst, start = 0, rel = false) {
     const inner = `${k ? avatar(k) : '<span class="avatar">·</span>'}<span class="yr">${rel ? 'RP' : `#${i + 1 + start} ${esc(pos || '')}`}</span><span class="rn">${esc(nm)}${tm ? `<small>${esc(tm)}</small>` : ''}</span><span class="meta">${rel ? '' : `<span title="${RATING}">${fmtR(s)}</span>`}</span>`;
     return k ? `<button class="row" onclick="go('p_${k}')">${inner}</button>` : tid ? `<button class="row" onclick="go('t_${tid}')">${inner}</button>` : `<div class="row" style="cursor:default">${inner}</div>`; }).join('')}</div>`;
 }
+// the model's wins above an average team per 162, read as a winning percentage
+const fmtP = a => (.5 + a / 162).toFixed(3).replace(/^0/, '');
+const postBadge = t => t.ws ? '<span class="badge gold">World Series</span>' : t.pen ? '<span class="badge gold">Pennant</span>' : t.dw ? '<span class="badge">Division</span>' : t.wc ? '<span class="badge">Wild card</span>' : '';
+const teamRankHead = () => `<div class="trow phead"><span></span><span></span><span></span><span title="Roster talent: projected WAR against a typical team of the era">Talent</span><span title="Pythagorean record, from runs scored and allowed">Pyth</span><span title="Actual record">W%</span><span title="80% talent, 15% Pythagorean, 5% actual">Score</span></div>`;
 function teamRankRow([tid, t], i, all = true) {
   const r = t.tr;
-  return `<button class="row" onclick="go('t_${tid}')">${badgeSm(t)}<span class="yr">#${all ? r.ar : r.yr}</span><span class="rn">${t.y} ${esc(t.n)}<small>${t.w}–${t.l}${t.ws ? ' · won the World Series' : t.pen ? ' · pennant' : ''} · ${r.v} projected WAR${all ? ` · #${r.yr} of ${r.n} in ${t.y}` : ''}</small></span><span class="meta">${fmtS(r.a)}</span></button>`;
+  return `<button class="row trow" onclick="go('t_${tid}')"><span class="rk">${all ? r.ar : r.yr}</span>${badgeSm(t)}<span class="rn">${t.y} ${esc(t.n)}<small>${t.w}–${t.l}${all ? ` · #${r.yr} of ${r.n} in ${t.y}` : ''} ${postBadge(t)}</small></span>${[r.tal, r.py, r.wp].map(x => `<span class="pc">${fmtP(x)}</span>`).join('')}<span class="meta">${fmtP(r.a)}</span></button>`;
 }
 function rosterHTML(tid) {
   if (!ROSTERS) {
@@ -646,13 +650,13 @@ const banner = () => `<div class="banner" id="dbnote" ${note ? '' : 'hidden'}>${
 const gRank = g => g.rk ? '#' + g.rk : 'Unranked', gOrd = g => g.rk ?? 1e9;
 // series names shortened for the list: ALCS, NLDS, AL Wild Card Game, NNL Championship Series
 const shortSeries = t => t.replace(/^Negro National League /, 'NNL ').replace(/^(American|National) League (Championship|Division) Series/, (_, l, s) => l[0] + 'L' + s[0] + 'S').replace(/^(American|National) League /, (_, l) => l[0] + 'L ');
-// a ranked game with its line score and who won, lost and homered, from the box scores (data/games.json, loaded with the list)
+// a ranked game with its line score, the series standing after it, and who won, lost and homered, from the box scores (data/games.json, loaded with the list)
 function gameRankRow(g) {
   const bx = BOXES && BOXES[g.id]?.v ? BOXES[g.id] : null;
   if (!bx) return `<button class="row grow" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(shortSeries(g.gt || g.g))}${g.vs ? `<small>${esc(g.vs)}</small>` : ''}</span></button>`;
   const k = Math.max(9, bx.v.inn.length, bx.h.inn.length), last = n => esc(n.split(' ').slice(-1)[0]);
   const hrs = [bx.v, bx.h].flatMap(s => (s.bat || []).filter(b => b[10] > 0).map(b => last(b[0]) + (b[10] > 1 ? ' ' + b[10] : '')));
-  const notes = [['W', bx.wp], ['L', bx.lp], ['S', bx.sv]].filter(x => x[1]).map(([l, n]) => `${l}: ${last(n)}`).concat(hrs.length ? ['HR: ' + hrs.join(', ')] : []).join(' · ');
+  const notes = (bx.ser ? [esc(bx.ser[0])] : []).concat([['W', bx.wp], ['L', bx.lp], ['S', bx.sv]].filter(x => x[1]).map(([l, n]) => `${l}: ${last(n)}`)).concat(hrs.length ? ['HR: ' + hrs.join(', ')] : []).join(' · ');
   const cells = s => [...Array(k)].map((_, i) => `<i>${esc(s.inn[i] ?? '')}</i>`).join('');
   const ls = !bx.v.inn.length && !bx.h.inn.length ? '' : `<span class="mls" style="grid-template-columns:auto repeat(${k},1.15em) 1.9em 1.4em 1.4em"><i></i>${[...Array(k)].map((_, i) => `<i class="h">${i + 1}</i>`).join('')}<i class="h r">R</i><i class="h">H</i><i class="h">E</i>
     ${[bx.v, bx.h].map(s => `<i class="t">${esc(s.n)}</i>${cells(s)}<b class="r">${s.r}</b><i>${s.h}</i><i>${s.e}</i>`).join('')}</span>`;
@@ -747,7 +751,7 @@ function vYear() {
   <div class="sub" style="margin-top:4px"><span><b>${nClubs}</b> clubs</span>${editing() ? `<span><b>${tms.filter(([tid]) => litN('t_' + tid)).length}</b> locked</span>` : ''}${lgs.length ? `<span>${lgs.map(l => esc(l)).join(' · ')}</span>` : ''}</div>
   ${ws.length || pen.length ? `<h2>Champions</h2><div class="list">${[...ws, ...pen].map(champ).join('')}</div>` : ''}
   ${nClubs ? `<h2>Clubs <small>${nClubs}, by league</small></h2>${clubsHTML(y, tms)}<p class="note"><a href="#" onclick="go('h_all');return false">Every franchise ›</a></p>` : ''}
-  ${tms.some(([, t]) => t.tr) ? `<h2>Teams by the model <small>talent and results</small></h2><div class="list">${tms.filter(([, t]) => t.tr).sort((a, b) => a[1].tr.yr - b[1].tr.yr).slice(0, 8).map((e, i) => teamRankRow(e, i, false)).join('')}</div>` : ''}
+  ${tms.some(([, t]) => t.tr) ? `<h2>Teams by the model <small>talent and results</small></h2><div class="list">${teamRankHead()}${tms.filter(([, t]) => t.tr).sort((a, b) => a[1].tr.yr - b[1].tr.yr).slice(0, 8).map((e, i) => teamRankRow(e, i, false)).join('')}</div>` : ''}
   ${mH.length ? `<h2>Top 5 <small>position players</small></h2>${modelList(mH.slice(0, 5))}` : ''}
   ${mP.length ? `<h2>Top 5 <small>pitchers</small></h2>${modelList(mP.slice(0, 5))}${yd.mRP ? modelList([yd.mRP], 0, true) : ''}` : ''}
   ${mH.length > 5 || mP.length > 5 ? `<details class="allteams"><summary>The next five</summary>
@@ -963,7 +967,7 @@ function vFranchise() {
    <div class="sub" style="margin-top:8px"><span><b>${ts.length}</b> season${ts.length > 1 ? 's' : ''}</span>${W + Lo ? `<span><b>${W}–${Lo}</b> all-time</span>` : ''}${pens ? `<span><b>${pens}</b> pennant${pens > 1 ? 's' : ''}</span>` : ''}${wss ? `<span><b>${wss}</b> World Series</span>` : ''}</div>
    <h2>Names and homes</h2><div class="list">${eras.map(e => `<button class="row" onclick="go('t_${e.tid}')"><span class="yr">${e.y0}${e.y1 !== e.y0 ? '–' + e.y1 : ''}</span><span class="rn">${esc(e.n)}${e.c ? `<small>${esc(e.c)}</small>` : ''}</span></button>`).join('')}</div>
    ${(fr.pk || []).length ? `<h2>Ballparks <small>photos and diagrams from Wikipedia; hover for credits</small></h2><div class="parks">${fr.pk.map(parkCard).join('')}</div>` : ''}
-   ${rated.length ? `<h2>Best seasons <small>by the model</small></h2><div class="list">${rated.slice(0, 8).map(teamRankRow).join('')}</div>` : ''}
+   ${rated.length ? `<h2>Best seasons <small>by the model</small></h2><div class="list">${teamRankHead()}${rated.slice(0, 8).map(teamRankRow).join('')}</div>` : ''}
    ${mine.length ? `<h2>From the list <small>${mine.length} played here</small></h2><div class="chips">${mine.map(playerChip).join('')}</div>` : ''}
    ${managersHTML(fr.mg)}
    ${fr.ex ? `<h2>Front office <small>from Wikipedia</small></h2><div class="execs">${[['own', 'Principal owners'], ['gm', 'General managers']].filter(([k]) => fr.ex[k]).map(([k, l]) => `<div><h3 class="sm">${l}</h3>${execRows(fr.ex[k])}</div>`).join('')}</div>` : ''}
@@ -1058,7 +1062,7 @@ function vLeague() {
    ${subs.length ? `<div class="list" style="margin-top:12px">${subs.map(x => `<div class="row" style="cursor:default"><span class="yr">${yrs(x.y0, x.y1)}</span><span class="rn">${esc(x.n)}${x.note ? `<small>${esc(x.note)}</small>` : ''}</span></div>`).join('')}</div>` : ''}
    ${nApprox ? `<p class="note">${nApprox} season${nApprox > 1 ? 's are' : ' is'} approximate: no standings survive in the sources used, so the clubs come from club histories.</p>` : ''}
    <h2>From the list <small>${players.length} played in it</small></h2>${players.length ? `<div class="list">${players.map(([k, x]) => `<button class="row" onclick="go('p_${k}')">${avatar(k)}<span class="yr">${esc(rankLabel(D.players[k]))}</span><span class="rn">${esc(nameOf(D.players[k]))}<small>${yrs(x.y0, x.y1)} · ${esc([...x.tm].join(', '))}</small></span></button>`).join('')}</div>` : '<p class="empty">Nobody from the list played in it.</p>'}
-   ${rated.length ? `<h2>Best teams <small>by the model</small></h2><div class="list">${rated.slice(0, 8).map(teamRankRow).join('')}</div>` : ''}
+   ${rated.length ? `<h2>Best teams <small>by the model</small></h2><div class="list">${teamRankHead()}${rated.slice(0, 8).map(teamRankRow).join('')}</div>` : ''}
    <h2>Clubs <small>${clubs.size}</small></h2><div class="list">${clubRows.map(c => { const inner = `<span class="yr">${yrs(Math.min(...c.ys), Math.max(...c.ys))}</span><span class="rn">${esc(c.n)}<small>${[c.city, `${c.ys.length} season${c.ys.length > 1 ? 's' : ''}`, c.fp ? 'franchise page ›' : ''].filter(Boolean).map(esc).join(' · ')}</small></span>`;
      return c.fp ? `<button class="row" onclick="go('f_${c.fp}')">${c.tid ? badgeSm(D.teams[c.tid]) : ''}${inner}</button>` : `<div class="row" style="cursor:default">${c.tid ? badgeSm(D.teams[c.tid]) : ''}${inner}</div>`; }).join('')}</div>
    ${(lg.also || []).length ? `<h2>Also on this page</h2><div class="list">${lg.also.map(a => `<div class="row" style="cursor:default"><span class="yr">${a[0]}</span><span class="rn">${esc(a[1])}<small>${[a[2], a[5].map(k => nameOf(D.players[k])).join(', ')].filter(Boolean).map(esc).join(' · ')}</small></span></div>`).join('')}</div>` : ''}
@@ -1213,9 +1217,9 @@ function vList() {
   }
   const arr = rkTeams().filter(([, t]) => !f || (t.y + ' ' + t.n).toLowerCase().includes(f)).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
   return `${rkHead('teams')}
-   <details class="method"><summary>How teams are scored</summary><p class="note">Each player’s projected WAR per game for that season, weighted by his games for the team, summed and put on a 162-game scale. That talent, measured against a typical team of its era (a smooth curve over time), makes up 80% of the score; Pythagorean record is 15% and actual record 5% (shrunk toward .500 in short seasons). All three are in wins over an average team per 162, scaled to how spread out teams were in that era.</p></details>
+   <details class="method"><summary>How teams are scored</summary><p class="note">Each player’s projected WAR per game for that season, weighted by his games for the team, summed and put on a 162-game scale. That talent, measured against a typical team of its era (a smooth curve over time), makes up 80% of the score; Pythagorean record is 15% and actual record 5% (shrunk toward .500 in short seasons). Each is shown as a winning percentage: .500 plus its wins over an average team per 162 games, scaled to how spread out teams were in that era.</p></details>
    ${filter('Filter by year or team name…')}
-   <div id="rkbody"><div class="list">${arr.slice(0, st.n).map(teamRankRow).join('') || '<p class="empty">No teams match.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
+   <div id="rkbody"><div class="list">${arr.length ? teamRankHead() + arr.slice(0, st.n).map(teamRankRow).join('') : '<p class="empty">No teams match.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
 }
 function badgeSm(t) {
   const logo = logoFor(t), [bg, fg] = teamColors(t);

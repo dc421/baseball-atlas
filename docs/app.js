@@ -650,17 +650,19 @@ const banner = () => `<div class="banner" id="dbnote" ${note ? '' : 'hidden'}>${
 const gRank = g => g.rk ? '#' + g.rk : 'Unranked', gOrd = g => g.rk ?? 1e9;
 // series names shortened for the list: ALCS, NLDS, AL Wild Card Game, NNL Championship Series
 const shortSeries = t => t.replace(/^Negro National League /, 'NNL ').replace(/^(American|National) League (Championship|Division) Series/, (_, l, s) => l[0] + 'L' + s[0] + 'S').replace(/^(American|National) League /, (_, l) => l[0] + 'L ');
-// a ranked game with its line score, the series standing after it, and who won, lost and homered, from the box scores (data/games.json, loaded with the list)
+// a ranked game: its line score with the teams' logos (on a phone, just the logos and the final), and the series standing after it, from the box scores (data/games.json, loaded with the list)
 function gameRankRow(g) {
-  const bx = BOXES && BOXES[g.id]?.v ? BOXES[g.id] : null;
-  if (!bx) return `<button class="row grow" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(shortSeries(g.gt || g.g))}${g.vs ? `<small>${esc(g.vs)}</small>` : ''}</span></button>`;
-  const k = Math.max(9, bx.v.inn.length, bx.h.inn.length), last = n => esc(n.split(' ').slice(-1)[0]);
-  const hrs = [bx.v, bx.h].flatMap(s => (s.bat || []).filter(b => b[10] > 0).map(b => last(b[0]) + (b[10] > 1 ? ' ' + b[10] : '')));
-  const notes = (bx.ser ? [esc(bx.ser[0])] : []).concat([['W', bx.wp], ['L', bx.lp], ['S', bx.sv]].filter(x => x[1]).map(([l, n]) => `${l}: ${last(n)}`)).concat(hrs.length ? ['HR: ' + hrs.join(', ')] : []).join(' · ');
-  const cells = s => [...Array(k)].map((_, i) => `<i>${esc(s.inn[i] ?? '')}</i>`).join('');
-  const ls = !bx.v.inn.length && !bx.h.inn.length ? '' : `<span class="mls" style="grid-template-columns:auto repeat(${k},1.15em) 1.9em 1.4em 1.4em"><i></i>${[...Array(k)].map((_, i) => `<i class="h">${i + 1}</i>`).join('')}<i class="h r">R</i><i class="h">H</i><i class="h">E</i>
-    ${[bx.v, bx.h].map(s => `<i class="t">${esc(s.n)}</i>${cells(s)}<b class="r">${s.r}</b><i>${s.h}</i><i>${s.e}</i>`).join('')}</span>`;
-  return `<button class="row grow" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(shortSeries(g.gt || g.g))}${notes ? `<small>${notes}</small>` : ''}</span>${ls}</button>`;
+  const bx = BOXES && BOXES[g.id]?.v ? BOXES[g.id] : null, rk = `<span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span>`;
+  if (!bx) return `<button class="row gmrow" onclick="go('g_${g.id}')">${rk}<span class="rn">${g.y} ${esc(shortSeries(g.gt || g.g))}${g.vs ? `<small>${esc(g.vs)}</small>` : ''}</span></button>`;
+  const k = Math.max(9, bx.v.inn.length, bx.h.inn.length), extra = Math.max(bx.v.inn.length, bx.h.inn.length) > 9 ? `${Math.max(bx.v.inn.length, bx.h.inn.length)} innings` : '';
+  const badge = s => { const t = D.teams[s.tid]; return t ? teamBadge(t) : `<span class="teambadge">${esc(s.n.slice(0, 3).toUpperCase())}</span>`; };
+  const abbr = s => esc(D.teams[s.tid]?.br || D.teams[s.tid]?.tm || s.n.slice(0, 3).toUpperCase()), won = s => s.r > (s === bx.v ? bx.h : bx.v).r;
+  const scored = bx.v.inn.length || bx.h.inn.length;  // the 1935 NNL box has the lineups but not the runs
+  const sb = `<span class="gsb">${[bx.v, bx.h].map(s => `${badge(s)}<span class="ab${won(s) ? ' w' : ''}">${abbr(s)}</span><b class="${won(s) ? 'w' : ''}">${scored ? s.r : ''}</b>`).join('')}</span>`;
+  const ls = !scored ? '' : `<span class="mls" style="grid-template-columns:auto repeat(${k},1.15em) 1.9em 1.4em 1.4em"><i></i>${[...Array(k)].map((_, i) => `<i class="h">${i + 1}</i>`).join('')}<i class="h r">R</i><i class="h">H</i><i class="h">E</i>
+    ${[bx.v, bx.h].map(s => `<i title="${esc(s.fn || s.n)}">${badge(s)}</i>${[...Array(k)].map((_, i) => `<i>${esc(s.inn[i] ?? '')}</i>`).join('')}<b class="r">${s.r}</b><i>${s.h}</i><i>${s.e}</i>`).join('')}</span>`;
+  const note = bx.ser?.[0] || extra;
+  return `<button class="row gmrow${ls ? '' : ' nols'}" onclick="go('g_${g.id}')">${rk}${sb}<span class="rn">${g.y} ${esc(shortSeries(g.gt || g.g))}${note ? `<small>${esc(note)}</small>` : ''}</span>${ls}</button>`;
 }
 function gameRow(g) { return `<button class="row" onclick="go('g_${g.id}')"><span class="yr" title="${g.rk ? '' : 'Unranked'}">${g.rk ? '#' + g.rk : '–'}</span><span class="rn">${g.y} ${esc(g.gt || g.g)}${g.d ? `<small>${esc(g.d)}</small>` : ''}</span></button>`; }
 

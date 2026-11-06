@@ -611,22 +611,16 @@ a.chip,button.chip{color:var(--lit)}
   .prow .spark,.phead .sh{display:none}
 }
 
-/* game rankings: a small line score at the right of each row, under the title on a phone */
-.grow{align-items:center}
-.grow .mls{display:grid;column-gap:2px;row-gap:1px;font-family:var(--f-serif);font-size:13px;font-variant-numeric:lining-nums tabular-nums;color:var(--ink);flex:none}
-.grow .mls i,.grow .mls b{font-style:normal;text-align:center}
-.grow .mls .h{color:var(--muted);font-size:11px}
-.grow .mls .t{text-align:left;padding-right:8px;white-space:nowrap;color:var(--muted)}
-.grow .mls .r{border-left:1px solid var(--line);padding-left:4px}
-@media (max-width:820px){.grow{flex-wrap:wrap}.grow .rn{flex-basis:calc(100% - 86px)}.grow .mls{margin-left:86px;max-width:calc(100% - 86px);overflow-x:auto}}
-
-/* team rankings: rank, badge, name with record and postseason, then talent / Pythagorean / actual as winning percentages and the score */
-.row.trow,.trow.phead{display:grid;grid-template-columns:30px 38px minmax(0,1fr) 48px 48px 48px 52px;gap:0 12px;align-items:center}
-.trow .rk{font-family:var(--f-serif);font-weight:600;font-size:17px;color:var(--muted);text-align:right;font-variant-numeric:lining-nums tabular-nums}
-.trow .pc{font-family:var(--f-serif);font-size:14px;color:var(--muted);text-align:right;font-variant-numeric:lining-nums tabular-nums}
-.trow.phead span:nth-child(n+4){text-align:right}
-.trow .rn .badge{font-style:normal;margin-left:4px}
-@media (max-width:700px){
-  .row.trow,.trow.phead{grid-template-columns:26px 38px minmax(0,1fr) 52px}
-  .trow .pc,.trow.phead span:nth-child(n+4):not(:last-child){display:none}
-}
+/* game rankings: a small line score with logos at the right of each row; on a phone, a two-line scoreboard (logo, team, runs) instead */
+.gmrow .mls{display:grid;column-gap:2px;row-gap:3px;align-items:center;font-family:var(--f-serif);font-size:13px;font-variant-numeric:lining-nums tabular-nums;color:var(--ink);flex:none}
+.gmrow .mls i,.gmrow .mls b{font-style:normal;text-align:center}
+.gmrow .mls .h{color:var(--muted);font-size:11px}
+.gmrow .mls .r{border-left:1px solid var(--line);padding-left:4px}
+.gmrow .teambadge{width:22px;height:22px;border-width:1px;font-size:8px;font-weight:600}
+.gmrow .mls .teambadge{margin-right:6px}
+.gmrow .gsb{display:none;grid-template-columns:22px 2.7em 1.5em;column-gap:7px;row-gap:4px;align-items:center;flex:none;font-size:12.5px}
+.gmrow .gsb .ab{color:var(--muted);font-weight:500;letter-spacing:.03em}
+.gmrow .gsb b{text-align:right;font-family:var(--f-serif);font-size:16px;font-weight:400;color:var(--muted);font-variant-numeric:lining-nums tabular-nums}
+.gmrow .gsb .w{color:var(--ink);font-weight:600}
+.gmrow.nols .gsb{display:grid}
+@media (max-width:820px){.gmrow .yr{min-width:34px}.gmrow .gsb{display:grid}.gmrow .mls{display:none}}

@@ -1100,8 +1100,8 @@ function vGame() {
 // one decade for all three pages; each list keeps its own filters. All of it rides in the hash (#r-players?dec=1950&pos=SS),
 // so a filtered list can be bookmarked or sent, and Back steps through filter changes.
 const RB = { dec: 'all' };
-const RK = { players: { f: '', sort: 'rank', pos: 'All', n: 100 }, games: { f: '', sort: 'rank', n: 100 }, teams: { f: '', grp: 'all', n: 100 } };
-const RK_DEF = { f: '', sort: 'rank', pos: 'All', grp: 'all' }, RK_Q = { f: 'q', sort: 'sort', pos: 'pos', grp: 'grp' };
+const RK = { players: { f: '', sort: 'rank', pos: 'All', n: 100 }, games: { f: '', sort: 'rank', n: 100 }, teams: { f: '', n: 100 } };
+const RK_DEF = { f: '', sort: 'rank', pos: 'All' }, RK_Q = { f: 'q', sort: 'sort', pos: 'pos' };
 function rkQuery(id) {
   const q = new URLSearchParams(), st = RK[id];
   if (RB.dec !== 'all') q.set('dec', RB.dec);
@@ -1114,9 +1114,6 @@ function rkApply(id, qs) {  // the hash is the truth: anything it leaves out goe
   if (st) { for (const [k, name] of Object.entries(RK_Q)) if (k in st) st[k] = q.get(name) || RK_DEF[k]; st.n = 100; }
 }
 function rkNav(push) { try { history[push ? 'pushState' : 'replaceState']({ d: depth() + (push ? 1 : 0) }, '', hashOf(view)); } catch (e) { } }
-const LGROUP = { AL: 'mlb', NL: 'mlb', NA: 'early', AA: 'early', UA: 'early', PL: 'early', FL: 'early',
-  NNL: 'negro', NN2: 'negro', ECL: 'negro', ANL: 'negro', EWL: 'negro', NSL: 'negro', NAL: 'negro' };
-const GROUPS = [['mlb', 'American & National League'], ['early', '19th-century majors & Federal League'], ['negro', 'Negro Leagues'], ['ind', 'Independent clubs']];
 const inDec = y => RB.dec === 'all' || (y != null && decadeOf(+y) === RB.dec);
 const rkPlayers = () => Object.entries(D.players).filter(([, p]) => inDec(p.pk));
 const rkTeams = () => Object.entries(D.teams).filter(([, t]) => t.tr?.ar <= 156 && inDec(t.y));  // the top 156 of all time
@@ -1198,10 +1195,9 @@ function vList() {
     return `${rkHead('games')}
      ${filter('Filter by year, series, description…', sortSel('Year'))}<div id="rkbody"><div class="list">${arr.slice(0, st.n).map(gameRow).join('') || '<p class="empty">No games match.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
   }
-  const arr = rkTeams().filter(([, t]) => (st.grp === 'all' || (LGROUP[t.lg] || 'ind') === st.grp) && (!f || (t.y + ' ' + t.n).toLowerCase().includes(f))).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
+  const arr = rkTeams().filter(([, t]) => !f || (t.y + ' ' + t.n).toLowerCase().includes(f)).sort((a, b) => a[1].tr.ar - b[1].tr.ar);
   return `${rkHead('teams')}
    <details class="method"><summary>How teams are scored</summary><p class="note">Each player’s projected WAR per game for that season, weighted by his games for the team, summed and put on a 162-game scale. That talent, measured against a typical team of its era (a smooth curve over time), makes up 80% of the score; Pythagorean record is 15% and actual record 5% (shrunk toward .500 in short seasons). All three are in wins over an average team per 162, scaled to how spread out teams were in that era.</p></details>
-   <div class="chips" style="margin:8px 0">${[['all', 'All'], ...GROUPS].map(([g, l]) => `<button class="chip" aria-pressed="${st.grp === g}" data-grp="${g}">${l}</button>`).join('')}</div>
    ${filter('Filter by year or team name…')}
    <div id="rkbody"><div class="list">${arr.slice(0, st.n).map(teamRankRow).join('') || '<p class="empty">No teams match.</p>'}</div>${more(st, arr.length - st.n)}</div>`;
 }
@@ -1314,7 +1310,6 @@ function wire() {
   // home lists
   const st = view.type === 'r' ? RK[view.id] : null, refilter = push => { if (st) st.n = 100; render(false); rkNav(push); };
   document.querySelectorAll('[data-pos]').forEach(b => b.addEventListener('click', () => { st.pos = b.dataset.pos; refilter(true); }));
-  document.querySelectorAll('[data-grp]').forEach(b => b.addEventListener('click', () => { st.grp = b.dataset.grp; refilter(true); }));
   document.querySelectorAll('[data-rdec]').forEach(b => b.addEventListener('click', () => { RB.dec = b.dataset.rdec; refilter(true); }));
   // a narrow decade row stays where it was left; if the chosen decade is out of view, it comes to rest just after the one before it
   const decs = $('.rdecs'), on = decs?.querySelector('[aria-pressed="true"]');

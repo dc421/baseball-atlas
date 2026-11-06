@@ -289,7 +289,10 @@ for j, r in IN.iterrows():
                     if st and st[-1][0] == t.franchID and st[-1][3] >= y - 1:
                         st[-1][3] = int(y); st[-1][4] += int(t.G_all or 0)
                     else:
-                        st.append([t.franchID, t.name, int(y), int(y), int(t.G_all or 0), tid])
+                        st.append([t.franchID, t.name, int(y), int(y), int(t.G_all or 0), tid, {}])
+                    nm = st[-1][6].setdefault(t.name, [0, tid]); nm[0] += int(t.G_all or 0)
+            for s in st:  # a stint that spans a move (Koufax's Dodgers) goes by the club he played most for there
+                s[1], (_, s[5]) = max(s[6].items(), key=lambda kv: kv[1][0]); s.pop()
         o['st'] = st
         if pid in bat.index and bat.loc[pid, 'AB'] > 0:
             b = bat.loc[pid]; pa = b.AB + b.BB + b.HBP + b.SF; tb = b.H + b['2B'] + 2 * b['3B'] + 3 * b.HR

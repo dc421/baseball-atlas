@@ -1127,12 +1127,11 @@ const careerSpan = p => { const s = p.st || [], a = p.arc || [], y0 = s.length ?
   return y0 == null ? '' : y0 === y1 ? String(y0) : y0 + '–' + y1; };
 // a career in one line: each season's rating on one scale for every row, placed by his age that season (as of June 30, as Baseball-Reference
 // counts it) so everyone's age-27 season lines up down the list; the dot is the peak.
-// One guide line at the Hall line (borderline in, 5.2; labelled on the first row): the line runs dark above it and faint below. Stars are
-// seasons he was #1. Seasons he didn't play (war, injury) or the model didn't rate are a gray dashed bridge, with a gray band where he missed.
+// One guide line at the Hall line (borderline in, 5.2; labelled on the first row): the line runs dark above it and faint below. The line runs
+// gold through the seasons he was #1, from halfway to the year before to halfway to the year after, so a streak reads as one gold run. Seasons he didn't play (war, injury) or the model didn't rate are a gray dashed bridge, with a gray band where he missed.
 // Team badges sit under each stretch: a return to the same club after a gap is one stretch, and a few games elsewhere in between don't split it.
 const HALL = 5.2, AGE0 = 17, AGE1 = 49, SPW = 234; let sparkN = 0;  // ages past 49 (Paige's one inning at 58) fall off the end
 const birthYr = p => { const b = String(p.born || ''); return b ? +b.slice(0, 4) + (+b.slice(5, 7) > 6 ? 1 : 0) : null; };
-const starPts = (cx, cy, r) => Array.from({ length: 10 }, (_, i) => { const t = Math.PI * i / 5 - Math.PI / 2, d = i % 2 ? r * .45 : r; return (cx + d * Math.cos(t)).toFixed(1) + ',' + (cy + d * Math.sin(t)).toFixed(1); }).join(' ');
 function arcSpark(p, axis) {
   const S = p.st || [], f0 = Math.min(...S.map(s => s[2])), f1 = Math.max(...S.map(s => s[3]));  // the model can rate a year before his debut
   const by = birthYr(p), a = (p.arc || []).filter(e => (!S.length || (e[0] >= f0 && e[0] <= f1)) && (by == null || e[0] - by <= AGE1)), W = 280, PW = SPW, H = 50, BASE = 46, TOP = 13, MAX = 10.5; if (!a.length) return '<span class="spark"></span>';
@@ -1157,12 +1156,15 @@ function arcSpark(p, axis) {
     return `<span class="stint" style="left:${(cx - 7.5).toFixed(1)}px" title="${esc(s[1])}, ${s[2] === s[3] ? s[2] : s[2] + '–' + s[3]}">${badgeSm(t)}</span>`; }).join('');
   const bridge = segs.slice(1).map((s, i) => { const e = segs[i].at(-1), f = s[0];  // across the gap, at his ratings on either side
     return `<path class="gap" d="M${x(e[0])} ${y(e[1])}L${x(f[0])} ${y(f[1])}"/>`; }).join('');
-  const stars = a.filter(e => e[2] === 1 && played(e[0]) && e !== pk).map(e => `<polygon class="star" points="${starPts(+x(e[0]), +y(e[1]), 3)}"/>`).join('');
-  const peak = pk[2] === 1 ? `<polygon class="star pk" points="${starPts(px, +y(pk[1]), 4.6)}"/>` : `<circle r="3" cx="${px}" cy="${y(pk[1])}"/>`;
+  const mid = (e, f) => ((xn(e[0]) + xn(f[0])) / 2).toFixed(1) + ' ' + ((+y(e[1]) + +y(f[1])) / 2).toFixed(1);
+  const gold = segs.flatMap(s => s.map((e, i) => e[2] === 1 && s[i - 1]?.[2] !== 1 ? i : -1).filter(i => i >= 0).map(i => {
+    let j = i; while (s[j + 1]?.[2] === 1) j++;
+    return `<path class="one" d="M${i ? mid(s[i - 1], s[i]) : x(s[i][0]) + ' ' + y(s[i][1])}L${pts(s.slice(i, j + 1))}${s[j + 1] ? 'L' + mid(s[j], s[j + 1]) : ''}"/>`; })).join('');
+  const peak = `<circle class="${pk[2] === 1 ? 'one' : ''}" r="3" cx="${px}" cy="${y(pk[1])}"/>`;
   return `<span class="spark"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${bands}${guides}${cuts}${bridge}${segs.map(s => s.length > 1
       ? `<path class="a" d="M${x(s[0][0])} ${BASE}L${pts(s)}L${x(s.at(-1)[0])} ${BASE}Z"/><path class="a up" clip-path="url(#${id})" d="M${x(s[0][0])} ${BASE}L${pts(s)}L${x(s.at(-1)[0])} ${BASE}Z"/><path class="l" d="M${pts(s)}"/><path class="l up" clip-path="url(#${id})" d="M${pts(s)}"/>`
       : `<circle class="${s[0][1] > HALL ? 'up' : 'lo'}" r="1.3" cx="${x(s[0][0])}" cy="${y(s[0][1])}"/>`).join('')}
-    ${stars}${peak}<text x="${lx}" y="${+y(pk[1]) - 7}" text-anchor="middle">${pk[0]}</text>${hits}</svg>${badges}</span>`;
+    ${gold}${peak}<text x="${lx}" y="${+y(pk[1]) - 7}" text-anchor="middle">${pk[0]}</text>${hits}</svg>${badges}</span>`;
 }
 // the head of all three pages: tabs, then the decade (one row that scrolls sideways on a phone)
 function rkHead(id) {
@@ -1185,7 +1187,7 @@ function vList() {
     const rows = arr.slice(0, st.n).map(([k, p], i) => { const all = st.pos === 'All', rk = all ? p.ovr || (typeof p.prk === 'string' ? p.prk : '') : p.prk ?? '';
       const pos = all && !p.ovr && typeof p.prk === 'number' ? `#${p.prk} ${p.pos}` : p.pos;  // the rank column is the overall rank; a position rank is spelled out with its position
       return `<button class="row prow" onclick="go('p_${k}')"><span class="rk">${esc(String(rk))}</span>${avatar(k)}<span class="rn">${esc(nameOf(p))}<small>${[esc(pos), esc(mainTeam(p)), careerSpan(p)].filter(Boolean).join(' · ')}</small></span>${arcSpark(p, i === 0)}${pRating(p)}</button>`; }).join('');
-    const cols = `<div class="prow phead"><span></span><span></span><span></span><span class="sh" title="The rating each season by his age that season, on one scale for every row; the dot marks the peak, stars the seasons he was #1, the badges the teams">${[20, 25, 30, 35, 40, 45].map(g => `<i style="left:${(4 + (g - AGE0) * (SPW - 8) / (AGE1 - AGE0)).toFixed(1)}px">${g}</i>`).join('')}<b>Age</b></span><span title="${RATING}">Rating</span></div>`;
+    const cols = `<div class="prow phead"><span></span><span></span><span></span><span class="sh" title="The rating each season by his age that season, on one scale for every row; the dot marks the peak, the gold the seasons he was #1, the badges the teams">${[20, 25, 30, 35, 40, 45].map(g => `<i style="left:${(4 + (g - AGE0) * (SPW - 8) / (AGE1 - AGE0)).toFixed(1)}px">${g}</i>`).join('')}<b>Age</b></span><span title="${RATING}">Rating</span></div>`;
     return `${rkHead('players')}
      <div class="chips" style="margin-bottom:8px">${['All', ...POSITIONS].map(p => `<button class="chip" aria-pressed="${st.pos === p}" data-pos="${p}">${p}</button>`).join('')}</div>
      ${filter('Filter by name…', sortSel('Peak year'))}<div id="rkbody"><div class="list">${rows ? cols + rows : '<p class="empty">No one matches.</p>'}</div>${more(st, arr.length - st.n)}</div>`;

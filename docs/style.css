@@ -601,7 +601,8 @@ a.chip,button.chip{color:var(--lit)}
 .spark .cut{stroke:var(--line);stroke-width:1}
 .spark .hatch{stroke:var(--line);stroke-width:1.2}
 .spark .gap{fill:none;stroke:var(--ghost);stroke-width:1.2;stroke-dasharray:2 2}
-.spark .star{fill:var(--gold);stroke:var(--bg);stroke-width:.6;stroke-linejoin:round}
+.spark .one{fill:none;stroke:var(--gold);stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
+.spark circle.one{fill:var(--gold);stroke:var(--bg);stroke-width:1}
 .spark .hit{fill:transparent}
 .spark .stint{position:absolute;top:51px;line-height:0}
 .spark .stint .avatar{width:15px;height:15px;border-width:1px;font-size:5.5px}
